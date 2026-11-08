@@ -37,6 +37,9 @@ try {
   await mkdir('outputs', { recursive: true });
   await page.goto(baseUrl);
   await page.locator('.team-bar').first().waitFor();
+  assert.deepEqual(await page.locator('#stamina-season option').allTextContents(), ['终焉矩阵S2-3（S2第三阶段）', '终焉矩阵S2-4（S2第四阶段）']);
+  assert.match(await page.locator('.stage-label').innerText(), /终焉矩阵S2-3（S2第三阶段）/);
+  assert.ok(!/本期|下期/.test(await page.locator('body').innerText()));
   await page.locator('.team-bar[data-id="team-2"]').dblclick();
   assert.ok(await page.locator('#character-dialog').isVisible());
   assert.equal(await page.locator('#dialog-team-name').inputValue(), '相吟维');

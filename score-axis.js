@@ -80,7 +80,7 @@ export function staminaLimits(rules, seasonId, identityById = new Map()) {
 }
 
 export function validateConfig(value, characterIds, records, identityById = new Map(), staminaRules) {
-  if (!value || value.version !== 1 || value.towerId !== 16) throw new Error('请导入本期（16）的 version: 1 JSON 配置');
+  if (!value || value.version !== 1 || value.towerId !== 16) throw new Error('请导入终焉矩阵S2-3（S2第三阶段，关卡16）的 version: 1 JSON 配置');
   const maxRound = Math.max(...records.map(wave => wave.round));
   if (!Number.isInteger(value.maxRound) || value.maxRound < 1) throw new Error(`显示轮次须为 1—${maxRound}`);
   if (!Number.isFinite(value.pixelsPerPoint) || value.pixelsPerPoint <= 0 || value.pixelsPerPoint > MAX_ZOOM) throw new Error('缩放范围无效');

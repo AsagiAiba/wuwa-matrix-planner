@@ -73,7 +73,7 @@ test('JSON round trip preserves teams, avatars, scores and positions', () => {
   overflow.teams[0].startScore = 1e9;
   assert.throws(() => validateConfig(overflow, characters, scores), /超出/);
   const other = structuredClone(example); other.towerId = 18;
-  assert.throws(() => validateConfig(other, characters, scores), /本期/);
+  assert.throws(() => validateConfig(other, characters, scores), /终焉矩阵S2-3/);
 });
 test('JSON prevents cross-team reuse, including other Rover variants', () => {
   const duplicate = structuredClone(example);

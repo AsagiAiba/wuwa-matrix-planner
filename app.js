@@ -111,7 +111,7 @@ function renderStaminaSeason() {
   const bonusNames = selected.bonusCharacterIds.map(id => characterMap.get(id).name).join('、');
   const baseNames = Object.keys(staminaRules.baseStamina).map(id => characterMap.get(id).name);
   $('stamina-season-note').textContent = `${bonusNames} 临时 +${selected.extraStamina} 体；${baseNames.length} 名角色基础 2 体`;
-  $('stamina-season-note').title = `基础 2 体：${baseNames.join('、')}。切换此项仅改变体力规则，血线仍使用本期分数表。`;
+  $('stamina-season-note').title = `基础 2 体：${baseNames.join('、')}。切换此项仅改变体力规则，血线仍使用终焉矩阵S2-3（S2第三阶段）分数表。`;
 }
 
 function portrait(id, className = 'portrait') {
@@ -843,8 +843,7 @@ $('import-file').addEventListener('change', async event => {
   event.target.value = '';
 });
 for (const season of staminaRules.seasons) {
-  const names = season.bonusCharacterIds.map(id => characterMap.get(id).name).join('、');
-  const option = element('option', '', `${season.name.split(' · ')[0]} · ${names}+${season.extraStamina}体`);
+  const option = element('option', '', season.name);
   option.value = season.id; $('stamina-season').append(option);
 }
 $('stamina-season').addEventListener('change', () => {

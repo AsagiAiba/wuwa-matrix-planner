@@ -1199,7 +1199,7 @@ $('confirm-characters').addEventListener('click', () => {
   const awaitingScore = (Boolean(pendingTeam) || team.needsScore === true) && !scoreText;
   const score = Number(scoreText);
   if (!name || name.length > 30) { $('character-feedback').textContent = '请填写 1—30 个字符的队伍名称。'; $('dialog-team-name').focus(); return; }
-  if (!awaitingScore && (!scoreText || !Number.isFinite(score) || score <= 0)) { $('character-feedback').textContent = '请填写大于 0 的队伍分数。'; $('dialog-team-score').focus(); return; }
+  if ($('dialog-team-score').validity.badInput || (!awaitingScore && (!scoreText || !Number.isFinite(score) || score <= 0))) { $('character-feedback').textContent = '请填写大于 0 的队伍分数。'; $('dialog-team-score').focus(); return; }
   const required = state.teams.filter(other => other.id !== team.id).reduce((sum, other) => sum + other.score, score);
   const sufficient = scores.records.find(wave => wave.cumulative_points_after >= required);
   if (hasBloodline() && !sufficient) { $('character-feedback').textContent = '队伍总分超出已导入的血线数据范围，请调整分数。'; return; }

@@ -1,6 +1,8 @@
 # 鸣潮终焉矩阵血线排布 V0.1
 
-这是我用来排《鸣潮》终焉矩阵队伍和血线的小工具。选好角色、填入队伍分数后，就能看到每队从哪只 Boss 的多少血开始、打到哪里结束，方便调整出场顺序。
+本项目由GPT-6.1 Sol全程Coding
+
+《鸣潮》终焉矩阵队伍和血线的小工具。选好角色、填入队伍分数后，就能看到每队从哪只 Boss 的多少血开始、打到哪里结束，方便调整出场顺序。
 
 ## 下载和运行
 
@@ -62,7 +64,7 @@ n = 5 × (轮次 - 4) + Boss 在该轮的位次（1—5）
 
 矩阵奇藏的 1000 分在击杀时单独发放，轴上用斜纹表示。剩余分数包含还没拿到的击杀奖励，奖励区本身没有可以停留的血线。
 
-推算部分还没有逐轮实测，游戏内的精确取整方式也暂未确认。有实测差异可以在 [Issues](https://github.com/KazamiSora/wuwa-matrix-planner/issues) 留下轮次、Boss 和分数，方便我核对。
+推算部分还没有逐轮实测，游戏内的精确取整方式也暂未确认。有实测差异可以在 [Issues](https://github.com/KazamiSora/wuwa-matrix-planner/issues) 留下轮次、Boss 和分数，方便作者核对。
 
 详细公式和数据来源见 [玩法与计分规则](docs/终焉矩阵调研与计分规则.md)。
 
@@ -100,7 +102,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/test_release.ps1
 Windows 启动器用 C# 编写，通过系统的 .NET Framework 4 编译器构建。打包脚本会生成便携目录、ZIP 和 SHA-256 校验文件；V0.1 附带的 Node.js 版本是 24.22.1。
 
 ## 素材与说明
-
-角色头像、Boss 图片和属性图标来自 [Nanoka](https://ww.nanoka.cc/)，下载地址保存在 `data/` 下的清单里。飞廉之猩和达妮娅的矩阵横图链接失效，目前使用同站对应的图鉴头像；莉莉头像暂缺。
 
 这是一个非官方玩家工具，相关游戏素材的权利归原权利人。素材来源及运行时许可证见 [第三方资源说明](THIRD_PARTY_NOTICES.md)，版本改动见 [CHANGELOG](CHANGELOG.md)。

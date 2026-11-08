@@ -29,7 +29,11 @@
         "source": "https://ww.nanoka.cc/newtower/18",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": [
+        "受到伤害降低20%。",
+        "被谐度破坏时，飞廉之猩受到伤害提升12.5%，持续至本场战斗结束，可叠加4层。"
+      ]
     },
     {
       "order": 2,
@@ -51,7 +55,11 @@
         "source": "https://ww.nanoka.cc/newtower/18",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": [
+        "受到的异常效应伤害最终提升25%。",
+        "受到【霜结】后，受到的最终伤害提升30%，持续15秒。"
+      ]
     },
     {
       "order": 3,
@@ -73,7 +81,10 @@
         "source": "https://ww.nanoka.cc/newtower/18",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": [
+        "共鸣者响应同奏时，该共鸣者在30秒内对无冠者造成的伤害最终提升40%。"
+      ]
     },
     {
       "order": 4,
@@ -95,7 +106,12 @@
         "source": "https://ww.nanoka.cc/newtower/18",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": [
+        "声骸技能命中辛吉勒姆时，将为其附加一层【迷航】，最多叠加5层，同名声骸仅可触发一次。",
+        "每层【迷航】使辛吉勒姆受到的最终伤害提升10%。",
+        "【迷航】达到5层时，辛吉勒姆受到的最终伤害额外提升30%。"
+      ]
     },
     {
       "order": 5,
@@ -117,7 +133,8 @@
         "source": "https://ww.nanoka.cc/newtower/18",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": []
     }
   ],
   "stamina": {

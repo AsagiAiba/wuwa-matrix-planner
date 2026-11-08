@@ -139,6 +139,35 @@ test('matrix resistances use the confirmed 20% base and 40% tagged attribute, wi
   }
 });
 
+test('boss special properties preserve all supplied triggers, percentages, limits and durations', () => {
+  const expected = {
+    '天傀劫煞': ['被施加异常效应时，受到的伤害最终提升20%，持续6秒。', '天傀劫煞受到的电磁效应伤害最终提升100%。'],
+    '封庭械囿': ['附近敌方目标获得护盾时，封庭械囿受到的最终伤害提升10%，持续6秒，每0.5秒可触发一次，最多可叠加4层。'],
+    '无冠者': ['共鸣者响应同奏时，该共鸣者在30秒内对无冠者造成的伤害最终提升40%。'],
+    '飞廉之猩': ['受到伤害降低20%。', '被谐度破坏时，飞廉之猩受到伤害提升12.5%，持续至本场战斗结束，可叠加4层。'],
+    '达妮娅': ['受到的异常效应伤害最终提升25%。', '受到【霜结】后，受到的最终伤害提升30%，持续15秒。'],
+    '辛吉勒姆': ['声骸技能命中辛吉勒姆时，将为其附加一层【迷航】，最多叠加5层，同名声骸仅可触发一次。', '每层【迷航】使辛吉勒姆受到的最终伤害提升10%。', '【迷航】达到5层时，辛吉勒姆受到的最终伤害额外提升30%。'],
+  };
+  const seen = new Map();
+  for (const season of seasonDefinitions) {
+    for (const boss of season.bosses) {
+      assert.deepEqual(boss.specialProperties, expected[boss.name] || []);
+      if (seen.has(boss.name)) assert.deepEqual(boss.specialProperties, seen.get(boss.name));
+      seen.set(boss.name, boss.specialProperties);
+    }
+  }
+  assert.equal(seen.size, 8);
+  assert.equal([...seen.values()].filter(properties => properties.length).length, 6);
+});
+
+test('older season definitions may omit special properties without losing score data', () => {
+  const result = runChangedConfig(({ phase3, phase4 }) => {
+    for (const season of [phase3, phase4]) for (const boss of season.bosses) delete boss.specialProperties;
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout)[0].full_kill_points, source.records[0].full_kill_points);
+});
+
 function runChangedConfig(change) {
   const temporaryRoot = mkdtempSync(path.join(os.tmpdir(), 'matrix-season-config-'));
   try {
@@ -182,6 +211,10 @@ test('unsafe registry paths and invalid boss/wave values fail before use', () =>
     ({ phase4 }) => { phase4.scoring.waves[0].hpStatus = 'unconfirmed'; },
     ({ phase4 }) => { phase4.bosses[0].resistances.status = 'confirmed'; phase4.bosses[0].resistances.values['1'] = null; },
     ({ phase4 }) => { phase4.bosses[0].resistances.values['2'] = '40'; },
+    ({ phase4 }) => { phase4.bosses[0].specialProperties = '不是数组'; },
+    ({ phase4 }) => { phase4.bosses[0].specialProperties = null; },
+    ({ phase4 }) => { phase4.bosses[0].specialProperties = ['   ']; },
+    ({ phase4 }) => { phase4.bosses[0].specialProperties = [40]; },
   ]) {
     const result = runChangedConfig(change);
     assert.notEqual(result.status, 0);

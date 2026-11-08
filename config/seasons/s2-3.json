@@ -29,7 +29,8 @@
         "source": "https://ww.nanoka.cc/newtower/16",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": []
     },
     {
       "order": 2,
@@ -51,7 +52,10 @@
         "source": "https://ww.nanoka.cc/newtower/16",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": [
+        "附近敌方目标获得护盾时，封庭械囿受到的最终伤害提升10%，持续6秒，每0.5秒可触发一次，最多可叠加4层。"
+      ]
     },
     {
       "order": 3,
@@ -73,7 +77,10 @@
         "source": "https://ww.nanoka.cc/newtower/16",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": [
+        "共鸣者响应同奏时，该共鸣者在30秒内对无冠者造成的伤害最终提升40%。"
+      ]
     },
     {
       "order": 4,
@@ -95,7 +102,11 @@
         "source": "https://ww.nanoka.cc/newtower/16",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": [
+        "被施加异常效应时，受到的伤害最终提升20%，持续6秒。",
+        "天傀劫煞受到的电磁效应伤害最终提升100%。"
+      ]
     },
     {
       "order": 5,
@@ -117,7 +128,8 @@
         "source": "https://ww.nanoka.cc/newtower/16",
         "note": "",
         "verification": "user-confirmed"
-      }
+      },
+      "specialProperties": []
     }
   ],
   "stamina": {

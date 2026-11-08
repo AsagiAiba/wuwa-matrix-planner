@@ -302,6 +302,36 @@ input[readonly] { color: #94a6b5; border-style: dashed; cursor: default; }
 .boss-resistance span { font-size: 11px; color: #a9b9c6; }
 .boss-resistance strong { font-size: 13px; font-weight: 550; margin-top: 3px; }
 .boss-resistance.high-resistance { border-color: #8d7858; background: #332e26; }
+.boss-special-properties { margin-top: 22px; }
+.boss-special-properties h3 { margin-bottom: 10px; }
+.boss-properties-copy p { color: #adbdca; font-size: 12px; line-height: 1.9; margin-top: 8px; white-space: pre-line; overflow-wrap: anywhere; }
+.boss-properties-copy p:first-child { margin-top: 0; }
+.boss-properties-copy p.muted { color: var(--muted); }
+#boss-properties-count { margin-left: 6px; color: #91a3b2; font-size: 11px; font-weight: 400; }
+.boss-property-search { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+.boss-property-search input { flex: 1; width: 0; font-size: 12px; }
+#boss-properties-results { flex-shrink: 0; font-size: 11px; }
+.boss-properties-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.boss-property-card { padding: 16px; background: #1a2732; border: 1px solid #354654; border-radius: 6px; }
+.boss-property-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 13px; }
+.boss-property-heading img { width: 66px; height: 44px; object-fit: cover; border-radius: 5px; border: 1px solid #475662; }
+.boss-property-heading h4 { margin: 0 0 5px; color: #e5cb9e; font-size: 13px; font-weight: 600; }
+.boss-property-heading span { font-size: 10px; }
+.boss-property-empty { grid-column: 1 / -1; padding: 15px 0; font-size: 12px; }
+.pending-score-bar { border-style: dashed; background: repeating-linear-gradient(135deg,#243443 0,#243443 8px,#1c2935 8px,#1c2935 16px); }
+.pending-score-bar .bar-score { color: #e6c794; }
+.axis-preview-tag { color: #d1b279; font-weight: 500; }
+.axis-guide.preview { border-left-style: dashed; opacity: .45; }
+.team-delete-actions { display: flex; align-items: center; gap: 12px; }
+.team-delete-actions button:disabled { opacity: .3; }
+@media(max-width:760px) {
+  .boss-properties-list { grid-template-columns: 1fr; }
+  .boss-property-card { padding: 13px; }
+}
+@media(max-width:480px) {
+  .boss-property-search { flex-wrap: wrap; gap: 8px; }
+  .boss-property-search input { flex-basis: 100%; width: 100%; }
+}
 .boss-percent-field { display: flex; gap: 14px; align-items: center; margin-top: 24px; }
 .boss-percent-field label { font-size: 13px; }
 .boss-percent-field .input-unit { width: 150px; margin: 0; }

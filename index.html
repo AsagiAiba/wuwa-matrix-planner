@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>终焉矩阵血线排布 V0.2</title>
+  <title>终焉矩阵血线排布 V0.2.1</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="./"><span class="brand-symbol">M</span><span>终焉矩阵<span class="brand-sub">血线排布 / V0.2</span></span></a>
+    <a class="brand" href="./"><span class="brand-symbol">M</span><span>终焉矩阵<span class="brand-sub">血线排布 / V0.2.1</span></span></a>
     <div class="header-actions"><span class="stage-label">终焉矩阵S2-3（S2第三阶段） · 奇点扩张</span><button id="import-button" class="quiet">导入 JSON</button><button id="export-button">导出 JSON <span aria-hidden="true">↗</span></button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
   </header>
   <main>
@@ -23,12 +23,12 @@
       <div id="team-list" class="team-list"></div>
       <button id="add-team" class="add-team">＋ 新建队伍</button>
       <button id="quick-team" class="quick-team-button">快捷组队 · 连续选人</button>
-      <div class="editor-heading"><h3>队伍设置</h3><button id="delete-team" class="text-button">删除</button></div>
+      <div class="editor-heading"><h3>队伍设置</h3><div class="team-delete-actions"><button id="undo-team-delete" type="button" class="text-button" aria-label="撤回队伍删除" disabled>撤回</button><button id="redo-team-delete" type="button" class="text-button" aria-label="恢复队伍删除" disabled>恢复</button><button id="delete-team" type="button" class="text-button">删除</button></div></div>
       <form id="team-form" class="team-form">
         <label>队伍名称<input id="team-name" maxlength="30" autocomplete="off" required></label>
         <div><span class="field-label">上阵角色 <span class="muted">点击更换</span></span><div id="selected-characters" class="selected-characters"></div></div>
         <label>本队分数<div class="input-unit"><input id="team-score" type="number" min="0.01" step="any" required><span>分</span></div></label>
-        <label>起点累计积分 <span class="muted">自动衔接</span><div class="input-unit"><input id="team-start" type="number" readonly aria-readonly="true"><span>分</span></div></label>
+        <label>起点累计积分 <span class="muted" id="team-start-mode">自动衔接</span><div class="input-unit"><input id="team-start" type="number" readonly aria-readonly="true"><span>分</span></div></label>
         <button type="submit" class="primary" id="apply-team">应用到血线轴</button>
       </form>
       <div class="sidebar-footer"><span class="save-dot"></span><span id="save-state">配置自动保存在此浏览器</span><button id="load-example" class="text-button">恢复示例</button></div>
@@ -62,6 +62,11 @@
         <details id="circuit-buffs" class="matrix-content-collapse">
           <summary>回路增益</summary><div id="matrix-circuits" class="matrix-circuits"></div>
         </details>
+        <details id="boss-properties-details" class="matrix-content-collapse">
+          <summary>Boss 特殊性质<span id="boss-properties-count"></span></summary>
+          <div class="boss-property-search"><input id="boss-properties-search" type="search" placeholder="搜索 Boss 名称、简称或性质…" aria-label="搜索 Boss 特殊性质"><span id="boss-properties-results" class="muted" role="status"></span></div>
+          <div id="boss-properties-list" class="boss-properties-list"></div>
+        </details>
         <h3>角色强化</h3><div id="matrix-stamina-enhancements" class="matrix-enhancements matrix-stamina-enhancements"></div>
         <details id="other-enhancements" class="matrix-content-collapse">
           <summary>其他角色强化<span id="other-enhancements-count"></span></summary>
@@ -83,6 +88,7 @@
     <p id="boss-data-basis" class="boss-data-basis muted"></p>
     <div class="boss-resistance-heading"><h3>怪物抗性</h3><a id="boss-resistance-source" target="_blank" rel="noopener noreferrer">属性资料：Nanoka</a></div>
     <div id="boss-resistances" class="boss-resistances"></div><p id="boss-resistance-note" class="muted boss-data-basis"></p>
+    <section class="boss-special-properties" aria-labelledby="boss-special-properties-title"><h3 id="boss-special-properties-title">特殊性质</h3><div id="boss-special-properties-copy" class="boss-properties-copy"></div></section>
     <div class="boss-percent-field"><label for="boss-hp-percent">剩余血量</label><div class="input-unit"><input id="boss-hp-percent" type="number" min="0" max="100" step="any" inputmode="decimal" aria-describedby="boss-percent-error boss-calculation-note"><span>%</span></div></div>
     <p id="boss-percent-error" class="boss-percent-error" role="status"></p>
     <div class="boss-calculation" aria-live="polite"><div><span>已获取分数</span><strong id="boss-earned-points"></strong></div><div><span>剩余分数</span><strong id="boss-remaining-points"></strong></div></div>

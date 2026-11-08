@@ -1,4 +1,4 @@
-import { visibleWaves, locateScore, packTeams, reorderTeams, nearestTeamSlot, characterIdentity, validateConfig, staminaLimits, staminaConflicts, defaultTeamName, splitQuickTeams, axisTickStep, matrixInfo, bossScoreAtRemainingHp, MIN_ZOOM, MAX_ZOOM } from './score-axis.js';
+import { visibleWaves, locateScore, packTeams, reorderTeams, nearestTeamSlot, characterIdentity, validateConfig, staminaLimits, staminaConflicts, defaultTeamName, splitQuickTeams, axisTickStep, matrixInfo, bossScoreAtRemainingHp, layoutTeamPreviews, PENDING_TEAM_SCORE, createTeamDeletionHistory, deleteTeamWithHistory, undoTeamDeletion, redoTeamDeletion, MIN_ZOOM, MAX_ZOOM } from './score-axis.js';
 import { normalizePlanLibrary, createPlanLibrary, addPlan, copyPlan, renamePlan, updatePlan, activatePlan, deletePlan } from './plan-library.js';
 import { seasonDefinitions, getSeason, seasonStaminaRules, buildSeasonScores } from './season-config.js';
 
@@ -113,12 +113,52 @@ let pendingStaminaSeason = null;
 let conflictTeamIds = new Set();
 let deletingPlanId = null;
 let lastMatrixContent = null;
+const teamDeletionHistories = new Map();
 syncSeasonRuntime();
 const quickSequence = () => quickSession.history[quickSession.cursor];
 const current = () => state.teams.find(team => team.id === selectedId);
 const hasBloodline = () => matrixInfo(state).scoreReady;
 const waves = () => hasBloodline() ? visibleWaves(scores.records, state.maxRound) : [];
 const total = () => hasBloodline() ? waves().at(-1).cumulative_points_after : Math.max(10000, state.scoreMarker || 0, state.teams.reduce((sum, team) => sum + team.score, 0));
+const axisTeams = () => layoutTeamPreviews(state.teams);
+const axisEntry = team => axisTeams().find(item => item.id === team.id);
+const axisTeamPoints = () => axisTeams().reduce((sum, team) => sum + team.axisScore, 0);
+const axisExtent = () => Math.max(total(), axisTeamPoints());
+
+function currentTeamDeletionHistory() {
+  return teamDeletionHistories.get(planLibrary.activePlanId) || createTeamDeletionHistory();
+}
+
+function renderTeamDeletionControls() {
+  const history = currentTeamDeletionHistory();
+  $('undo-team-delete').disabled = history.undo.length === 0;
+  $('redo-team-delete').disabled = history.redo.length === 0;
+  $('undo-team-delete').title = `撤回队伍删除（可撤回 ${history.undo.length} 次，最多 2 次）`;
+  $('redo-team-delete').title = `重新执行已撤回的删除（可恢复 ${history.redo.length} 次）`;
+}
+
+function changeTeamDeletion(action) {
+  const history = currentTeamDeletionHistory();
+  const record = (action === 'undo' ? history.undo : history.redo).at(-1);
+  if (action !== 'delete' && !record) return;
+  const team = action === 'delete' ? current() : record.team;
+  if (!team) return;
+  try {
+    const result = action === 'undo' ? undoTeamDeletion(state.teams, history) : action === 'redo' ? redoTeamDeletion(state.teams, history) : deleteTeamWithHistory(state.teams, team.id, history);
+    const candidate = { ...structuredClone(state), teams: result.teams };
+    const actualTotal = candidate.teams.reduce((sum, item) => sum + item.score, 0);
+    const required = scores.records.find(wave => wave.cumulative_points_after >= actualTotal);
+    if (hasBloodline() && !required) throw new Error('队伍总分超出 R15 范围，请先调整已有队伍分数。');
+    if (required) candidate.maxRound = Math.max(candidate.maxRound, required.round);
+    state = validatePlan(candidate, { allowStaminaConflicts: true });
+    teamDeletionHistories.set(planLibrary.activePlanId, result.history);
+    selectedId = action === 'undo' ? team.id : state.teams.some(item => item.id === selectedId) ? selectedId : state.teams[0]?.id;
+    persist(); renderAll();
+    toast(action === 'undo' ? `已撤回删除：${team.name}` : action === 'redo' ? `已恢复删除操作：${team.name}` : `已删除 ${team.name}，可撤回最近 2 次队伍删除。`);
+  } catch (error) {
+    toast(`操作未完成：${error.message} 队伍与撤回记录已保留。`);
+  }
+}
 
 function normalizeTeamNames() {
   const formerExamples = { 'team-1': '今汐队', 'team-2': '相里要队', 'team-3': '椿队' };
@@ -234,6 +274,7 @@ function confirmDeletePlan() {
     const next = deletePlan(planLibrary, deletingPlanId, fallback);
     // Commit the deletion before changing the visible selection; failure leaves the plan intact.
     localStorage.setItem(LIBRARY_STORAGE, JSON.stringify(next));
+    teamDeletionHistories.delete(deletingPlanId);
     planLibrary = next; deletingPlanId = null;
     $('delete-plan-dialog').close(); enterActivePlan(); toast('排布方案已永久删除。');
   } catch (error) { $('delete-plan-error').textContent = `删除未完成，方案仍保留：${error.message}`; }
@@ -293,6 +334,43 @@ function renderMatrixDetails() {
   $('other-enhancements-count').textContent = `（${$('matrix-enhancements').children.length}）`;
 }
 
+function renderBossPropertiesText(container, boss) {
+  container.replaceChildren();
+  const properties = boss.specialProperties || [];
+  if (!properties.length) container.append(element('p', 'muted', '暂无特殊性质说明。'));
+  else for (const description of properties) container.append(element('p', '', description));
+}
+
+function renderBossPropertiesCatalog() {
+  const catalog = new Map();
+  for (const season of seasonDefinitions) {
+    for (const boss of season.bosses) {
+      const key = `${boss.id}:${JSON.stringify(boss.specialProperties || [])}`;
+      if (!catalog.has(key)) catalog.set(key, { boss, seasons: [] });
+      catalog.get(key).seasons.push(`${season.season}-${season.stage}`);
+    }
+  }
+  const entries = [...catalog.values()];
+  const query = $('boss-properties-search').value.trim().toLowerCase();
+  const matches = entries.filter(({ boss, seasons }) => [boss.name, boss.alias, ...seasons, ...(boss.specialProperties || [])].join(' ').toLowerCase().includes(query));
+  $('boss-properties-count').textContent = `（${entries.length}）`;
+  $('boss-properties-results').textContent = `${matches.length} / ${entries.length} 只 Boss`;
+  $('boss-properties-list').replaceChildren();
+  for (const { boss, seasons } of matches) {
+    const card = element('article', 'boss-property-card');
+    card.dataset.bossId = boss.id;
+    const heading = element('div', 'boss-property-heading');
+    const image = element('img'); image.src = boss.icon_file; image.alt = ''; image.loading = 'lazy';
+    const title = element('div');
+    title.append(element('h4', '', boss.name), element('span', 'muted', seasons.join(' · ')));
+    heading.append(image, title);
+    const copy = element('div', 'boss-properties-copy');
+    renderBossPropertiesText(copy, boss); card.append(heading, copy);
+    $('boss-properties-list').append(card);
+  }
+  if (!matches.length) $('boss-properties-list').append(element('p', 'boss-property-empty muted', '没有找到匹配的 Boss，试试名称、简称或性质关键词。'));
+}
+
 let inspectedBossWave = null;
 function renderBossScoreCalculation() {
   if (!inspectedBossWave) return;
@@ -345,6 +423,7 @@ function openBossDetails(wave) {
   $('boss-resistance-note').hidden = !$('boss-resistance-note').textContent;
   const source = $('boss-resistance-source');
   source.href = resistances?.source || season.source;
+  renderBossPropertiesText($('boss-special-properties-copy'), boss);
   $('boss-hp-percent').value = '100';
   renderBossScoreCalculation();
   $('boss-dialog').showModal();
@@ -476,6 +555,7 @@ function portrait(id, className = 'portrait') {
 }
 
 function renderList() {
+  renderTeamDeletionControls();
   $('team-list').replaceChildren();
   $('team-count').textContent = state.teams.length;
   for (const team of state.teams) {
@@ -503,7 +583,8 @@ function renderEditor() {
   $('delete-team').disabled = !team;
   $('team-name').value = team?.name || '';
   $('team-score').value = team?.needsScore ? '' : team?.score ?? '';
-  $('team-start').value = team ? Math.round(team.startScore * 100) / 100 : '';
+  $('team-start').value = team ? Math.round(axisEntry(team).axisStartScore * 100) / 100 : '';
+  $('team-start-mode').textContent = team && axisEntry(team).positionIsPreview ? '预览起点' : '自动衔接';
   $('selected-characters').replaceChildren();
   for (let slot = 0; slot < (team ? 3 : 0); slot++) {
     const id = team.characterIds[slot];
@@ -528,6 +609,13 @@ function renderLocation(node, position) {
   const value = `${fmt(position.remainingPoints)} 分`;
   const offset = text.lastIndexOf(value);
   node.replaceChildren(document.createTextNode(text.slice(0, offset)), element('span', 'remaining-score-value', value));
+}
+
+function renderAxisLocation(node, score, preview) {
+  if (!hasBloodline()) node.textContent = 'Boss 血线待配置';
+  else if (score > total() + 1e-7) node.textContent = '超出当前显示血线';
+  else renderLocation(node, locateScore(Math.min(score, total()), waves()));
+  if (preview) node.prepend(element('span', 'axis-preview-tag', '预览 · '));
 }
 
 function renderScoreMarker() {
@@ -573,7 +661,8 @@ function showTeamTooltip(team, x, y) {
   tooltip.replaceChildren();
   tooltip.style.setProperty('--team-color', team.color);
   const title = element('div', 'tooltip-title', team.name);
-  title.append(element('strong', '', `${fmt(team.score)} 分`));
+  const display = axisEntry(team);
+  title.append(element('strong', '', team.needsScore ? `待填分数 · ${fmt(PENDING_TEAM_SCORE)} 分预览` : `${fmt(team.score)} 分`));
   const roster = element('div', 'tooltip-roster');
   team.characterIds.forEach(id => {
     const member = element('div', 'tooltip-member');
@@ -582,12 +671,11 @@ function showTeamTooltip(team, x, y) {
   });
   if (team.needsCharacters) roster.append(element('span', 'muted', '阵容待补选'));
   tooltip.append(title, roster);
-  for (const [label, score] of [['起点', team.startScore], ['终点', team.startScore + team.score]]) {
+  for (const [label, score] of [['起点', display.axisStartScore], ['终点', display.axisStartScore + display.axisScore]]) {
     const detail = element('div', 'tooltip-detail');
     const location = element('strong');
-    if (hasBloodline()) renderLocation(location, locateScore(score, waves()));
-    else location.textContent = 'Boss 血线待配置';
-    detail.append(element('span', 'muted', label), location, element('small', '', `累计 ${fmt(score)} 分`));
+    renderAxisLocation(location, score, display.positionIsPreview);
+    detail.append(element('span', 'muted', label), location, element('small', '', `${display.positionIsPreview ? '预览累计' : '累计'} ${fmt(score)} 分`));
     tooltip.append(detail);
   }
   tooltip.hidden = false;
@@ -608,54 +696,49 @@ function renderInspector() {
   }
   if (team?.needsCharacters) $('selection-roster').append(element('span', 'muted', '阵容待补选'));
   $('selection-score').replaceChildren();
-  if (team?.needsScore) {
-    $('selection-score').textContent = '待填分数';
-    $('selection-score').style.color = team.color;
-    $('selection-dot').style.background = team.color;
-    $('start-location').textContent = '填写分数后显示';
-    $('end-location').textContent = '填写分数后显示';
-    $('start-points').textContent = '';
-    $('end-points').textContent = '';
-    $('endpoint-note').textContent = '队伍已加入序列。双击待填队伍，或在左侧填写分数后，显示对应的血线长度。';
-    $('endpoint-note').parentElement.classList.remove('warning');
-    return;
-  }
   if (!team) {
     for (const id of ['start-location', 'end-location', 'start-points', 'end-points', 'endpoint-note']) $(id).textContent = '—';
     return;
   }
   $('selection-dot').style.background = team.color;
   $('selection-score').style.color = team.color;
-  $('selection-score').append(document.createTextNode(fmt(team.score)), element('small', '', '分'));
-  const start = hasBloodline() ? locateScore(team.startScore, waves()) : null;
-  const end = hasBloodline() ? locateScore(team.startScore + team.score, waves()) : null;
-  if (start && end) { renderLocation($('start-location'), start); renderLocation($('end-location'), end); }
-  else { $('start-location').textContent = 'Boss 血线待配置'; $('end-location').textContent = 'Boss 血线待配置'; }
-  $('start-points').textContent = `累计 ${fmt(team.startScore)} 分`;
-  $('end-points').textContent = `累计 ${fmt(team.startScore + team.score)} 分`;
+  if (team.needsScore) $('selection-score').textContent = `待填分数 · ${fmt(PENDING_TEAM_SCORE)} 分预览`;
+  else $('selection-score').append(document.createTextNode(fmt(team.score)), element('small', '', '分'));
+  const display = axisEntry(team);
+  const begin = display.axisStartScore, finish = begin + display.axisScore;
+  const start = hasBloodline() && begin <= total() ? locateScore(begin, waves()) : null;
+  const end = hasBloodline() && finish <= total() ? locateScore(finish, waves()) : null;
+  renderAxisLocation($('start-location'), begin, display.positionIsPreview);
+  renderAxisLocation($('end-location'), finish, display.positionIsPreview);
+  const cumulativeLabel = display.positionIsPreview ? '预览累计' : '累计';
+  $('start-points').textContent = `${cumulativeLabel} ${fmt(begin)} 分`;
+  $('end-points').textContent = `${cumulativeLabel} ${fmt(finish)} 分`;
   const bonus = Boolean(start?.inBonus || end?.inBonus);
-  $('endpoint-note').textContent = bonus ? '端点落在矩阵奇藏奖励区，此区间没有可停留的血线。调整本队或前序队伍得分可改变终点。' : '第一队从 0 分开始，队伍之间首尾相接。拖动色条或按左右键调整出场顺序。';
+  $('endpoint-note').textContent = team.needsScore ? `本队暂按 ${fmt(PENDING_TEAM_SCORE)} 分预览。双击队伍或在左侧填写实际分数后，血线长度会重新计算。` : display.positionIsPreview ? `前序队伍有待填分数，起止位置按每队 ${fmt(PENDING_TEAM_SCORE)} 分占位预览。` : bonus ? '端点落在矩阵奇藏奖励区，此区间没有可停留的血线。调整本队或前序队伍得分可改变终点。' : '第一队从 0 分开始，队伍之间首尾相接。拖动色条或按左右键调整出场顺序。';
   $('endpoint-note').parentElement.classList.toggle('warning', bonus);
 }
 
 function renderPositions() {
+  const layout = axisTeams();
   for (const bar of document.querySelectorAll('.team-bar')) {
-    const team = state.teams.find(item => item.id === bar.dataset.id);
-    bar.style.left = `${LABEL + team.startScore * state.pixelsPerPoint}px`;
+    const team = layout.find(item => item.id === bar.dataset.id);
+    bar.style.left = `${LABEL + team.axisStartScore * state.pixelsPerPoint}px`;
     bar.classList.toggle('is-selected', team.id === selectedId);
-    bar.setAttribute('aria-valuenow', team.startScore.toFixed(2));
-    bar.setAttribute('aria-valuetext', `起点 ${fmt(team.startScore)} 分，终点 ${fmt(team.startScore + team.score)} 分`);
+    bar.setAttribute('aria-valuenow', team.axisStartScore.toFixed(2));
+    bar.setAttribute('aria-valuetext', `${team.positionIsPreview ? '预览，' : ''}起点 ${fmt(team.axisStartScore)} 分，终点 ${fmt(team.axisStartScore + team.axisScore)} 分${team.needsScore ? '，待填实际分数' : ''}`);
   }
   const team = current();
   for (const card of document.querySelectorAll('.pending-team')) card.classList.toggle('active', card.dataset.id === selectedId);
   for (const guide of document.querySelectorAll('.axis-guide')) {
-    guide.hidden = !team || team.needsScore;
+    guide.hidden = !team;
     if (team) {
-      guide.style.left = `${LABEL + (team.startScore + (guide.classList.contains('end') ? team.score : 0)) * state.pixelsPerPoint}px`;
+      const display = layout.find(item => item.id === team.id);
+      guide.classList.toggle('preview', display.positionIsPreview);
+      guide.style.left = `${LABEL + (display.axisStartScore + (guide.classList.contains('end') ? display.axisScore : 0)) * state.pixelsPerPoint}px`;
       guide.style.setProperty('--guide-color', team.color);
     }
   }
-  if (team && !document.activeElement?.closest('#team-form')) $('team-start').value = Math.round(team.startScore * 100) / 100;
+  if (team && !document.activeElement?.closest('#team-form')) $('team-start').value = Math.round(axisEntry(team).axisStartScore * 100) / 100;
   renderInspector();
 }
 
@@ -667,7 +750,8 @@ function startDrag(event, team, bar) {
   hideTeamTooltip();
   renderList(); renderEditor(); renderPositions();
   const initialX = event.clientX;
-  const initialStart = team.startScore;
+  const displayTeams = axisTeams().map(item => ({ ...item, score: item.axisScore, startScore: item.axisStartScore }));
+  const initialStart = displayTeams.find(item => item.id === team.id).startScore;
   const initialIndex = state.teams.findIndex(item => item.id === team.id);
   let targetIndex = initialIndex;
   let moved = false;
@@ -682,8 +766,8 @@ function startDrag(event, team, bar) {
     if (moveEvent.clientX > bounds.right - 38) viewport.scrollLeft += 16;
     if (moveEvent.clientX < bounds.left + LABEL + 20) viewport.scrollLeft -= 16;
     const deltaX = moveEvent.clientX - initialX + viewport.scrollLeft - initialScroll;
-    targetIndex = nearestTeamSlot(state.teams, team.id, initialStart + deltaX / state.pixelsPerPoint);
-    const proposed = reorderTeams(state.teams, team.id, targetIndex).find(item => item.id === team.id);
+    targetIndex = nearestTeamSlot(displayTeams, team.id, initialStart + deltaX / state.pixelsPerPoint);
+    const proposed = reorderTeams(displayTeams, team.id, targetIndex).find(item => item.id === team.id);
     $('team-drop-marker').hidden = false;
     $('team-drop-marker').style.left = `${LABEL + proposed.startScore * state.pixelsPerPoint}px`;
     $('team-drop-marker').textContent = `第 ${targetIndex + 1} 队`;
@@ -709,7 +793,7 @@ function renderTimeline() {
   hideTeamTooltip();
   const sheet = $('axis-sheet');
   sheet.replaceChildren();
-  sheet.style.width = `${LABEL + total() * state.pixelsPerPoint + 24}px`;
+  sheet.style.width = `${LABEL + axisExtent() * state.pixelsPerPoint + 24}px`;
   const ruler = element('div', 'score-ruler');
   ruler.append(element('div', 'axis-label', '累计积分'));
   sheet.append(ruler);
@@ -717,10 +801,13 @@ function renderTimeline() {
   const laneLabel = element('div', 'axis-label', '队伍排布');
   laneLabel.append(element('small', '', '悬停查看 · 拖动排序'));
   lane.append(laneLabel);
-  state.teams.filter(team => !team.needsScore).forEach(team => {
-    const width = team.score * state.pixelsPerPoint;
-    const bar = element('button', `team-bar${width < 150 ? ' narrow' : ''}`);
+  axisTeams().forEach(team => {
+    const width = team.axisScore * state.pixelsPerPoint;
+    const bar = element('button', `team-bar${width < 150 ? ' narrow' : ''}${team.needsScore ? ' pending-score-bar' : ''}`);
     bar.dataset.id = team.id;
+    bar.dataset.preview = String(Boolean(team.needsScore));
+    bar.dataset.axisScore = team.axisScore;
+    bar.dataset.estimatedPosition = String(team.positionIsPreview);
     bar.classList.toggle('stamina-conflicted', conflictTeamIds.has(team.id));
     bar.style.width = `${width}px`;
     if (width < 40) bar.style.paddingInline = '0';
@@ -732,11 +819,11 @@ function renderTimeline() {
     bar.setAttribute('aria-describedby', 'team-tooltip');
     bar.setAttribute('aria-label', `${team.name}分数条`);
     bar.setAttribute('aria-valuemin', '0');
-    bar.setAttribute('aria-valuemax', Math.max(0, total() - team.score));
+    bar.setAttribute('aria-valuemax', Math.max(0, axisExtent() - team.axisScore));
     const portraits = element('div', 'bar-portraits');
     team.characterIds.forEach(id => portraits.append(portrait(id)));
     const text = element('div');
-    text.append(element('strong', '', team.name), element('div', 'bar-score', `${fmt(team.score)} 分`));
+    text.append(element('strong', '', team.name), element('div', 'bar-score', team.needsScore ? `待填 · ${fmt(PENDING_TEAM_SCORE)} 分预览` : `${fmt(team.score)} 分`));
     bar.append(portraits, text, element('span', 'bar-grip', '⠿'));
     bar.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') showTeamTooltip(team, event.clientX, event.clientY); });
     bar.addEventListener('pointermove', event => { if (!dragging && !$('team-tooltip').hidden) positionTeamTooltip(event.clientX, event.clientY); });
@@ -767,7 +854,7 @@ function renderTimeline() {
     });
     lane.append(bar);
   });
-  if (!state.teams.some(team => !team.needsScore)) lane.append(element('div', 'lane-empty', '填写队伍分数后，在此显示血线长度'));
+  if (!state.teams.length) lane.append(element('div', 'lane-empty', '新建队伍后，在此显示血线长度'));
   const dropMarker = element('div', 'team-drop-marker');
   dropMarker.id = 'team-drop-marker'; dropMarker.hidden = true;
   lane.append(dropMarker); sheet.append(lane);
@@ -841,7 +928,7 @@ function renderRulerTicks() {
   const viewport = $('timeline-viewport');
   const step = axisTickStep(state.pixelsPerPoint);
   const first = Math.max(0, Math.floor((viewport.scrollLeft - 180) / state.pixelsPerPoint / step) * step);
-  const last = Math.min(total(), (viewport.scrollLeft + viewport.clientWidth - LABEL + 180) / state.pixelsPerPoint);
+  const last = Math.min(axisExtent(), (viewport.scrollLeft + viewport.clientWidth - LABEL + 180) / state.pixelsPerPoint);
   for (let value = first; value <= last; value += step) {
     const tick = element('div', 'ruler-tick');
     tick.style.left = `${LABEL + value * state.pixelsPerPoint}px`;
@@ -891,7 +978,7 @@ function renderPendingTeams() {
   container.hidden = pending.length === 0;
   container.replaceChildren();
   if (!pending.length) return;
-  container.append(element('p', 'pending-title', `待填分数 · ${pending.length} 队（双击补分）`));
+  container.append(element('p', 'pending-title', `待填分数 · ${pending.length} 队（轴上按每队 ${fmt(PENDING_TEAM_SCORE)} 分预览，双击补分）`));
   const list = element('div', 'pending-team-list');
   for (const team of pending) {
     const card = element('button', `pending-team${team.id === selectedId ? ' active' : ''}`);
@@ -966,7 +1053,7 @@ function openCharacters() {
   dialogAutoName = Boolean(pendingTeam) || team.nameMode === 'auto';
   $('dialog-team-name').value = pendingTeam ? '' : team.name;
   $('dialog-team-score').value = pendingTeam || team.needsScore ? '' : team.score;
-  $('dialog-team-score').placeholder = team.needsScore ? '可稍后填写' : '填写本队分数';
+  $('dialog-team-score').placeholder = pendingTeam || team.needsScore ? '可稍后填写（5,000分预览）' : '填写本队分数';
   $('dialog-title').textContent = pendingTeam ? '新建队伍' : '编辑队伍';
   $('confirm-characters').textContent = pendingTeam ? '创建队伍' : '保存队伍';
   picked = [...team.characterIds];
@@ -1087,11 +1174,9 @@ $('add-team').addEventListener('click', () => {
   pendingTeam = { id: crypto.randomUUID(), name: '', nameMode: 'auto', characterIds: [], score: 0, startScore: end, color: COLORS[state.teams.length % COLORS.length] };
   openCharacters();
 });
-$('delete-team').addEventListener('click', () => {
-  state.teams = state.teams.filter(team => team.id !== selectedId);
-  state.teams = packTeams(state.teams);
-  selectedId = state.teams[0]?.id; persist(); renderAll();
-});
+$('delete-team').addEventListener('click', () => changeTeamDeletion('delete'));
+$('undo-team-delete').addEventListener('click', () => changeTeamDeletion('undo'));
+$('redo-team-delete').addEventListener('click', () => changeTeamDeletion('redo'));
 $('confirm-characters').addEventListener('click', () => {
   if (quickSession) {
     const sequence = quickSequence();
@@ -1111,7 +1196,7 @@ $('confirm-characters').addEventListener('click', () => {
   if (!team) return;
   const name = $('dialog-team-name').value.trim() || defaultTeamName(picked, characterMap);
   const scoreText = $('dialog-team-score').value.trim();
-  const awaitingScore = !pendingTeam && team.needsScore === true && !scoreText;
+  const awaitingScore = (Boolean(pendingTeam) || team.needsScore === true) && !scoreText;
   const score = Number(scoreText);
   if (!name || name.length > 30) { $('character-feedback').textContent = '请填写 1—30 个字符的队伍名称。'; $('dialog-team-name').focus(); return; }
   if (!awaitingScore && (!scoreText || !Number.isFinite(score) || score <= 0)) { $('character-feedback').textContent = '请填写大于 0 的队伍分数。'; $('dialog-team-score').focus(); return; }
@@ -1190,7 +1275,7 @@ function updateZoomControls() {
   $('zoom-level').title = '缩小可看到更长的排布，放大可查看细节';
 }
 function fitAxis(entireBloodline) {
-  const points = entireBloodline ? total() : state.teams.reduce((sum, team) => sum + team.score, 0) || waves()[0]?.full_kill_points || 10000;
+  const points = entireBloodline ? total() : axisTeamPoints() || waves()[0]?.full_kill_points || 10000;
   const available = Math.max(30, $('timeline-viewport').clientWidth - LABEL - 28);
   state.pixelsPerPoint = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, available / points));
   renderAll(); $('timeline-viewport').scrollLeft = 0; persist();
@@ -1200,7 +1285,7 @@ $('fit-bloodline').addEventListener('click', () => fitAxis(true));
 $('zoom').addEventListener('input', event => setZoom(Number(event.target.value)));
 $('zoom-in').addEventListener('click', () => setZoom(state.pixelsPerPoint * 1.5));
 $('zoom-out').addEventListener('click', () => setZoom(state.pixelsPerPoint / 1.5));
-$('jump-selected').addEventListener('click', () => { const team = current(); if (team) $('timeline-viewport').scrollTo({ left: Math.max(0, team.startScore * state.pixelsPerPoint - 25), behavior: 'smooth' }); });
+$('jump-selected').addEventListener('click', () => { const team = current(); if (team) $('timeline-viewport').scrollTo({ left: Math.max(0, axisEntry(team).axisStartScore * state.pixelsPerPoint - 25), behavior: 'smooth' }); });
 $('score-locator').addEventListener('submit', event => {
   event.preventDefault();
   const text = $('target-score').value.trim();
@@ -1212,7 +1297,7 @@ $('score-locator').addEventListener('submit', event => {
   persist(); renderAll(); scrollToScore(value);
 });
 $('clear-score-marker').addEventListener('click', () => { state.scoreMarker = null; persist(); renderScoreMarker(); });
-$('load-example').addEventListener('click', () => { state = structuredClone(example); pendingStaminaSeason = null; if (!libraryRecoveryLocked) restoreError = null; renderRestoreWarning(); selectedId = state.teams[0].id; persist(); renderAll(); $('timeline-viewport').scrollLeft = 0; toast('已恢复示例排布'); });
+$('load-example').addEventListener('click', () => { teamDeletionHistories.delete(planLibrary.activePlanId); state = structuredClone(example); pendingStaminaSeason = null; if (!libraryRecoveryLocked) restoreError = null; renderRestoreWarning(); selectedId = state.teams[0].id; persist(); renderAll(); $('timeline-viewport').scrollLeft = 0; toast('已恢复示例排布'); });
 $('export-button').addEventListener('click', () => {
   downloadPlanConfig(state, activePlan().name);
 });
@@ -1253,6 +1338,7 @@ $('close-plan-dialog').addEventListener('click', () => $('plan-dialog').close())
 $('close-copy-config').addEventListener('click', () => $('copy-config-dialog').close());
 $('close-boss-dialog').addEventListener('click', () => $('boss-dialog').close());
 $('boss-hp-percent').addEventListener('input', renderBossScoreCalculation);
+$('boss-properties-search').addEventListener('input', renderBossPropertiesCatalog);
 $('boss-dialog').addEventListener('close', () => { inspectedBossWave = null; });
 $('select-copy-config').addEventListener('click', () => { $('copy-config-text').focus(); $('copy-config-text').select(); });
 $('plan-form').addEventListener('submit', event => {
@@ -1287,6 +1373,7 @@ $('stamina-season').addEventListener('change', () => {
 $('zoom').min = MIN_ZOOM;
 $('zoom').max = MAX_ZOOM;
 renderElementFilters();
+renderBossPropertiesCatalog();
 renderAll();
 renderRestoreWarning();
 if (!restoreError) persist();

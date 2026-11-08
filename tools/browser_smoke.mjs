@@ -130,8 +130,18 @@ try {
   await page.getByRole('button', { name: '鉴心', exact: true }).click();
   assert.equal(await page.locator('#picked-count').innerText(), '3 / 3');
   await page.locator('#confirm-characters').click();
-  assert.match(await page.locator('#character-feedback').innerText(), /大于 0/);
-  assert.equal(await page.locator('.team-bar').count(), 3);
+  assert.equal(await page.locator('#character-dialog').isVisible(), false);
+  assert.equal(await page.locator('.team-bar').count(), 4);
+  const manualPending = await exported(); connected(manualPending);
+  const manualPendingTeam = manualPending.teams[3];
+  assert.equal(manualPendingTeam.score, 0);
+  assert.equal(manualPendingTeam.needsScore, true);
+  const manualPreview = page.locator(`.team-bar[data-id="${manualPendingTeam.id}"]`);
+  assert.ok(await manualPreview.evaluate(node => node.classList.contains('pending-score-bar')));
+  assert.match(await manualPreview.innerText(), /5,?000/);
+  assert.match(await manualPreview.innerText(), /待填/);
+  await manualPreview.dblclick();
+  assert.equal(await page.locator('#dialog-team-score').inputValue(), '');
   assert.equal(await page.locator('#dialog-team-name').inputValue(), '忌莫鉴');
   await page.locator('#dialog-team-name').fill('气动混合队');
   await page.getByRole('button', { name: '鉴心', exact: true }).click();
@@ -393,10 +403,21 @@ try {
   assert.deepEqual(quickAdded.teams.slice(0, 3), beforeQuick.teams);
   assert.deepEqual(quickAdded.teams.slice(3).map(team => team.characterIds), [['1505', '1404', '1405'], ['1204', '1203', '1103']]);
   assert.ok(quickAdded.teams.slice(3).every(team => team.score === 0 && team.needsScore));
+  connected(quickAdded);
   assert.equal(await page.locator('.pending-team').count(), 2);
-  assert.equal(await page.locator('.team-bar').count(), 3);
+  assert.equal(await page.locator('.team-bar').count(), 5);
+  assert.equal(await page.locator('.team-bar.pending-score-bar').count(), 2);
+  for (const team of quickAdded.teams.slice(3)) {
+    const preview = page.locator(`.team-bar[data-id="${team.id}"]`);
+    assert.match(await preview.innerText(), /5,?000/);
+    assert.match(await preview.innerText(), /待填/);
+    assert.ok(Math.abs((await preview.boundingBox()).width - 5000 * quickAdded.pixelsPerPoint) < 1);
+  }
   await page.reload(); await page.locator('.pending-team').first().waitFor();
   assert.equal(await page.locator('.pending-team').count(), 2);
+  assert.equal(await page.locator('.team-bar').count(), 5);
+  assert.equal(await page.locator('.team-bar.pending-score-bar').count(), 2);
+  assert.deepEqual((await exported()).teams, quickAdded.teams);
   await page.locator('#load-example').click();
   await page.locator('#import-file').setInputFiles({ name: 'quick.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(quickAdded)) });
   await page.locator('.pending-team').first().waitFor();
@@ -405,7 +426,9 @@ try {
   assert.equal(await page.locator('#dialog-team-name').inputValue(), '守忌鉴');
   await page.locator('#dialog-team-score').fill('5000'); await page.locator('#confirm-characters').click();
   assert.equal(await page.locator('.pending-team').count(), 1);
-  assert.equal(await page.locator('.team-bar').count(), 4);
+  assert.equal(await page.locator('.team-bar').count(), 5);
+  assert.equal(await page.locator('.team-bar.pending-score-bar').count(), 1);
+  assert.equal(await page.locator(`.team-bar[data-id="${quickAdded.teams[3].id}"]`).evaluate(node => node.classList.contains('pending-score-bar')), false);
   const filledQuick = await exported();
   assert.equal(filledQuick.teams[3].score, 5000); assert.ok(!filledQuick.teams[3].needsScore);
   await page.locator('#quick-team').click();

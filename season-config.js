@@ -26,6 +26,9 @@ function validateSeason(season, registryId) {
   season.bosses.forEach((boss, index) => {
     requireValue(boss.order === index + 1 && nonempty(boss.id) && !bossIds.has(boss.id), `${registryId} 的 Boss 顺序或 id 无效`);
     requireValue(nonempty(boss.name) && nonempty(boss.alias) && assetPath.test(boss.icon_file), `${registryId} 的 Boss 名称或头像路径无效`);
+    if (boss.specialProperties !== undefined) {
+      requireValue(Array.isArray(boss.specialProperties) && boss.specialProperties.every(nonempty), `${registryId} 的 Boss 特殊性质必须是非空说明文字的数组`);
+    }
     if (boss.resistances !== undefined) {
       const resistance = boss.resistances;
       requireValue(resistance && ['confirmed', 'unconfirmed'].includes(resistance.status) && resistance.values && typeof resistance.values === 'object', `${registryId} 的抗性配置无效`);

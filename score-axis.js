@@ -32,6 +32,94 @@ export function packTeams(teams) {
   });
 }
 
+export const PENDING_TEAM_SCORE = 5000;
+
+export function layoutTeamPreviews(teams) {
+  let cursor = 0;
+  let pendingBefore = false;
+  return teams.map(team => {
+    const pending = team.needsScore === true;
+    const axisScore = pending ? PENDING_TEAM_SCORE : team.score;
+    const preview = {
+      ...structuredClone(team),
+      axisScore,
+      axisStartScore: cursor,
+      positionIsPreview: pendingBefore || pending,
+    };
+    cursor += axisScore;
+    pendingBefore ||= pending;
+    return preview;
+  });
+}
+
+const TEAM_DELETION_HISTORY_LIMIT = 2;
+
+export function createTeamDeletionHistory() {
+  return { undo: [], redo: [] };
+}
+
+function copyTeamDeletionInputs(teams, history) {
+  if (!Array.isArray(teams) || !history || !Array.isArray(history.undo) || !Array.isArray(history.redo)) throw new Error('队伍删除记录无效');
+  const ids = new Set();
+  for (const team of teams) {
+    if (!team || typeof team.id !== 'string' || !team.id || ids.has(team.id)) throw new Error('队伍 ID 无效或重复');
+    ids.add(team.id);
+  }
+  for (const stack of [history.undo, history.redo]) {
+    if (stack.length > TEAM_DELETION_HISTORY_LIMIT) throw new Error('队伍删除记录超出两次上限');
+    for (const record of stack) {
+      if (!record?.team || typeof record.team.id !== 'string' || !record.team.id || !Number.isInteger(record.index) || record.index < 0
+          || ![record.beforeId, record.afterId].every(id => id === null || (typeof id === 'string' && id.length > 0 && id !== record.team.id))) throw new Error('队伍删除记录无效');
+    }
+  }
+  return { teams: structuredClone(teams), history: structuredClone(history) };
+}
+
+function teamDeletionRecord(teams, index) {
+  return {
+    team: structuredClone(teams[index]), index,
+    beforeId: teams[index - 1]?.id ?? null,
+    afterId: teams[index + 1]?.id ?? null,
+  };
+}
+
+function appendTeamDeletionRecord(stack, record) {
+  return [...stack, record].slice(-TEAM_DELETION_HISTORY_LIMIT);
+}
+
+export function deleteTeamWithHistory(teams, id, history = createTeamDeletionHistory()) {
+  const next = copyTeamDeletionInputs(teams, history);
+  const index = next.teams.findIndex(team => team.id === id);
+  if (index < 0) throw new Error('找不到要删除的队伍');
+  const record = teamDeletionRecord(next.teams, index);
+  next.teams.splice(index, 1);
+  return { teams: packTeams(next.teams), history: { undo: appendTeamDeletionRecord(next.history.undo, record), redo: [] } };
+}
+
+export function undoTeamDeletion(teams, history) {
+  const next = copyTeamDeletionInputs(teams, history);
+  const record = next.history.undo.pop();
+  if (!record) throw new Error('没有可以撤回的队伍删除');
+  if (next.teams.some(team => team.id === record.team.id)) throw new Error('无法撤回删除：该队伍 ID 已存在');
+  const before = next.teams.findIndex(team => team.id === record.beforeId);
+  const after = next.teams.findIndex(team => team.id === record.afterId);
+  const anchorsReversed = before >= 0 && after >= 0 && before >= after;
+  const index = anchorsReversed ? Math.min(record.index, next.teams.length) : after >= 0 ? after : before >= 0 ? before + 1 : Math.min(record.index, next.teams.length);
+  next.teams.splice(index, 0, structuredClone(record.team));
+  return { teams: packTeams(next.teams), history: { undo: next.history.undo, redo: appendTeamDeletionRecord(next.history.redo, record) } };
+}
+
+export function redoTeamDeletion(teams, history) {
+  const next = copyTeamDeletionInputs(teams, history);
+  const record = next.history.redo.pop();
+  if (!record) throw new Error('没有可以恢复的队伍删除');
+  const index = next.teams.findIndex(team => team.id === record.team.id);
+  if (index < 0) throw new Error('无法恢复删除：对应队伍已不存在');
+  const current = teamDeletionRecord(next.teams, index);
+  next.teams.splice(index, 1);
+  return { teams: packTeams(next.teams), history: { undo: appendTeamDeletionRecord(next.history.undo, current), redo: next.history.redo } };
+}
+
 export function reorderTeams(teams, id, targetIndex) {
   const ordered = [...teams];
   const index = ordered.findIndex(team => team.id === id);

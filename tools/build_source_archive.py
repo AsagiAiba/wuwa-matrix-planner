@@ -31,6 +31,7 @@ REQUIRED_FILES = {
     'config/seasons/s2-3.json', 'config/seasons/s2-4.json',
     'data/matrix_content_16.json', 'data/matrix_content_18.json',
     'tools/boss_details_smoke.mjs', 'tools/matrix_plans_smoke.mjs',
+    'tools/boss_properties_smoke.mjs', 'tools/pending_delete_smoke.mjs',
     'tests/season-config.test.mjs',
 }
 BROWSER_FILE_LIMIT = 25 * 1024 * 1024
@@ -98,14 +99,14 @@ def upload_guide(version, short_version, core_count, asset_count):
 1. 源码两批都提交后，进入仓库的 Releases，点 Draft a new release。
 2. 新建标签 v{version}，Target 选择 main，标题填写 V{short_version}。
 3. 说明正文可复制 dist 下的 V{short_version}发布说明.txt；附件上传 WuwaMatrixPlanner-v{version}-win-x64.zip 和 SHA256SUMS.txt。需要时也可附上 WuwaMatrixPlanner-v{version}-source.zip。
-4. 确认文件已传完后点 Publish release。原来的 V0.1 Release 保留即可。
+4. 确认文件已传完后点 Publish release。旧版本的 Release 保留即可。
 
 软件 ZIP 放在 Release 附件里，不要放到源码根目录。源码压缩包不含 Node.js 运行时；给普通用户下载的是 win-x64 软件包。
 
 三、升级自己的排布
 先在旧版逐套导出需要保留的排布 JSON，再从系统托盘选择“退出软件”。将 V{short_version} 完整解压到新目录运行；若旧排布没有自动出现，可在新版本逐套导入 JSON。
 
-本次源码包包含两个赛季的 JSON、增益图标、Boss 详情窗口、队伍排布库及相关检查脚本；未打包浏览器个人数据、个人排布导出、运行日志或原始网页快照。
+本次源码包包含两个赛季的 JSON、增益图标、Boss 特殊性质与搜索、5000 分待填队伍预览、两步队伍删除撤回和恢复、队伍排布库及相关检查脚本；未打包浏览器个人数据、个人排布导出、运行日志或原始网页快照。
 
 GitHub 官方说明：
 上传文件：{UPLOAD_DOC}
@@ -122,7 +123,8 @@ def main():
     version = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))['version']
     if not re.fullmatch(r'\d+\.\d+\.\d+', version):
         raise ValueError('Expected numeric major.minor.patch package version')
-    short_version = '.'.join(version.split('.')[:2])
+    # Patch releases need their own upload folder and full visible version.
+    short_version = version if int(version.split('.')[2]) else '.'.join(version.split('.')[:2])
     files = source_files()
     core = [name for name in files if not name.startswith('assets/')]
     assets = [name for name in files if name.startswith('assets/')]

@@ -4,7 +4,7 @@ $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $package = Get-Content -LiteralPath (Join-Path $projectRoot 'package.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $version = $package.version
 $parsedVersion = [version]$version
-$displayVersion = "V$($parsedVersion.Major).$($parsedVersion.Minor)"
+$displayVersion = if ($parsedVersion.Build -gt 0) { "V$version" } else { "V$($parsedVersion.Major).$($parsedVersion.Minor)" }
 if (-not $ReleaseDirectory) { $ReleaseDirectory = Join-Path $projectRoot "dist\WuwaMatrixPlanner-v$version-win-x64" }
 $ReleaseDirectory = [IO.Path]::GetFullPath($ReleaseDirectory)
 $manifest = Get-Content -LiteralPath (Join-Path $ReleaseDirectory 'release-manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -49,7 +49,9 @@ try {
     $serverProcessId = [int]$health.pid
     $baseUrl = "http://127.0.0.1:$testPort"
     $html = (Invoke-WebRequest -Uri $baseUrl -UseBasicParsing).Content
-    if (-not $html.Contains($displayVersion)) { throw 'Version badge not present.' }
+    $expectedTitle = "<title>终焉矩阵血线排布 $displayVersion</title>"
+    $expectedBadge = "<span class=`"brand-sub`">血线排布 / $displayVersion</span>"
+    if (-not $html.Contains($expectedTitle) -or -not $html.Contains($expectedBadge)) { throw 'Packaged title or version badge does not exactly match the release version.' }
     $scores = Invoke-RestMethod -Uri "$baseUrl/data/scores.json"
     if ($scores.records.Count -ne 75 -or $scores.max_round -ne 15) { throw 'Score data mismatch.' }
     $registry = Invoke-RestMethod -Uri "$baseUrl/config/seasons.json"
@@ -75,7 +77,7 @@ try {
     $env:MATRIX_URL = $baseUrl
     Push-Location $projectRoot
     try {
-        foreach ($script in @('tools/browser_smoke.mjs','tools/matrix_plans_smoke.mjs','tools/boss_details_smoke.mjs')) {
+        foreach ($script in @('tools/browser_smoke.mjs','tools/matrix_plans_smoke.mjs','tools/boss_details_smoke.mjs','tools/boss_properties_smoke.mjs','tools/pending_delete_smoke.mjs')) {
             & $sourceNode $script
             if ($LASTEXITCODE -ne 0) { throw "Packaged browser checks failed: $script" }
         }

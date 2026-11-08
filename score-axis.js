@@ -126,7 +126,8 @@ export function validateConfig(value, characterIds, records, identityById = new 
   const total = matrix.scoreReady ? visibleWaves(records, Math.min(value.maxRound, maxRound)).at(-1).cumulative_points_after : Number.MAX_SAFE_INTEGER;
   const ids = new Set();
   const usedCharacters = new Map();
-  const limits = staminaLimits(staminaRules, value.staminaSeason, identityById);
+  const staminaSeason = value.staminaSeason || matrix.id;
+  const limits = staminaLimits(staminaRules, staminaSeason, identityById);
   let combinedScore = 0;
   for (const team of value.teams) {
     if (typeof team.id !== 'string' || !team.id || ids.has(team.id)) throw new Error('队伍 ID 须唯一');
@@ -144,6 +145,8 @@ export function validateConfig(value, characterIds, records, identityById = new 
       if (!options.allowStaminaConflicts && count > (limits.get(identity) || staminaRules?.defaultStamina || 1)) throw new Error('角色体力不足，不能重复上阵到更多队伍');
       usedCharacters.set(identity, count);
     }
+    if (Object.hasOwn(team, 'needsScore') && typeof team.needsScore !== 'boolean') throw new Error('待填分数标记须为布尔值');
+    if (team.needsScore === true && team.score !== 0) throw new Error('待填分数的队伍分数须为 0');
     const awaitingScore = team.needsScore === true && team.score === 0;
     if (!Number.isFinite(team.score) || team.score < 0 || (!awaitingScore && team.score === 0) || team.score > total || !Number.isFinite(team.startScore) || team.startScore < 0 || team.startScore + team.score > total + 1e-7) throw new Error('队伍分数或起点超出当前血线轴');
     if (!/^#[\da-f]{6}$/i.test(team.color)) throw new Error('队伍颜色格式无效');
@@ -155,7 +158,7 @@ export function validateConfig(value, characterIds, records, identityById = new 
   normalized.matrixSeason = matrix.id;
   normalized.matrixVersion = matrix.name;
   normalized.pixelsPerPoint = Math.max(MIN_ZOOM, normalized.pixelsPerPoint);
-  if (staminaRules) normalized.staminaSeason = value.staminaSeason || matrix.id;
+  if (staminaRules) normalized.staminaSeason = staminaSeason;
   normalized.teams = packTeams(normalized.teams);
   if (matrix.scoreReady && normalized.scoreMarker != null) normalized.maxRound = Math.max(normalized.maxRound, records.find(wave => wave.cumulative_points_after >= normalized.scoreMarker).round);
   return normalized;

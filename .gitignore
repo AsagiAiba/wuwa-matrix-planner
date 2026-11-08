@@ -1,0 +1,21 @@
+# Generated builds, releases and test output.
+/build/
+/dist/
+/outputs/
+/runtime/
+/data/raw/
+
+# Local browser data, caches and development environments.
+/user-data/
+/cache/
+/.cache/
+/temp/
+/.venv/
+/venv/
+node_modules/
+__pycache__/
+*.py[cod]
+
+# Local automation state.
+/.codex/
+/.agents/

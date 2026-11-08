@@ -103,7 +103,16 @@ def main():
         raise ValueError('Expected 75 S2-3 reference waves through R15')
     stamina = read_json('config/stamina.json')
     for tower_id, filename in ((16, 's2-3.json'), (18, 's2-4.json')):
-        write_new_file(ROOT / 'config' / 'seasons' / filename, make_season(tower_id, reference, stamina), args.force)
+        path = ROOT / 'config' / 'seasons' / filename
+        season = make_season(tower_id, reference, stamina)
+        if args.force and path.exists():
+            existing = json.loads(path.read_text(encoding='utf-8'))
+            # Resistances are maintained in the season file, not in the source Boss catalog.
+            resistances = {boss['id']: boss['resistances'] for boss in existing.get('bosses', []) if 'resistances' in boss}
+            for boss in season['bosses']:
+                if boss['id'] in resistances:
+                    boss['resistances'] = copy.deepcopy(resistances[boss['id']])
+        write_new_file(path, season, args.force)
     registry = {
         'version': 1,
         'defaultSeason': 's2-phase3',

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>终焉矩阵血线排布 V0.1</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="./"><span class="brand-symbol">M</span><span>终焉矩阵<span class="brand-sub">血线排布 / V0.1</span></span></a>
+    <div class="header-actions"><span class="stage-label">S2 第三阶段 · 奇点扩张</span><button id="import-button" class="quiet">导入 JSON</button><button id="export-button">导出 JSON <span aria-hidden="true">↗</span></button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
+  </header>
+  <main>
+    <aside class="sidebar">
+      <div class="section-heading"><div><span class="eyebrow">TEAM SETUP</span><h2>我的队伍</h2></div><span id="team-count" class="count">3</span></div>
+      <p class="muted intro">三人一队，用得分确定色条长度。</p>
+      <div class="stamina-settings">
+        <label for="stamina-season">体力期数</label><select id="stamina-season" aria-label="体力期数"></select>
+        <p id="stamina-season-note" class="muted"></p>
+        <small class="muted">此处切换体力规则，血线仍使用本期数据。</small>
+      </div>
+      <div id="team-list" class="team-list"></div>
+      <button id="add-team" class="add-team">＋ 新建队伍</button>
+      <button id="quick-team" class="quick-team-button">快捷组队 · 连续选人</button>
+      <div class="editor-heading"><h3>队伍设置</h3><button id="delete-team" class="text-button">删除</button></div>
+      <form id="team-form" class="team-form">
+        <label>队伍名称<input id="team-name" maxlength="30" autocomplete="off" required></label>
+        <div><span class="field-label">上阵角色 <span class="muted">点击更换</span></span><div id="selected-characters" class="selected-characters"></div></div>
+        <label>本队分数<div class="input-unit"><input id="team-score" type="number" min="0.01" step="any" required><span>分</span></div></label>
+        <label>起点累计积分 <span class="muted">自动衔接</span><div class="input-unit"><input id="team-start" type="number" readonly aria-readonly="true"><span>分</span></div></label>
+        <button type="submit" class="primary" id="apply-team">应用到血线轴</button>
+      </form>
+      <div class="sidebar-footer"><span class="save-dot"></span><span id="save-state">配置自动保存在此浏览器</span><button id="load-example" class="text-button">恢复示例</button></div>
+    </aside>
+    <section class="workspace">
+      <div class="workspace-heading"><div><span class="eyebrow">SCORE × HP</span><h1>血线排布</h1><p class="muted">队伍首尾相接，拖动色条调整出场顺序。</p></div><div class="origin"><span>起始位置</span><strong>R1 <span>燎照之骑 · 100%</span></strong></div></div>
+      <div class="timeline-card">
+        <div class="timeline-toolbar"><div class="legend"><span class="legend-line"></span>分数条与 Boss 血线共用积分刻度</div><div class="view-controls"><label for="max-round">显示至</label><select id="max-round"></select><span class="control-divider"></span><button id="zoom-out" title="缩小" aria-label="缩小">−</button><input id="zoom" aria-label="时间轴缩放" type="range" min="0.000001" max="0.24" step="0.000001"><span id="zoom-level" class="zoom-level">100%</span><button id="zoom-in" title="放大" aria-label="放大">＋</button><button id="fit-teams" class="quiet">全部队伍</button><button id="fit-bloodline" class="quiet">全部血线</button><button id="jump-selected" class="quiet">定位选中队伍</button></div></div>
+        <form id="score-locator" class="score-locator">
+          <label for="target-score">目标总分</label><div class="input-unit"><input id="target-score" aria-label="目标总分" type="number" min="0" step="any" placeholder="填写目标总分" required><span>分</span></div>
+          <button type="submit" id="locate-score">定位并标记</button><button type="button" id="clear-score-marker" class="quiet">清除标记</button>
+          <span id="target-score-location" role="status" class="muted"></span>
+        </form>
+        <div id="timeline-viewport" class="timeline-viewport" tabindex="0" aria-label="可横向滚动的 Boss 血线轴"><div id="axis-sheet" class="axis-sheet"></div></div>
+        <div class="timeline-footer"><span>↔ 横向滚动查看后续 Boss　<span class="desktop-hint">拖动或按 ← → 调整队伍顺序</span></span><span id="coverage-note"></span></div>
+      </div>
+      <section id="pending-teams" class="pending-teams" hidden aria-label="待填分数的队伍"></section>
+      <section class="inspector" aria-live="polite"><div class="inspector-title"><span class="selection-dot" id="selection-dot"></span><h2 id="selection-name">选中队伍</h2><div id="selection-roster" class="selection-roster" aria-label="当前队伍角色"></div><strong id="selection-score"></strong></div><div class="endpoints"><div class="endpoint"><span class="eyebrow">START / 起点</span><strong id="start-location">—</strong><span id="start-points" class="muted"></span></div><div class="endpoint-arrow">→</div><div class="endpoint"><span class="eyebrow">END / 终点</span><strong id="end-location">—</strong><span id="end-points" class="muted"></span></div><div class="endpoint-note"><span id="endpoint-note"></span></div></div></section>
+      <div class="usage-note"><span class="note-number">01</span><span>填写得分，后续队伍自动首尾衔接。</span><span class="note-number">02</span><span>拖动排序，第一队始终从 0 分开始。</span><span class="note-number">03</span><span>斜纹为矩阵奇藏击杀奖励，单独计分。</span></div>
+      <p class="data-note">采用你提供的分数表，保留原始小数；当前示范本期排布。剩余分数为当前 Boss 尚可获得的积分，包含未获得的击杀奖励；矩阵奇藏的奖励区没有可停留血线。双击队伍色条可直接编辑。R9 后三只及 R10—R15 按原表规律推算，图中已标注。</p>
+    </section>
+  </main>
+  <dialog id="character-dialog">
+    <div class="dialog-header"><div><span class="eyebrow">TEAM SETUP</span><h2><span id="dialog-title">队伍设置</span> <span id="picked-count">0 / 3</span></h2></div><button id="close-dialog" class="quiet" aria-label="关闭角色选择">✕</button></div>
+    <div class="dialog-team-fields">
+      <label>队伍名称<input id="dialog-team-name" maxlength="30" autocomplete="off" placeholder="按角色首字生成，可手动修改"></label>
+      <label>本队分数<div class="input-unit"><input id="dialog-team-score" type="number" min="0.01" step="any" placeholder="填写本队分数"><span>分</span></div></label>
+    </div>
+    <section id="quick-team-panel" class="quick-team-panel" hidden>
+      <div class="quick-team-toolbar"><span id="quick-team-hint"></span><div><button id="quick-undo" type="button">撤回</button><button id="quick-redo" type="button">恢复</button><button id="quick-reset" type="button">重置</button></div></div>
+      <div id="quick-team-preview" class="quick-team-preview"></div>
+    </section>
+    <input id="character-search" class="character-search" placeholder="搜索角色名称…" aria-label="搜索角色名称">
+    <p id="picker-stamina-note" class="picker-stamina-note"></p>
+    <div class="element-filter-row"><div id="element-filters" class="element-filters" role="group" aria-label="角色属性筛选"></div><span id="character-result-count" class="muted"></span></div>
+    <div id="character-grid" class="character-grid"></div>
+    <p id="character-feedback" class="character-feedback" role="status" aria-live="polite"></p>
+    <div class="dialog-footer"><span id="picked-names" class="muted"></span><button id="confirm-characters" class="primary">确认选择</button></div>
+  </dialog>
+  <div id="team-tooltip" class="team-tooltip" role="tooltip" hidden></div>
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

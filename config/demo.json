@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "towerId": 16,
+  "staminaSeason": "s2-phase3",
+  "maxRound": 2,
+  "pixelsPerPoint": 0.04,
+  "scoreMarker": null,
+  "teams": [
+    { "id": "team-1", "name": "今长守", "nameMode": "auto", "characterIds": ["1304", "1205", "1505"], "score": 8000, "startScore": 0, "color": "#e6bd79" },
+    { "id": "team-2", "name": "相吟维", "nameMode": "auto", "characterIds": ["1305", "1302", "1503"], "score": 9500, "startScore": 8000, "color": "#79c8c6" },
+    { "id": "team-3", "name": "椿丹白", "nameMode": "auto", "characterIds": ["1603", "1602", "1103"], "score": 6500, "startScore": 17500, "color": "#a9a1e6" }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "source": "https://ww.nanoka.cc/",
+  "mapping_source": "https://ww.nanoka.cc/_app/immutable/chunks/BM-A1S15.js",
+  "captured_at_utc": "2026-11-08T03:39:59.091013+00:00",
+  "entries": [
+    {
+      "id": 1,
+      "name": "冷凝",
+      "code": "Ice",
+      "icon_file": "assets/elements/T_IconElementAttriIce.webp",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconElementAttri/T_IconElementAttriIce.webp",
+      "width": 76,
+      "height": 76,
+      "bytes": 3492,
+      "sha256": "dffc9e8611cceccb224a1e92a78648fe595872dfd13f63847203c259d361da97"
+    },
+    {
+      "id": 2,
+      "name": "热熔",
+      "code": "Fire",
+      "icon_file": "assets/elements/T_IconElementAttriFire.webp",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconElementAttri/T_IconElementAttriFire.webp",
+      "width": 76,
+      "height": 76,
+      "bytes": 2762,
+      "sha256": "9624c12c08278b5b350ec99a67f081eb0f33c44706924014b3a5949b8f284793"
+    },
+    {
+      "id": 3,
+      "name": "导电",
+      "code": "Thunder",
+      "icon_file": "assets/elements/T_IconElementAttriThunder.webp",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconElementAttri/T_IconElementAttriThunder.webp",
+      "width": 76,
+      "height": 76,
+      "bytes": 2984,
+      "sha256": "96eb2d7e773225382b6679b7ce73d242ebbe192122cfc7529f4144d0c1a7a4c9"
+    },
+    {
+      "id": 4,
+      "name": "气动",
+      "code": "Wind",
+      "icon_file": "assets/elements/T_IconElementAttriWind.webp",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconElementAttri/T_IconElementAttriWind.webp",
+      "width": 76,
+      "height": 76,
+      "bytes": 2778,
+      "sha256": "522e83e79d145120bd43f84a82b54a56cc1c2b4f1e579f7a764314b10b27052c"
+    },
+    {
+      "id": 5,
+      "name": "衍射",
+      "code": "Light",
+      "icon_file": "assets/elements/T_IconElementAttriLight.webp",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconElementAttri/T_IconElementAttriLight.webp",
+      "width": 76,
+      "height": 76,
+      "bytes": 3250,
+      "sha256": "5476ee187b15bf231f389fcae085c470a7a73e336de12822925cd3898d972a48"
+    },
+    {
+      "id": 6,
+      "name": "湮灭",
+      "code": "Dark",
+      "icon_file": "assets/elements/T_IconElementAttriDark.webp",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconElementAttri/T_IconElementAttriDark.webp",
+      "width": 76,
+      "height": 76,
+      "bytes": 3124,
+      "sha256": "73148bfcbfd8a265751b698e59a297c2038a627f1d62bc34a9332bb38da46658"
+    }
+  ]
+}

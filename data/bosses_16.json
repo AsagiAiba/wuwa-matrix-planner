@@ -1,0 +1,92 @@
+{
+  "tower_id": 16,
+  "source": "https://ww.nanoka.cc/newtower/16",
+  "cycle": {
+    "id": 8,
+    "name": "S2第三阶段"
+  },
+  "entries": [
+    {
+      "id": "650000050",
+      "name": "燎照之骑",
+      "name_en": null,
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/ImgBoss/T_Boss_33020.T_Boss_33020",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_33020.webp",
+      "icon_file": "assets/bosses/T_Boss_33020.webp",
+      "monster_id": 650000050,
+      "alias": "摩托",
+      "source_wave_id": 155,
+      "order": 1,
+      "sha256": "91e6d9d86cbf801ce146e9328c6b9042e44925638e67b3dbf46b05108fbcda33",
+      "bytes": 52150,
+      "width": 592,
+      "height": 232
+    },
+    {
+      "id": "602850001",
+      "name": "封庭械囿",
+      "name_en": null,
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/ImgBoss/T_Boss_32068.T_Boss_32068",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_32068.webp",
+      "icon_file": "assets/bosses/T_Boss_32068.webp",
+      "monster_id": 602850001,
+      "alias": "盾山",
+      "source_wave_id": 156,
+      "order": 2,
+      "sha256": "36d6ae1dc621325db79aa7f5b2ae426ec42499cff8eade34f6b25585eedc0832",
+      "bytes": 87734,
+      "width": 592,
+      "height": 232
+    },
+    {
+      "id": "650000041",
+      "name": "无冠者",
+      "name_en": null,
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/ImgBoss/T_Boss_34010_1.T_Boss_34010_1",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_34010_1.webp",
+      "icon_file": "assets/bosses/T_Boss_34010_1.webp",
+      "monster_id": 650000041,
+      "alias": "无冠者",
+      "source_wave_id": 157,
+      "order": 3,
+      "sha256": "c22268485ffc1c5b3dbe8cc32a770659f606c46278aaabe88d31d66b09dbadbb",
+      "bytes": 79816,
+      "width": 592,
+      "height": 232
+    },
+    {
+      "id": "665850005",
+      "name": "天傀劫煞",
+      "name_en": null,
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/ImgBoss/T_Boss_34032.T_Boss_34032",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_34032.webp",
+      "icon_file": "assets/bosses/T_Boss_34032.webp",
+      "monster_id": 665850005,
+      "alias": "天人",
+      "source_wave_id": 158,
+      "order": 4,
+      "sha256": "7ae1878b70e3e79b193ef37e0015073ca8bd62d378b1ae07e18f389812da8078",
+      "bytes": 70374,
+      "width": 592,
+      "height": 232
+    },
+    {
+      "id": "401800000",
+      "name": "矩阵奇藏",
+      "name_en": null,
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/ImgBoss/T_Boss_35220.T_Boss_35220",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_35220.webp",
+      "icon_file": "assets/bosses/T_Boss_35220.webp",
+      "monster_id": 401800000,
+      "alias": "宝箱",
+      "source_wave_id": 159,
+      "order": 5,
+      "sha256": "b0472f14c051337da0b5152450752155dfea12a5f1e7ff709d88ab90747dd732",
+      "bytes": 40698,
+      "width": 592,
+      "height": 232
+    }
+  ],
+  "site_data_version": "3.8.3",
+  "captured_at_utc": "2026-11-08T03:05:27.394271+00:00"
+}

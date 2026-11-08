@@ -1,0 +1,61 @@
+{
+  "version": "3.8.3",
+  "captured_at_utc": "2026-11-08T03:05:27.394271+00:00",
+  "monster_portraits_enabled": false,
+  "counts": {
+    "characters": {
+      "records": 65,
+      "unique_files": 59,
+      "downloaded_unique_files": 58,
+      "missing_unique_files": 1
+    },
+    "bosses": {
+      "records": 8,
+      "unique_files": 8,
+      "downloaded_unique_files": 8,
+      "missing_unique_files": 0
+    }
+  },
+  "phases": {
+    "16": {
+      "cycle": {
+        "id": 8,
+        "name": "S2第三阶段"
+      },
+      "boss_count": 5
+    },
+    "18": {
+      "cycle": {
+        "id": 9,
+        "name": "S2第四阶段"
+      },
+      "boss_count": 5
+    }
+  },
+  "downloaded_unique_files": 66,
+  "total_bytes": 2443176,
+  "failures": [
+    {
+      "file": "assets/characters/T_IconRoleHead256_77_UI.webp",
+      "url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_77_UI.webp",
+      "error": "HTTP Error 404: Not Found",
+      "id": "1512",
+      "name": "莉莉"
+    }
+  ],
+  "fallbacks": [
+    {
+      "id": "607750002",
+      "name": "飞廉之猩",
+      "preferred_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_33005.webp",
+      "used_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_996_UI.webp"
+    },
+    {
+      "id": "665700003",
+      "name": "达妮娅",
+      "preferred_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_34028_1.webp",
+      "used_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_34028_UI.webp"
+    }
+  ],
+  "local_integrity_checks_passed": 66
+}

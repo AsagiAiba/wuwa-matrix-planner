@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "maxRound": 15,
+  "baseHp": 19388951,
+  "damagePerPoint": 1200,
+  "roundMultiplier": 1.25,
+  "growthStartRound": 4,
+  "growthPerBoss": 0.05,
+  "bossesPerRound": 5,
+  "chestScoreMultiplier": 1.1,
+  "chestKillBonus": 1000,
+  "basis": "原表 R4—R9 前两只共 27 条公式，按连续波次线性增加 R3 基准的 5%；更高轮次按同一公式推算。",
+  "hpInterpretation": "推算血量 = R3 血量基数 × 递增系数；该解释及更高轮次并非游戏内实测。"
+}

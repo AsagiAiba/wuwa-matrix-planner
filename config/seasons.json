@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "defaultSeason": "s2-phase3",
+  "seasons": [
+    {
+      "id": "s2-phase3",
+      "file": "config/seasons/s2-3.json"
+    },
+    {
+      "id": "s2-phase4",
+      "file": "config/seasons/s2-4.json"
+    }
+  ]
+}

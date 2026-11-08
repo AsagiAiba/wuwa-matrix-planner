@@ -176,3 +176,147 @@ input[readonly] { color: #94a6b5; border-style: dashed; cursor: default; }
 
 .projected-boss { border-top: 1px dashed #caa873; }
 .projected-boss .boss-name { color: #ead4b0; }
+
+/* Persistent stamina conflict resolution. */
+.stamina-conflict-panel, .restore-warning { padding: 18px 20px; margin-bottom: 20px; border: 1px solid #b77f75; border-radius: 8px; background: #33252b; }
+.stamina-conflict-panel[hidden], .restore-warning[hidden] { display: none; }
+.stamina-conflict-panel h2, .restore-warning h2 { font-size: 16px; color: #ffd1b9; margin-bottom: 10px; }
+.conflict-description, .restore-warning p { color: #cbbdc3; font-size: 12px; line-height: 1.8; }
+.conflict-list { display: flex; flex-direction: column; gap: 12px; max-height: 265px; overflow-y: auto; margin-top: 14px; }
+.conflict-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 17px; padding-top: 12px; border-top: 1px solid #805e6355; }
+.conflict-character { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.conflict-summary { color: #ffcfb0; font-size: 12px; }
+.conflict-team-links { display: flex; flex-wrap: wrap; gap: 7px; width: 100%; }
+.conflict-team-links button { font-size: 11px; padding: 7px 10px; background: #493339; border-color: #a57d77; }
+.conflict-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 17px; }
+.conflict-actions button { font-size: 12px; }
+.stamina-conflict-panel.resolved { background: #1b302c; border-color: #6eaa8e; }
+.stamina-conflict-panel.resolved h2 { color: #bde5ce; }
+.team-card.stamina-conflicted, .team-bar.stamina-conflicted { outline: 1px dashed #ee9d8b; outline-offset: 2px; }
+.restore-warning button { margin-top: 12px; font-size: 12px; }
+@media(max-width:760px) {
+  .stamina-conflict-panel, .restore-warning { padding: 15px 13px; }
+  .stamina-conflict-panel h2, .restore-warning h2 { font-size: 14px; }
+}
+
+.pending-team.stamina-conflicted { outline: 1px dashed #ee9d8b; outline-offset: -2px; }
+
+.workspace-heading-hint { margin: 0; color: var(--muted); font-size: 13px; font-weight: 400; text-align: right; white-space: nowrap; }
+@media(max-width:760px) { .workspace-heading-hint { font-size: 11px; } }
+
+/* Named independent arrangement presets. */
+.plan-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: -5px 0 21px; padding: 13px 15px; border: 1px solid #35434f; border-radius: 7px; background: #17222b; }
+.plan-toolbar > label { font-size: 12px; color: #b6c5d0; margin-right: 3px; }
+#plan-select { flex: 1; min-width: 180px; max-width: 300px; font-size: 12px; padding: 8px; }
+.plan-toolbar button { font-size: 11px; padding: 7px 10px; }
+#plan-save-status { margin-left: auto; font-size: 10px; white-space: nowrap; }
+.plan-dialog { width: 430px; }
+.plan-dialog h2 { margin-bottom: 22px; }
+.plan-dialog label { display: block; font-size: 12px; color: #afbfcc; margin-bottom: 8px; }
+#plan-name { width: 100%; }
+#plan-dialog-error { min-height: 20px; font-size: 12px; line-height: 1.7; color: #f2b59c; margin: 10px 0; }
+.plan-dialog-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-top: 16px; }
+.copy-config-dialog > p { font-size: 12px; line-height: 1.8; margin: 12px 0; }
+#copy-config-text { width: 100%; height: 44vh; resize: vertical; background: #101a22; color: #dce6ed; border: 1px solid #4a5f6e; border-radius: 5px; padding: 12px; font: 12px/1.7 Consolas, monospace; }
+@media(max-width:760px) {
+  .plan-toolbar { padding: 11px; gap: 7px; }
+  #plan-select { min-width: 0; max-width: none; flex-basis: calc(100% - 70px); }
+  #plan-save-status { width: 100%; margin-left: 0; padding-top: 2px; }
+}
+
+/* Matrix reference details and irreversible plan deletion. */
+.danger-quiet { color: #edb0a5; background: transparent; border-color: #8a625b; }
+.danger { background: #a84841; border-color: #ce8174; color: #fff1e8; }
+.danger:hover { background: #bb5b51; }
+.delete-plan-dialog { width: 570px; }
+.delete-plan-dialog h2 { margin-bottom: 18px; }
+.delete-plan-dialog p { line-height: 1.9; font-size: 13px; }
+.delete-warning { color: #ffc0ae; font-weight: 650; margin: 12px 0; }
+#delete-plan-error { color: #ffc0ae; min-height: 20px; }
+.delete-plan-dialog .plan-dialog-actions { flex-wrap: wrap; }
+#plan-season-field[hidden] { display: none; }
+#plan-season-field { margin-top: 17px; }
+#plan-season { width: 100%; }
+#plan-season-note { margin-top: 8px; font-size: 11px; line-height: 1.8; }
+.matrix-details { margin-top: 26px; padding: 21px; border: 1px solid #364550; border-radius: 8px; background: #151f28; }
+.matrix-details-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 23px; }
+.matrix-details-heading h2 { font-size: 17px; line-height: 1.7; }
+.matrix-details-heading a { color: #c6ae82; font-size: 11px; white-space: nowrap; }
+.matrix-details > h3 { color: #d6dfe6; margin: 20px 0 12px; }
+.matrix-circuits { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.matrix-circuit, .matrix-character-enhancement { padding: 16px; border: 1px solid #354654; border-radius: 6px; background: #1a2732; }
+.matrix-circuit h4, .enhancement-character h4 { margin: 0; font-size: 13px; color: #e5cb9e; font-weight: 600; }
+.matrix-circuit p, .matrix-character-enhancement p { font-size: 12px; line-height: 1.9; color: #adbdca; white-space: pre-line; margin-top: 10px; }
+.matrix-enhancements { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+.enhancement-character { display: flex; align-items: center; gap: 9px; }
+.enhancement-character .portrait { width: 34px; height: 34px; }
+.matrix-content-note { font-size: 11px; line-height: 1.8; margin-bottom: 12px; }
+.bloodline-unavailable { padding: 28px 25px 20px 138px; color: #b9c8d3; font-size: 13px; line-height: 1.9; }
+@media(max-width:760px) {
+  .matrix-details { padding: 15px 12px; }
+  .matrix-details-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .matrix-details-heading h2 { font-size: 14px; }
+  .matrix-circuits, .matrix-enhancements { grid-template-columns: 1fr; }
+  .matrix-circuit, .matrix-character-enhancement { padding: 13px; }
+  .bloodline-unavailable { font-size: 11px; padding-left: 126px; }
+}
+
+.matrix-circuit-heading { display: flex; align-items: center; gap: 11px; min-height: 38px; }
+.matrix-circuit-icon { width: 36px; height: 36px; object-fit: contain; flex: 0 0 auto; padding: 5px; background: #101a23; border: 1px solid #4b5d6c; border-radius: 6px; }
+@media(max-width:760px) { .matrix-circuit-icon { width: 33px; height: 33px; padding: 4px; } }
+
+.provisional-boss { border-top: 1px dashed #9db8d3; }
+.provisional-boss .boss-name { color: #bfdaef; }
+.matrix-details-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.matrix-details-actions button { font-size: 11px; padding: 7px 9px; }
+
+.matrix-stamina-enhancements { grid-template-columns: 1fr; }
+.matrix-stamina-enhancements .matrix-character-enhancement { border-color: #756346; background: #242b30; }
+.matrix-content-collapse { margin-top: 17px; border-top: 1px solid #354654; }
+.matrix-content-collapse > summary { cursor: pointer; padding: 15px 0; color: #dac49e; font-size: 13px; font-weight: 600; }
+.matrix-content-collapse > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+#other-enhancements-count { font-size: 11px; color: #91a3b2; margin-left: 6px; font-weight: 400; }
+.matrix-content-collapse[open] > summary { padding-bottom: 12px; }
+
+.boss-segment { padding: 0; border: 0; border-right: 1px solid #48545d; border-radius: 0; text-align: left; cursor: pointer; }
+.boss-segment:hover { box-shadow: inset 0 0 0 1px #d0b789; }
+.boss-segment.projected-boss { border-top: 1px dashed #caa873; }
+.boss-segment.provisional-boss { border-top: 1px dashed #9db8d3; }
+.boss-segment:focus-visible { outline-offset: -3px; }
+.boss-dialog { width: 570px; }
+.boss-dialog-header { gap: 14px; }
+.boss-dialog-header > div { flex: 1; min-width: 0; }
+.boss-dialog-header h2 { margin-top: 7px; font-size: 19px; }
+.boss-dialog-header p { font-size: 11px; line-height: 1.6; }
+.boss-dialog-portrait { width: 85px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #475662; }
+.boss-totals { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.boss-totals > div { display: flex; flex-direction: column; gap: 9px; padding: 15px; background: #101a23; border: 1px solid #354550; border-radius: 6px; }
+.boss-totals span { font-size: 11px; }
+.boss-totals strong { font-size: 20px; color: #f0d4a3; font-weight: 550; font-variant-numeric: tabular-nums; }
+.boss-data-basis { font-size: 11px; line-height: 1.8; margin-top: 10px; }
+.boss-resistance-heading { display: flex; justify-content: space-between; align-items: center; margin: 23px 0 12px; }
+.boss-resistance-heading a { color: #c6ae82; font-size: 11px; }
+.boss-resistances { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
+.boss-resistance { display: grid; grid-template-columns: 28px 1fr; align-items: center; column-gap: 8px; padding: 10px; background: #1c2a35; border: 1px solid #354654; border-radius: 6px; }
+.boss-resistance img { grid-row: span 2; object-fit: contain; }
+.boss-resistance span { font-size: 11px; color: #a9b9c6; }
+.boss-resistance strong { font-size: 13px; font-weight: 550; margin-top: 3px; }
+.boss-resistance.high-resistance { border-color: #8d7858; background: #332e26; }
+.boss-percent-field { display: flex; gap: 14px; align-items: center; margin-top: 24px; }
+.boss-percent-field label { font-size: 13px; }
+.boss-percent-field .input-unit { width: 150px; margin: 0; }
+.boss-percent-error { min-height: 21px; padding-top: 5px; font-size: 11px; color: #ffb3a6; }
+.boss-calculation { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+.boss-calculation > div { display: flex; flex-direction: column; gap: 8px; }
+.boss-calculation span { font-size: 12px; color: #a9b9c6; }
+.boss-calculation strong { color: var(--gold); font-size: 21px; font-weight: 550; font-variant-numeric: tabular-nums; }
+@media(max-width:480px) {
+  .boss-dialog { padding: 18px; }
+  .boss-dialog-portrait { width: 64px; height: 52px; }
+  .boss-dialog-header h2 { font-size: 16px; }
+  .boss-totals > div { padding: 11px; }
+  .boss-totals strong, .boss-calculation strong { font-size: 17px; }
+  .boss-resistances { gap: 6px; }
+  .boss-resistance { grid-template-columns: 22px 1fr; padding: 8px 6px; column-gap: 5px; }
+  .boss-resistance img { width: 22px; height: 22px; }
+}

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "towerId": 16,
+  "matrixSeason": "s2-phase3",
+  "matrixVersion": "终焉矩阵S2-3（S2第三阶段）",
+  "staminaSeason": "s2-phase3",
+  "maxRound": 2,
+  "pixelsPerPoint": 0.04,
+  "scoreMarker": 20000,
+  "teams": [
+    { "id": "alt-team-1", "name": "椿丹白", "nameMode": "auto", "characterIds": ["1603", "1602", "1103"], "score": 6500, "startScore": 0, "color": "#a9a1e6" },
+    { "id": "alt-team-2", "name": "今长守", "nameMode": "auto", "characterIds": ["1304", "1205", "1505"], "score": 8000, "startScore": 6500, "color": "#e6bd79" },
+    { "id": "alt-team-3", "name": "相吟维", "nameMode": "auto", "characterIds": ["1305", "1302", "1503"], "score": 9500, "startScore": 14500, "color": "#79c8c6" }
+  ]
+}

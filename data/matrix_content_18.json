@@ -1,0 +1,205 @@
+{
+  "towerId": 18,
+  "matrixSeason": "s2-phase4",
+  "matrixVersion": "终焉矩阵S2-4（S2第四阶段）",
+  "source": "https://ww.nanoka.cc/newtower/18",
+  "dataSource": "https://static.nanoka.cc/ww/3.8.3/zh/newtower/18.json",
+  "siteDataVersion": "3.8.3",
+  "capturedAtUtc": "2026-11-08T08:19:52.636365+00:00",
+  "descriptionNote": "按来源页面展示；保留阶段限定。角色强化分类键不解释为共鸣链或技能等级，且不覆盖独立的体力配置。",
+  "circuits": [
+    {
+      "id": "39",
+      "name": "异常效应强化",
+      "description": "角色附加异常效应时，使目标受到伤害最终提升25%，持续30秒；\n敌人受到霜渐效应伤害最终提升80%。",
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.T_Iconpropertyredice_UI",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.webp",
+      "icon_file": "assets/circuits/T_Iconpropertyredice_UI.webp",
+      "icon_sha256": "33468cbc1d094ca2dd318e5ef47c15df89f08547e98c4d93581e356805c006c6",
+      "icon_bytes": 5986,
+      "icon_width": 96,
+      "icon_height": 96
+    },
+    {
+      "id": "40",
+      "name": "基础伤害强化",
+      "description": "角色获得护盾时，伤害最终提升25%，持续2秒；\n声骸技能伤害最终提升65%；\n角色响应同奏时，造成伤害最终提升55%，持续30秒。",
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredphysics_UI.T_Iconpropertyredphysics_UI",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredphysics_UI.webp",
+      "icon_file": "assets/circuits/T_Iconpropertyredphysics_UI.webp",
+      "icon_sha256": "1f777db2e8378e6b7031935f52c235eefbafe476644c27e1f5f826a9f14fa09b",
+      "icon_bytes": 1580,
+      "icon_width": 96,
+      "icon_height": 96
+    },
+    {
+      "id": "41",
+      "name": "谐度破坏强化",
+      "description": "角色附加谐度·偏移状态时，全队伤害最终提升25%，持续30秒。\n角色造成震谐伤害后，造成伤害最终提升30%，持续30秒。",
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+      "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+      "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+      "icon_bytes": 6678,
+      "icon_width": 96,
+      "icon_height": 96
+    },
+    {
+      "id": "42",
+      "name": "通用强化",
+      "description": "敌人受到伤害最终提升20%，受到共鸣解放伤害最终提升20%。",
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+      "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+      "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+      "icon_bytes": 3600,
+      "icon_width": 96,
+      "icon_height": 96
+    }
+  ],
+  "characters": [
+    {
+      "id": "1105",
+      "name": "折枝",
+      "icon_file": "assets/characters/T_IconRoleHead256_27_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升20%。施放共鸣解放时，队伍中的角色共鸣技能加成提升30%，持续30秒。"
+        }
+      ]
+    },
+    {
+      "id": "1107",
+      "name": "珂莱塔",
+      "icon_file": "assets/characters/T_IconRoleHead256_32_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1109",
+      "name": "洛瑟菈",
+      "icon_file": "assets/characters/T_IconRoleHead256_66_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色拥有额外疲劳值（限S2第4阶段）。"
+        }
+      ]
+    },
+    {
+      "id": "1205",
+      "name": "长离",
+      "icon_file": "assets/characters/T_IconRoleHead256_26_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1206",
+      "name": "布兰特",
+      "icon_file": "assets/characters/T_IconRoleHead256_44_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1302",
+      "name": "吟霖",
+      "icon_file": "assets/characters/T_IconRoleHead256_17_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升20%。施放共鸣解放时，队伍中的角色共鸣解放加成提升30%，持续30秒。"
+        }
+      ]
+    },
+    {
+      "id": "1304",
+      "name": "今汐",
+      "icon_file": "assets/characters/T_IconRoleHead256_24_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1305",
+      "name": "相里要",
+      "icon_file": "assets/characters/T_IconRoleHead256_25_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1404",
+      "name": "忌炎",
+      "icon_file": "assets/characters/T_IconRoleHead256_11_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1506",
+      "name": "菲比",
+      "icon_file": "assets/characters/T_IconRoleHead256_45_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升20%。施放共鸣解放时，队伍中的角色衍射伤害加成提升20%，持续30秒。"
+        }
+      ]
+    },
+    {
+      "id": "1603",
+      "name": "椿",
+      "icon_file": "assets/characters/T_IconRoleHead256_29_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1606",
+      "name": "洛可可",
+      "icon_file": "assets/characters/T_IconRoleHead256_33_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升20%。施放共鸣解放时，队伍中的角色湮灭伤害加成提升20%，持续30秒。"
+        }
+      ]
+    },
+    {
+      "id": "1607",
+      "name": "坎特蕾拉",
+      "icon_file": "assets/characters/T_IconRoleHead256_34_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    }
+  ]
+}

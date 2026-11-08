@@ -22,7 +22,7 @@ if (-not (Test-Path -LiteralPath $compiler)) { throw '.NET Framework C# compiler
 $launcher = Join-Path $releaseRoot '终焉矩阵血线排布.exe'
 & $compiler /nologo /codepage:65001 /target:winexe /platform:x64 /optimize+ "/out:$launcher" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Web.Extensions.dll (Join-Path $projectRoot 'desktop\Launcher.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Launcher compilation failed.' }
-foreach ($name in @('index.html','app.js','styles.css','score-axis.js','server.mjs','package.json','THIRD_PARTY_NOTICES.md','CHANGELOG.md')) {
+foreach ($name in @('index.html','app.js','styles.css','score-axis.js','plan-library.js','season-config.js','server.mjs','package.json','README.md','THIRD_PARTY_NOTICES.md','CHANGELOG.md')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot $name) -Destination (Join-Path $releaseRoot $name) -Force
 }
 foreach ($name in @('assets','config')) {
@@ -30,6 +30,9 @@ foreach ($name in @('assets','config')) {
     [void](New-Item -ItemType Directory -Force -Path $destination)
     Copy-Item -Path (Join-Path $projectRoot "$name\*") -Destination $destination -Recurse -Force
 }
+$docsRoot = Join-Path $releaseRoot 'docs'
+[void](New-Item -ItemType Directory -Force -Path $docsRoot)
+Get-ChildItem -LiteralPath (Join-Path $projectRoot 'docs') -File -Filter '*.md' | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $docsRoot -Force }
 $dataRoot = Join-Path $releaseRoot 'data'
 [void](New-Item -ItemType Directory -Force -Path $dataRoot)
 Get-ChildItem -LiteralPath (Join-Path $projectRoot 'data') -File -Filter '*.json' | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $dataRoot -Force }

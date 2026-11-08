@@ -12,13 +12,15 @@ const baseUrl = process.env.MATRIX_URL || 'http://127.0.0.1:4173';
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 page.on('response', response => { if (response.status() >= 400 && !response.url().endsWith('/favicon.ico')) errors.push(`${response.status()} ${response.url()}`); });
-async function exported() {
+async function exported(includePlanName = false) {
   const event = page.waitForEvent('download');
   await page.locator('#export-button').click();
   const file = await event;
   const filename = path.resolve('outputs/demo-test-plan.json');
   await file.saveAs(filename);
-  return JSON.parse(await readFile(filename, 'utf8'));
+  const config = JSON.parse(await readFile(filename, 'utf8'));
+  if (!includePlanName) delete config.planName;
+  return config;
 }
 function connected(config) {
   let previous = 0;
@@ -160,11 +162,13 @@ try {
   assert.match(await page.locator('#toast').innerText(), /重复上阵/);
   const legacy = structuredClone(config);
   legacy.teams[1].characterIds = [...legacy.teams[0].characterIds];
-  await page.evaluate(value => localStorage.setItem('wuwa-matrix-demo-v1', JSON.stringify(value)), legacy);
+  await page.evaluate(value => { localStorage.removeItem('wuwa-matrix-plan-library-v1'); localStorage.setItem('wuwa-matrix-demo-v1', JSON.stringify(value)); }, legacy);
   await page.reload(); await page.locator('.team-bar').first().waitFor();
   const repaired = await exported(); connected(repaired);
   assert.equal(repaired.teams.length, 3); assert.equal(repaired.teams[1].score, 9500);
-  assert.equal(repaired.teams[1].needsCharacters, true); assert.deepEqual(repaired.teams[1].characterIds, ['1505']);
+  assert.deepEqual(repaired.teams[1].characterIds, legacy.teams[1].characterIds);
+  assert.ok(await page.locator('#stamina-conflict-panel').isVisible());
+  assert.equal(await page.locator('.conflict-row').count(), 2);
   const base = JSON.parse(await readFile('config/demo.json', 'utf8'));
   async function loadPlan(plan) {
     await page.locator('#import-file').setInputFiles({ name: 'stamina.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(plan)) });
@@ -204,9 +208,49 @@ try {
   assert.ok(await page.getByRole('button', { name: '守岸人', exact: true }).isEnabled());
   await page.locator('#close-dialog').click();
   await loadPlan(repeated('1509'));
+  const beforeBlockedSwitch = await exported();
+  const storageBeforeBlockedSwitch = await page.evaluate(() => localStorage.getItem('wuwa-matrix-demo-v1'));
   await page.locator('#stamina-season').selectOption('s2-phase4');
   assert.equal(await page.locator('#stamina-season').inputValue(), 's2-phase3');
   assert.match(await page.locator('#toast').innerText(), /琳奈/);
+  assert.equal(await page.evaluate(() => localStorage.getItem('wuwa-matrix-demo-v1')), storageBeforeBlockedSwitch);
+  assert.deepEqual(await exported(), beforeBlockedSwitch);
+  assert.ok(await page.locator('#stamina-conflict-panel').isVisible());
+  assert.match(await page.locator('#stamina-conflict-panel').innerText(), /琳奈.*已用 2 次 \/ 上限 1 次/s);
+  assert.equal(await page.locator('.conflict-team-links button').count(), 2);
+  assert.ok(await page.locator('#apply-stamina-season').isDisabled());
+  await page.screenshot({ path: 'outputs/demo-stamina-conflict.png' });
+  await page.locator('#stamina-conflict-panel button[data-team-id="team-2"]').click();
+  assert.match(await page.locator('#character-feedback').innerText(), /切换 S2-4.*琳奈/);
+  await page.locator('#close-dialog').click();
+  assert.ok(await page.locator('#stamina-conflict-panel').isVisible());
+  await page.locator('#stamina-conflict-panel button[data-team-id="team-2"]').click();
+  await page.getByRole('button', { name: '琳奈', exact: true }).click();
+  await page.getByRole('button', { name: '守岸人', exact: true }).click();
+  await page.locator('#confirm-characters').click();
+  assert.ok(await page.locator('#apply-stamina-season').isEnabled());
+  assert.equal(await page.locator('#stamina-season').inputValue(), 's2-phase3');
+  assert.equal((await exported()).teams[1].score, 9500);
+  await page.locator('#apply-stamina-season').click();
+  assert.equal(await page.locator('#stamina-season').inputValue(), 's2-phase4');
+  assert.ok(await page.locator('#stamina-conflict-panel').isHidden());
+  await loadPlan(repeated('1509'));
+  await page.locator('#stamina-season').selectOption('s2-phase4');
+  await page.locator('#cancel-stamina-change').click();
+  assert.ok(await page.locator('#stamina-conflict-panel').isHidden());
+  assert.deepEqual(await exported(), beforeBlockedSwitch);
+  const pendingConflict = repeated('1509'); pendingConflict.teams[1].score = 0; pendingConflict.teams[1].needsScore = true;
+  await loadPlan(pendingConflict);
+  await page.locator('#stamina-season').selectOption('s2-phase4');
+  await page.locator('#stamina-conflict-panel button[data-team-id="team-2"]').click();
+  assert.equal(await page.locator('#dialog-team-score').inputValue(), '');
+  await page.getByRole('button', { name: '琳奈', exact: true }).click();
+  await page.getByRole('button', { name: '守岸人', exact: true }).click();
+  await page.locator('#confirm-characters').click();
+  assert.equal((await exported()).teams[1].needsScore, true);
+  assert.ok(await page.locator('#apply-stamina-season').isEnabled());
+  await page.locator('#apply-stamina-season').click();
+  assert.equal(await page.locator('#stamina-season').inputValue(), 's2-phase4');
   await loadPlan(repeated('1109', 's2-phase4'));
   await page.locator('#stamina-season').selectOption('s2-phase3');
   assert.equal(await page.locator('#stamina-season').inputValue(), 's2-phase4');
@@ -217,6 +261,16 @@ try {
   assert.match(await page.locator('#picker-stamina-note').innerText(), /洛瑟菈/);
   await page.screenshot({ path: 'outputs/demo-stamina-next.png' });
   await page.locator('#close-dialog').click();
+  const invalidSaved = { ...base, version: 999 };
+  const invalidSavedRaw = JSON.stringify(invalidSaved);
+  await page.evaluate(raw => { localStorage.removeItem('wuwa-matrix-plan-library-v1'); localStorage.setItem('wuwa-matrix-demo-v1', raw); }, invalidSavedRaw);
+  await page.reload(); await page.locator('#restore-warning').waitFor();
+  assert.equal(await page.evaluate(() => localStorage.getItem('wuwa-matrix-demo-v1')), invalidSavedRaw);
+  const recoveryDownload = page.waitForEvent('download');
+  await page.locator('#download-restore-backup').click();
+  const backup = await recoveryDownload; await backup.saveAs('outputs/restore-backup-test.json');
+  assert.equal(await readFile('outputs/restore-backup-test.json', 'utf8'), invalidSavedRaw);
+  await loadPlan(base); assert.ok(await page.locator('#restore-warning').isHidden());
   await page.locator('#load-example').click();
   assert.match(await page.locator('#start-location').innerText(), /剩余分数 4,677.1 分/);
   assert.ok(!(await page.locator('#start-location').innerText()).includes('血量'));
@@ -227,6 +281,7 @@ try {
   const view = await page.locator('#timeline-viewport').boundingBox();
   const lastBar = await page.locator('.team-bar').last().boundingBox();
   assert.ok(lastBar.x + lastBar.width <= view.x + view.width + 1);
+  await page.locator('#max-round').selectOption('15');
   await page.locator('#fit-bloodline').click();
   assert.equal(await page.locator('.boss-segment').count(), 75);
   const sheetWidth = await page.locator('#axis-sheet').evaluate(node => node.getBoundingClientRect().width);
@@ -382,5 +437,5 @@ try {
   assert.ok(quickConfirm.y + quickConfirm.height <= quickDialog.y + quickDialog.height - 8, 'Confirm must not be clipped by the dialog');
   await page.screenshot({ path: 'outputs/demo-quick-mobile.png' });
   assert.deepEqual(errors, []);
-  console.log('PASS: R9 completed; R15 shows 75 waves with 33 labeled projections; viewport-only ruler ticks at high zoom; projected score target auto-expands and centers; all-source mapping/JSON/markers; sequential quick builder/history/stamina; remaining points, names, dialogs and mobile layout; no resource or page errors.');
+  console.log('PASS: blocked season switch preserves full state and storage; persistent role/team conflict list and edit links; cancel safe; fix-then-apply; unscored roster repairs stay unscored; startup conflict preservation; invalid startup never overwrites stored data and exports exact backup; prior projection/marker/quick/stamina/mobile checks; no page errors.');
 } finally { await browser.close(); }

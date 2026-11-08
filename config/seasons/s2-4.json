@@ -1,0 +1,1167 @@
+{
+  "schemaVersion": 1,
+  "id": "s2-phase4",
+  "name": "终焉矩阵S2-4（S2第四阶段）",
+  "season": "S2",
+  "stage": 4,
+  "towerId": 18,
+  "modeName": "奇点扩张",
+  "maxRound": 15,
+  "source": "https://ww.nanoka.cc/newtower/18",
+  "bosses": [
+    {
+      "order": 1,
+      "id": "607750002",
+      "name": "飞廉之猩",
+      "alias": "飞廉之猩",
+      "icon_file": "assets/bosses/T_IconMonsterHead_996_UI.webp",
+      "resistances": {
+        "status": "confirmed",
+        "values": {
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 40,
+          "5": 20,
+          "6": 20
+        },
+        "highElement": 4,
+        "source": "https://ww.nanoka.cc/newtower/18",
+        "note": "",
+        "verification": "user-confirmed"
+      }
+    },
+    {
+      "order": 2,
+      "id": "665700003",
+      "name": "达妮娅",
+      "alias": "达妮娅",
+      "icon_file": "assets/bosses/T_IconMonsterHead_34028_UI.webp",
+      "resistances": {
+        "status": "confirmed",
+        "values": {
+          "1": 20,
+          "2": 40,
+          "3": 20,
+          "4": 20,
+          "5": 20,
+          "6": 20
+        },
+        "highElement": 2,
+        "source": "https://ww.nanoka.cc/newtower/18",
+        "note": "",
+        "verification": "user-confirmed"
+      }
+    },
+    {
+      "order": 3,
+      "id": "650000041",
+      "name": "无冠者",
+      "alias": "无冠者",
+      "icon_file": "assets/bosses/T_Boss_34010_1.webp",
+      "resistances": {
+        "status": "confirmed",
+        "values": {
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20,
+          "6": 40
+        },
+        "highElement": 6,
+        "source": "https://ww.nanoka.cc/newtower/18",
+        "note": "",
+        "verification": "user-confirmed"
+      }
+    },
+    {
+      "order": 4,
+      "id": "676750008",
+      "name": "辛吉勒姆",
+      "alias": "辛吉勒姆",
+      "icon_file": "assets/bosses/T_Boss_340251.webp",
+      "resistances": {
+        "status": "confirmed",
+        "values": {
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 40,
+          "6": 20
+        },
+        "highElement": 5,
+        "source": "https://ww.nanoka.cc/newtower/18",
+        "note": "",
+        "verification": "user-confirmed"
+      }
+    },
+    {
+      "order": 5,
+      "id": "401800000",
+      "name": "矩阵奇藏",
+      "alias": "宝箱",
+      "icon_file": "assets/bosses/T_Boss_35220.webp",
+      "resistances": {
+        "status": "confirmed",
+        "values": {
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20,
+          "6": 20
+        },
+        "highElement": null,
+        "source": "https://ww.nanoka.cc/newtower/18",
+        "note": "",
+        "verification": "user-confirmed"
+      }
+    }
+  ],
+  "stamina": {
+    "defaultStamina": 1,
+    "baseStamina": {
+      "1505": 2,
+      "1503": 2,
+      "1103": 2,
+      "1307": 2,
+      "1209": 2,
+      "1110": 2
+    },
+    "bonusCharacterIds": [
+      "1109"
+    ],
+    "extraStamina": 1
+  },
+  "circuits": [
+    {
+      "id": "39",
+      "name": "异常效应强化",
+      "description": "角色附加异常效应时，使目标受到伤害最终提升25%，持续30秒；\n敌人受到霜渐效应伤害最终提升80%。",
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.T_Iconpropertyredice_UI",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.webp",
+      "icon_file": "assets/circuits/T_Iconpropertyredice_UI.webp",
+      "icon_sha256": "33468cbc1d094ca2dd318e5ef47c15df89f08547e98c4d93581e356805c006c6",
+      "icon_bytes": 5986,
+      "icon_width": 96,
+      "icon_height": 96
+    },
+    {
+      "id": "40",
+      "name": "基础伤害强化",
+      "description": "角色获得护盾时，伤害最终提升25%，持续2秒；\n声骸技能伤害最终提升65%；\n角色响应同奏时，造成伤害最终提升55%，持续30秒。",
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredphysics_UI.T_Iconpropertyredphysics_UI",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredphysics_UI.webp",
+      "icon_file": "assets/circuits/T_Iconpropertyredphysics_UI.webp",
+      "icon_sha256": "1f777db2e8378e6b7031935f52c235eefbafe476644c27e1f5f826a9f14fa09b",
+      "icon_bytes": 1580,
+      "icon_width": 96,
+      "icon_height": 96
+    },
+    {
+      "id": "41",
+      "name": "谐度破坏强化",
+      "description": "角色附加谐度·偏移状态时，全队伤害最终提升25%，持续30秒。\n角色造成震谐伤害后，造成伤害最终提升30%，持续30秒。",
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+      "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+      "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+      "icon_bytes": 6678,
+      "icon_width": 96,
+      "icon_height": 96
+    },
+    {
+      "id": "42",
+      "name": "通用强化",
+      "description": "敌人受到伤害最终提升20%，受到共鸣解放伤害最终提升20%。",
+      "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+      "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+      "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+      "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+      "icon_bytes": 3600,
+      "icon_width": 96,
+      "icon_height": 96
+    }
+  ],
+  "characters": [
+    {
+      "id": "1105",
+      "name": "折枝",
+      "icon_file": "assets/characters/T_IconRoleHead256_27_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升20%。施放共鸣解放时，队伍中的角色共鸣技能加成提升30%，持续30秒。"
+        }
+      ]
+    },
+    {
+      "id": "1107",
+      "name": "珂莱塔",
+      "icon_file": "assets/characters/T_IconRoleHead256_32_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1205",
+      "name": "长离",
+      "icon_file": "assets/characters/T_IconRoleHead256_26_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1206",
+      "name": "布兰特",
+      "icon_file": "assets/characters/T_IconRoleHead256_44_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1302",
+      "name": "吟霖",
+      "icon_file": "assets/characters/T_IconRoleHead256_17_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升20%。施放共鸣解放时，队伍中的角色共鸣解放加成提升30%，持续30秒。"
+        }
+      ]
+    },
+    {
+      "id": "1304",
+      "name": "今汐",
+      "icon_file": "assets/characters/T_IconRoleHead256_24_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1305",
+      "name": "相里要",
+      "icon_file": "assets/characters/T_IconRoleHead256_25_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1404",
+      "name": "忌炎",
+      "icon_file": "assets/characters/T_IconRoleHead256_11_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1506",
+      "name": "菲比",
+      "icon_file": "assets/characters/T_IconRoleHead256_45_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升20%。施放共鸣解放时，队伍中的角色衍射伤害加成提升20%，持续30秒。"
+        }
+      ]
+    },
+    {
+      "id": "1603",
+      "name": "椿",
+      "icon_file": "assets/characters/T_IconRoleHead256_29_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1606",
+      "name": "洛可可",
+      "icon_file": "assets/characters/T_IconRoleHead256_33_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升20%。施放共鸣解放时，队伍中的角色湮灭伤害加成提升20%，持续30秒。"
+        }
+      ]
+    },
+    {
+      "id": "1607",
+      "name": "坎特蕾拉",
+      "icon_file": "assets/characters/T_IconRoleHead256_34_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "6",
+          "description": "角色最终伤害提升25%。"
+        }
+      ]
+    },
+    {
+      "id": "1109",
+      "name": "洛瑟菈",
+      "icon_file": "assets/characters/T_IconRoleHead256_66_UI.webp",
+      "enhancements": [
+        {
+          "sourceKey": "season-stamina",
+          "kind": "stamina-bonus",
+          "description": "角色拥有额外1点体力（终焉矩阵S2-4（S2第四阶段）限定）。"
+        }
+      ]
+    }
+  ],
+  "scoring": {
+    "status": "provisional",
+    "basis": "S2-4分数暂按S2-3相同出场位次沿用，尚未实测；高轮次按原表规律推算。",
+    "basedOnSeason": "s2-phase3",
+    "waves": [
+      {
+        "round": 1,
+        "position": 1,
+        "fullPoints": 4677.099166666667,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=5612519/1200",
+        "maxHp": 5612519.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 1,
+        "position": 2,
+        "fullPoints": 4677.099166666667,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=5612519/1200",
+        "maxHp": 5612519.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 1,
+        "position": 3,
+        "fullPoints": 4677.099166666667,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=5612519/1200",
+        "maxHp": 5612519.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 1,
+        "position": 4,
+        "fullPoints": 4677.099166666667,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=5612519/1200",
+        "maxHp": 5612519.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 1,
+        "position": 5,
+        "fullPoints": 6659.290083333334,
+        "killBonus": 1000,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=6173771/1200*1.1+1000",
+        "maxHp": 6173771.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 2,
+        "position": 1,
+        "fullPoints": 9143.950916666665,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=9541514/1200*1.15",
+        "maxHp": 9541514.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 2,
+        "position": 2,
+        "fullPoints": 9143.950916666665,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=9541514/1200*1.15",
+        "maxHp": 9541514.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 2,
+        "position": 3,
+        "fullPoints": 9143.950916666665,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=9541514/1200*1.15",
+        "maxHp": 9541514.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 2,
+        "position": 4,
+        "fullPoints": 9143.950916666665,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=9541514/1200*1.15",
+        "maxHp": 9541514.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 2,
+        "position": 5,
+        "fullPoints": 14447.049091666668,
+        "killBonus": 1000,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=12756094/1200*1.15*1.1+1000",
+        "maxHp": 12756094.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 3,
+        "position": 1,
+        "fullPoints": 20196.823958333334,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25",
+        "maxHp": 19388951.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 3,
+        "position": 2,
+        "fullPoints": 20196.823958333334,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25",
+        "maxHp": 19388951.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 3,
+        "position": 3,
+        "fullPoints": 20196.823958333334,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25",
+        "maxHp": 19388951.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 3,
+        "position": 4,
+        "fullPoints": 20196.823958333334,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25",
+        "maxHp": 19388951.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 3,
+        "position": 5,
+        "fullPoints": 23216.506354166668,
+        "killBonus": 1000,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*1.1+1000",
+        "maxHp": 19388951.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 4,
+        "position": 1,
+        "fullPoints": 21206.66515625,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*1)",
+        "maxHp": 20358398.55,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 4,
+        "position": 2,
+        "fullPoints": 22216.506354166668,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*2)",
+        "maxHp": 21327846.1,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 4,
+        "position": 3,
+        "fullPoints": 23226.347552083334,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*3)",
+        "maxHp": 22297293.65,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 4,
+        "position": 4,
+        "fullPoints": 24236.18875,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*4)",
+        "maxHp": 23266741.2,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 4,
+        "position": 5,
+        "fullPoints": 28770.632942708333,
+        "killBonus": 1000,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*1.1*(1+0.05*5)+1000",
+        "maxHp": 24236188.75,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 5,
+        "position": 1,
+        "fullPoints": 26255.871145833335,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*6)",
+        "maxHp": 25205636.3,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 5,
+        "position": 2,
+        "fullPoints": 27265.71234375,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*7)",
+        "maxHp": 26175083.85,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 5,
+        "position": 3,
+        "fullPoints": 28275.553541666668,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*8)",
+        "maxHp": 27144531.4,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 5,
+        "position": 4,
+        "fullPoints": 29285.394739583335,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*9)",
+        "maxHp": 28113978.95,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 5,
+        "position": 5,
+        "fullPoints": 34324.759531250005,
+        "killBonus": 1000,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*1.1*(1+0.05*10)+1000",
+        "maxHp": 29083426.5,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 6,
+        "position": 1,
+        "fullPoints": 31305.077135416668,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*11)",
+        "maxHp": 30052874.05,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 6,
+        "position": 2,
+        "fullPoints": 32314.918333333335,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*12)",
+        "maxHp": 31022321.6,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 6,
+        "position": 3,
+        "fullPoints": 33324.75953125,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*13)",
+        "maxHp": 31991769.15,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 6,
+        "position": 4,
+        "fullPoints": 34334.60072916667,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*14)",
+        "maxHp": 32961216.700000003,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 6,
+        "position": 5,
+        "fullPoints": 39878.88611979167,
+        "killBonus": 1000,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*1.1*(1+0.05*15)+1000",
+        "maxHp": 33930664.25,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 7,
+        "position": 1,
+        "fullPoints": 36354.283125,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*16)",
+        "maxHp": 34900111.800000004,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 7,
+        "position": 2,
+        "fullPoints": 37364.12432291667,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*17)",
+        "maxHp": 35869559.35,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 7,
+        "position": 3,
+        "fullPoints": 38373.965520833335,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*18)",
+        "maxHp": 36839006.9,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 7,
+        "position": 4,
+        "fullPoints": 39383.806718750006,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*19)",
+        "maxHp": 37808454.45,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 7,
+        "position": 5,
+        "fullPoints": 45433.012708333335,
+        "killBonus": 1000,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*1.1*(1+0.05*20)+1000",
+        "maxHp": 38777902.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 8,
+        "position": 1,
+        "fullPoints": 41403.48911458333,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*21)",
+        "maxHp": 39747349.55,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 8,
+        "position": 2,
+        "fullPoints": 42413.3303125,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*22)",
+        "maxHp": 40716797.1,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 8,
+        "position": 3,
+        "fullPoints": 43423.17151041667,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*23)",
+        "maxHp": 41686244.650000006,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 8,
+        "position": 4,
+        "fullPoints": 44433.012708333335,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*24)",
+        "maxHp": 42655692.2,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 8,
+        "position": 5,
+        "fullPoints": 50987.139296875,
+        "killBonus": 1000,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*1.1*(1+0.05*25)+1000",
+        "maxHp": 43625139.75,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 9,
+        "position": 1,
+        "fullPoints": 46452.69510416667,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*26)",
+        "maxHp": 44594587.3,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 9,
+        "position": 2,
+        "fullPoints": 47462.53630208334,
+        "killBonus": 0,
+        "inferred": false,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*27)",
+        "maxHp": 45564034.85,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 9,
+        "position": 3,
+        "fullPoints": 48472.37750000001,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*28)",
+        "maxHp": 46533482.400000006,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 9,
+        "position": 4,
+        "fullPoints": 49482.21869791667,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*29)",
+        "maxHp": 47502929.95,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 9,
+        "position": 5,
+        "fullPoints": 56541.26588541667,
+        "killBonus": 1000,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*30)*1.1+1000",
+        "maxHp": 48472377.5,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 10,
+        "position": 1,
+        "fullPoints": 51501.90109375,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*31)",
+        "maxHp": 49441825.05,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 10,
+        "position": 2,
+        "fullPoints": 52511.74229166667,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*32)",
+        "maxHp": 50411272.6,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 10,
+        "position": 3,
+        "fullPoints": 53521.58348958334,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*33)",
+        "maxHp": 51380720.150000006,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 10,
+        "position": 4,
+        "fullPoints": 54531.4246875,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*34)",
+        "maxHp": 52350167.7,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 10,
+        "position": 5,
+        "fullPoints": 62095.39247395834,
+        "killBonus": 1000,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*35)*1.1+1000",
+        "maxHp": 53319615.25,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 11,
+        "position": 1,
+        "fullPoints": 56551.107083333336,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*36)",
+        "maxHp": 54289062.8,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 11,
+        "position": 2,
+        "fullPoints": 57560.94828125001,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*37)",
+        "maxHp": 55258510.35,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 11,
+        "position": 3,
+        "fullPoints": 58570.78947916668,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*38)",
+        "maxHp": 56227957.900000006,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 11,
+        "position": 4,
+        "fullPoints": 59580.63067708334,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*39)",
+        "maxHp": 57197405.45,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 11,
+        "position": 5,
+        "fullPoints": 67649.51906250001,
+        "killBonus": 1000,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*40)*1.1+1000",
+        "maxHp": 58166853.0,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 12,
+        "position": 1,
+        "fullPoints": 61600.31307291667,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*41)",
+        "maxHp": 59136300.550000004,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 12,
+        "position": 2,
+        "fullPoints": 62610.154270833336,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*42)",
+        "maxHp": 60105748.1,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 12,
+        "position": 3,
+        "fullPoints": 63619.99546875,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*43)",
+        "maxHp": 61075195.65,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 12,
+        "position": 4,
+        "fullPoints": 64629.83666666667,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*44)",
+        "maxHp": 62044643.2,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 12,
+        "position": 5,
+        "fullPoints": 73203.64565104168,
+        "killBonus": 1000,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*45)*1.1+1000",
+        "maxHp": 63014090.75,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 13,
+        "position": 1,
+        "fullPoints": 66649.51906250001,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*46)",
+        "maxHp": 63983538.300000004,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 13,
+        "position": 2,
+        "fullPoints": 67659.36026041667,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*47)",
+        "maxHp": 64952985.85,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 13,
+        "position": 3,
+        "fullPoints": 68669.20145833334,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*48)",
+        "maxHp": 65922433.400000006,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 13,
+        "position": 4,
+        "fullPoints": 69679.04265625,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*49)",
+        "maxHp": 66891880.95,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 13,
+        "position": 5,
+        "fullPoints": 78757.77223958334,
+        "killBonus": 1000,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*50)*1.1+1000",
+        "maxHp": 67861328.5,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 14,
+        "position": 1,
+        "fullPoints": 71698.72505208335,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*51)",
+        "maxHp": 68830776.05000001,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 14,
+        "position": 2,
+        "fullPoints": 72708.56625,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*52)",
+        "maxHp": 69800223.60000001,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 14,
+        "position": 3,
+        "fullPoints": 73718.40744791667,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*53)",
+        "maxHp": 70769671.15,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 14,
+        "position": 4,
+        "fullPoints": 74728.24864583334,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*54)",
+        "maxHp": 71739118.7,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 14,
+        "position": 5,
+        "fullPoints": 84311.898828125,
+        "killBonus": 1000,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*55)*1.1+1000",
+        "maxHp": 72708566.25,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 15,
+        "position": 1,
+        "fullPoints": 76747.93104166667,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*56)",
+        "maxHp": 73678013.80000001,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 15,
+        "position": 2,
+        "fullPoints": 77757.77223958334,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*57)",
+        "maxHp": 74647461.35000001,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 15,
+        "position": 3,
+        "fullPoints": 78767.61343750001,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*58)",
+        "maxHp": 75616908.9,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 15,
+        "position": 4,
+        "fullPoints": 79777.45463541667,
+        "killBonus": 0,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*59)",
+        "maxHp": 76586356.45,
+        "hpStatus": "provisional"
+      },
+      {
+        "round": 15,
+        "position": 5,
+        "fullPoints": 89866.02541666667,
+        "killBonus": 1000,
+        "inferred": true,
+        "sourceCell": null,
+        "formula": "=19388951/1200*1.25*(1+0.05*60)*1.1+1000",
+        "maxHp": 77555804.0,
+        "hpStatus": "provisional"
+      }
+    ],
+    "hpBasis": "S2-4 血量暂按 S2-3 相同轮次、相同出场位次沿用；其中 R4 起的血量按原表规律推算，尚未实测。"
+  }
+}

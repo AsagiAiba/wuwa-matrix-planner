@@ -1,12 +1,45 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { visibleWaves, locateScore, packTeams, reorderTeams, nearestTeamSlot, characterIdentity, validateConfig, staminaLimits, MIN_ZOOM, defaultTeamName, splitQuickTeams, axisTickStep } from '../score-axis.js';
+import { visibleWaves, bossScoreAtRemainingHp, locateScore, packTeams, reorderTeams, nearestTeamSlot, characterIdentity, validateConfig, staminaLimits, MIN_ZOOM, defaultTeamName, splitQuickTeams, axisTickStep } from '../score-axis.js';
 const scores = JSON.parse(readFileSync(new URL('../data/scores.json', import.meta.url))).records;
 const example = JSON.parse(readFileSync(new URL('../config/demo.json', import.meta.url)));
 const characters = new Set(JSON.parse(readFileSync(new URL('../data/characters.json', import.meta.url))).entries.filter(item => !item.download_failed).map(item => item.id));
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-7, `${a} != ${b}`);
 const stamina = JSON.parse(readFileSync(new URL('../config/stamina.json', import.meta.url)));
+
+test('remaining HP calculator keeps earned and remaining scores complementary at endpoints and fractional HP', () => {
+  for (const wave of scores) {
+    assert.deepEqual(bossScoreAtRemainingHp(wave, 100), {
+      earnedPoints: 0, remainingPoints: wave.full_kill_points, damagePointsEarned: 0, killBonusEarned: 0,
+    });
+    assert.deepEqual(bossScoreAtRemainingHp(wave, 0), {
+      earnedPoints: wave.full_kill_points, remainingPoints: 0, damagePointsEarned: wave.damage_points_at_full_hp, killBonusEarned: wave.kill_bonus,
+    });
+    const fractional = bossScoreAtRemainingHp(wave, 37.25);
+    near(fractional.earnedPoints, wave.damage_points_at_full_hp * .6275);
+    near(fractional.remainingPoints, wave.damage_points_at_full_hp * .3725 + wave.kill_bonus);
+    near(fractional.earnedPoints + fractional.remainingPoints, wave.full_kill_points);
+    assert.equal(fractional.killBonusEarned, 0);
+  }
+});
+test('remaining HP calculator awards the chest bonus only on reaching zero HP', () => {
+  for (const wave of scores.filter(item => item.kill_bonus)) {
+    const alive = bossScoreAtRemainingHp(wave, .001);
+    assert.equal(alive.killBonusEarned, 0);
+    assert.ok(alive.remainingPoints > wave.kill_bonus);
+    const defeated = bossScoreAtRemainingHp(wave, 0);
+    assert.equal(defeated.killBonusEarned, wave.kill_bonus);
+    near(defeated.earnedPoints - defeated.damagePointsEarned, wave.kill_bonus);
+  }
+});
+test('remaining HP calculator rejects missing, nonnumeric and out-of-range input', () => {
+  for (const invalid of ['', '50', 'bad', null, undefined, true, NaN, Infinity, -Infinity, -.01, 100.01]) {
+    assert.throws(() => bossScoreAtRemainingHp(scores[0], invalid), /百分比/);
+  }
+  assert.throws(() => bossScoreAtRemainingHp(null, 50), /分数数据/);
+  assert.throws(() => bossScoreAtRemainingHp({ ...scores[0], damage_points_at_full_hp: NaN }, 50), /分数数据/);
+});
 
 test('all 75 boss midpoints map to 50% HP', () => {
   for (const wave of scores) {
@@ -73,7 +106,7 @@ test('JSON round trip preserves teams, avatars, scores and positions', () => {
   overflow.teams[0].startScore = 1e9;
   assert.throws(() => validateConfig(overflow, characters, scores), /超出/);
   const other = structuredClone(example); other.towerId = 18;
-  assert.throws(() => validateConfig(other, characters, scores), /终焉矩阵S2-3/);
+  assert.throws(() => validateConfig(other, characters, scores), /不匹配/);
 });
 test('JSON prevents cross-team reuse, including other Rover variants', () => {
   const duplicate = structuredClone(example);
@@ -154,6 +187,14 @@ test('automatic names take each character first codepoint in selection order', (
   assert.equal(defaultTeamName(['1302', '1305'], map), '吟相');
   assert.equal(defaultTeamName([], map), '');
   for (const scale of [.0001, .001, .01, .04, .24]) assert.ok(axisTickStep(scale) * scale >= 80);
+});
+test('matrix identity is explicit and legacy stamina choices do not change the score-data period', () => {
+  const legacy = structuredClone(example); delete legacy.matrixSeason; delete legacy.matrixVersion; legacy.staminaSeason = 's2-phase4';
+  const migrated = validateConfig(legacy, characters, scores, new Map(), stamina);
+  assert.equal(migrated.matrixSeason, 's2-phase3'); assert.equal(migrated.staminaSeason, 's2-phase4');
+  const phase4 = { ...structuredClone(example), towerId: 18, matrixSeason: 's2-phase4', matrixVersion: 'wrong', staminaSeason: 's2-phase4', scoreMarker: 2000000 };
+  const result = validateConfig(phase4, characters, scores, new Map(), stamina);
+  assert.equal(result.matrixVersion, '终焉矩阵S2-4（S2第四阶段）'); assert.equal(result.scoreMarker, 2000000);
 });
 test('quick selections split strictly in threes and preserve partial last group', () => {
   assert.deepEqual(splitQuickTeams(['a', 'b', 'c', 'd', 'e', 'f', 'g']), [['a', 'b', 'c'], ['d', 'e', 'f'], ['g']]);

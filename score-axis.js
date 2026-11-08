@@ -2,6 +2,15 @@ export function visibleWaves(records, maxRound) {
   return records.filter(wave => wave.round <= maxRound);
 }
 
+export function bossScoreAtRemainingHp(wave, remainingPercent) {
+  if (!Number.isFinite(remainingPercent) || remainingPercent < 0 || remainingPercent > 100) throw new RangeError('剩余血量百分比须为 0—100');
+  if (!Number.isFinite(wave?.damage_points_at_full_hp) || !Number.isFinite(wave.full_kill_points) || !Number.isFinite(wave.kill_bonus) || wave.damage_points_at_full_hp <= 0 || wave.kill_bonus < 0 || wave.full_kill_points < wave.damage_points_at_full_hp) throw new TypeError('Boss 分数数据无效');
+  const damagePointsEarned = wave.damage_points_at_full_hp * (1 - remainingPercent / 100);
+  const killBonusEarned = remainingPercent === 0 ? wave.kill_bonus : 0;
+  const earnedPoints = remainingPercent === 0 ? wave.full_kill_points : damagePointsEarned;
+  return { earnedPoints, remainingPoints: wave.full_kill_points - earnedPoints, damagePointsEarned, killBonusEarned };
+}
+
 export function locateScore(score, waves) {
   if (!Number.isFinite(score) || !waves.length || score < 0 || score > waves.at(-1).cumulative_points_after + 1e-7) throw new RangeError('积分超出当前血线轴');
   const wave = waves.find(item => score < item.cumulative_points_after - 1e-7) || waves.at(-1);
@@ -68,25 +77,53 @@ export function staminaLimits(rules, seasonId, identityById = new Map()) {
   if (!rules) return limits;
   const season = rules.seasons.find(item => item.id === (seasonId || rules.defaultSeason));
   if (!season) throw new Error('体力期数无效');
-  for (const [id, count] of Object.entries(rules.baseStamina)) {
+  const baseStamina = season.baseStamina || rules.baseStamina;
+  const defaultStamina = season.defaultStamina || rules.defaultStamina;
+  for (const identity of identityById.values()) limits.set(identity, defaultStamina);
+  for (const [id, count] of Object.entries(baseStamina)) {
     const identity = identityById.get(id) || id;
-    limits.set(identity, Math.max(limits.get(identity) || rules.defaultStamina, count));
+    limits.set(identity, count);
   }
   for (const id of season.bonusCharacterIds) {
     const identity = identityById.get(id) || id;
-    limits.set(identity, (limits.get(identity) || rules.defaultStamina) + season.extraStamina);
+    limits.set(identity, (limits.get(identity) || defaultStamina) + season.extraStamina);
   }
   return limits;
 }
 
-export function validateConfig(value, characterIds, records, identityById = new Map(), staminaRules) {
-  if (!value || value.version !== 1 || value.towerId !== 16) throw new Error('请导入终焉矩阵S2-3（S2第三阶段，关卡16）的 version: 1 JSON 配置');
+export function staminaConflicts(teams, rules, seasonId, identityById = new Map()) {
+  const limits = staminaLimits(rules, seasonId, identityById);
+  const usage = new Map();
+  teams.forEach((team, index) => {
+    const seen = new Set();
+    for (const id of team.characterIds) {
+      const identity = identityById.get(id) || id;
+      if (seen.has(identity)) continue;
+      seen.add(identity);
+      if (!usage.has(identity)) usage.set(identity, { identity, characterId: id, teams: [] });
+      usage.get(identity).teams.push({ id: team.id, name: team.name, number: index + 1 });
+    }
+  });
+  return [...usage.values()].map(item => {
+    const limit = limits.get(item.identity) || rules?.defaultStamina || 1;
+    return { ...item, used: item.teams.length, limit, excess: item.teams.length - limit };
+  }).filter(item => item.excess > 0);
+}
+
+export function matrixInfo(config) {
+  const season = getSeason(config);
+  return { id: season.id, towerId: season.towerId, name: season.name, scoreReady: season.scoring.waves.length > 0, provisional: season.scoring.status === 'provisional', maxRound: season.maxRound };
+}
+
+export function validateConfig(value, characterIds, records, identityById = new Map(), staminaRules, options = {}) {
+  if (!value || value.version !== 1) throw new Error('请导入 version: 1 JSON 配置');
+  const matrix = matrixInfo(value);
   const maxRound = Math.max(...records.map(wave => wave.round));
   if (!Number.isInteger(value.maxRound) || value.maxRound < 1) throw new Error(`显示轮次须为 1—${maxRound}`);
   if (!Number.isFinite(value.pixelsPerPoint) || value.pixelsPerPoint <= 0 || value.pixelsPerPoint > MAX_ZOOM) throw new Error('缩放范围无效');
   if (!Array.isArray(value.teams) || value.teams.length > 40) throw new Error('队伍数量须为 0—40');
-  if (value.scoreMarker != null && (!Number.isFinite(value.scoreMarker) || value.scoreMarker < 0 || value.scoreMarker > records.at(-1).cumulative_points_after)) throw new Error('目标总分标记超出已导入的分数范围');
-  const total = visibleWaves(records, Math.min(value.maxRound, maxRound)).at(-1).cumulative_points_after;
+  if (value.scoreMarker != null && (!Number.isFinite(value.scoreMarker) || value.scoreMarker < 0 || value.scoreMarker > (matrix.scoreReady ? records.at(-1).cumulative_points_after : Number.MAX_SAFE_INTEGER))) throw new Error('目标总分标记超出已导入的分数范围');
+  const total = matrix.scoreReady ? visibleWaves(records, Math.min(value.maxRound, maxRound)).at(-1).cumulative_points_after : Number.MAX_SAFE_INTEGER;
   const ids = new Set();
   const usedCharacters = new Map();
   const limits = staminaLimits(staminaRules, value.staminaSeason, identityById);
@@ -104,7 +141,7 @@ export function validateConfig(value, characterIds, records, identityById = new 
       if (teamIdentities.has(identity)) throw new Error('同一队内不能重复选择同一角色');
       teamIdentities.add(identity);
       const count = (usedCharacters.get(identity) || 0) + 1;
-      if (count > (limits.get(identity) || staminaRules?.defaultStamina || 1)) throw new Error('角色体力不足，不能重复上阵到更多队伍');
+      if (!options.allowStaminaConflicts && count > (limits.get(identity) || staminaRules?.defaultStamina || 1)) throw new Error('角色体力不足，不能重复上阵到更多队伍');
       usedCharacters.set(identity, count);
     }
     const awaitingScore = team.needsScore === true && team.score === 0;
@@ -115,12 +152,16 @@ export function validateConfig(value, characterIds, records, identityById = new 
   if (combinedScore > total + 1e-7) throw new Error('所有队伍的总分超出当前血线轴，请增加显示轮次');
   const normalized = structuredClone(value);
   normalized.maxRound = Math.min(normalized.maxRound, maxRound);
+  normalized.matrixSeason = matrix.id;
+  normalized.matrixVersion = matrix.name;
   normalized.pixelsPerPoint = Math.max(MIN_ZOOM, normalized.pixelsPerPoint);
-  if (staminaRules) normalized.staminaSeason = value.staminaSeason || staminaRules.defaultSeason;
+  if (staminaRules) normalized.staminaSeason = value.staminaSeason || matrix.id;
   normalized.teams = packTeams(normalized.teams);
-  if (normalized.scoreMarker != null) normalized.maxRound = Math.max(normalized.maxRound, records.find(wave => wave.cumulative_points_after >= normalized.scoreMarker).round);
+  if (matrix.scoreReady && normalized.scoreMarker != null) normalized.maxRound = Math.max(normalized.maxRound, records.find(wave => wave.cumulative_points_after >= normalized.scoreMarker).round);
   return normalized;
 }
 export const MIN_ZOOM = 0.000001;
 export const MAX_ZOOM = 0.24;
+
+import { getSeason } from './season-config.js';
 

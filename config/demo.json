@@ -1,6 +1,8 @@
 {
   "version": 1,
   "towerId": 16,
+  "matrixSeason": "s2-phase3",
+  "matrixVersion": "终焉矩阵S2-3（S2第三阶段）",
   "staminaSeason": "s2-phase3",
   "maxRound": 2,
   "pixelsPerPoint": 0.04,

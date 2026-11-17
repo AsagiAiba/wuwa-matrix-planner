@@ -25,11 +25,13 @@ try {
   assert.equal(await page.locator('#circuit-buffs').evaluate(node => node.open), false);
   assert.equal(await page.locator('#other-enhancements').evaluate(node => node.open), false);
   assert.equal(await page.locator('#matrix-stamina-enhancements .matrix-character-enhancement').isVisible(), true);
-  assert.equal(await page.locator('#matrix-enhancements .matrix-character-enhancement').first().isVisible(), false);
+  assert.equal(await page.locator('#other-enhancements').evaluate(node => node.open), false);
   await page.locator('#other-enhancements > summary').click();
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('#other-enhancements'), '::details-content').opacity === '1');
   assert.equal(await page.locator('#matrix-enhancements .matrix-character-enhancement').first().isVisible(), true);
   await page.locator('#other-enhancements > summary').click();
-  assert.equal(await page.locator('#matrix-enhancements .matrix-character-enhancement').first().isVisible(), false);
+  await page.waitForFunction(() => !document.querySelector('#other-enhancements').open && getComputedStyle(document.querySelector('#other-enhancements'), '::details-content').contentVisibility === 'hidden');
+  assert.equal(await page.locator('#other-enhancements').evaluate(node => !node.open && getComputedStyle(node, '::details-content').contentVisibility === 'hidden'), true);
   assert.deepEqual(await page.locator('.matrix-circuit p').allTextContents(), content16.circuits.map(item => item.description));
   assert.match(await page.locator('.matrix-character-enhancement[data-character-id="1509"]').innerText(), /琳奈.*额外1点体力.*S2-3/s);
   assert.equal(await page.locator('.matrix-character-enhancement[data-character-id="1109"]').count(), 0);

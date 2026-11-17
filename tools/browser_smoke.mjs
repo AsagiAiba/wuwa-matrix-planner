@@ -39,7 +39,8 @@ try {
   await mkdir('outputs', { recursive: true });
   await page.goto(baseUrl);
   await page.locator('.team-bar').first().waitFor();
-  assert.deepEqual(await page.locator('#stamina-season option').allTextContents(), ['终焉矩阵S2-3（S2第三阶段）', '终焉矩阵S2-4（S2第四阶段）']);
+  assert.deepEqual(await page.locator('#stamina-season > option').allTextContents(), ['终焉矩阵S2-3（S2第三阶段）', '终焉矩阵S2-4（S2第四阶段）']);
+  assert.equal(await page.locator('#stamina-season optgroup option').count(), 7);
   assert.match(await page.locator('.stage-label').innerText(), /终焉矩阵S2-3（S2第三阶段）/);
   assert.ok(!/本期|下期/.test(await page.locator('body').innerText()));
   await page.locator('.team-bar[data-id="team-2"]').dblclick();

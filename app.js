@@ -17,7 +17,7 @@ const element = (tag, className, text) => {
   if (text !== undefined) node.textContent = text;
   return node;
 };
-const [characterData, example, elementData, alternateExample, characterSearchData, characterOrder] = await Promise.all(['data/characters.json', 'config/demo.json', 'data/elements.json', 'config/alternate-demo.json', 'data/character_search.json', 'config/character_order.json'].map(async url => {
+const [characterData, example, elementData, alternateExample, characterSearchData, characterOrder, bossPropertyData, matrixReferences] = await Promise.all(['data/characters.json', 'config/demo.json', 'data/elements.json', 'config/alternate-demo.json', 'data/character_search.json', 'config/character_order.json', 'config/boss_properties.json', 'config/matrix_references.json'].map(async url => {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`无法加载 ${url}`);
   return response.json();
@@ -83,6 +83,7 @@ function syncSeasonRuntime() {
   bossMap = new Map(season.bosses.map(boss => [boss.name, boss]));
 }
 let state = structuredClone(example);
+let referencePreviewId = null;
 let repairedRosters = false;
 let removedOutOfRangeMarker = false;
 let restoreError = null;
@@ -302,6 +303,7 @@ function renderPlanControls() {
 
 function enterActivePlan() {
   state = structuredClone(activePlan().config);
+  referencePreviewId = null;
   syncSeasonRuntime();
   delete state.planName;
   selectedId = state.teams[0]?.id;
@@ -368,14 +370,16 @@ function renderNewPlanSeasonNote() {
 function renderMatrixDetails() {
   const matrix = matrixInfo(state);
   const season = getSeason(state);
+  const reference = referencePreviewId && matrixReferences.periods.find(period => period.id === referencePreviewId);
+  const content = reference || getSeason(state.staminaSeason);
   document.querySelector('.stage-label').textContent = `${matrix.name} · ${season.modeName}`;
-  $('matrix-stamina-note').textContent = `体力规则独立选择；矩阵数据对应 ${matrix.name}。`;
+  $('matrix-stamina-note').textContent = reference ? `正在查看 ${reference.name} 的回路；队伍体力仍使用 ${getSeason(state.staminaSeason).name}，血线仍对应 ${matrix.name}。` : `体力与增益期数独立选择；血线数据对应 ${matrix.name}。`;
   $('matrix-data-note').textContent = `${matrix.name}：${season.scoring.basis} 剩余分数包含未获得的击杀奖励。双击队伍色条可编辑。`;
   $('max-round').disabled = !matrix.scoreReady; $('fit-bloodline').disabled = !matrix.scoreReady;
-  if (lastMatrixContent === matrix.towerId) return;
-  lastMatrixContent = matrix.towerId;
-  const content = season;
-  $('matrix-details-title').textContent = `${matrix.name} · 矩阵增益`;
+  if (lastMatrixContent === content.id) return;
+  lastMatrixContent = content.id;
+  $('matrix-details-title').textContent = `${content.name} · ${reference ? '回路增益（仅查看）' : '矩阵增益'}`;
+  $('export-season-config').textContent = reference ? '导出增益JSON' : '导出赛季JSON';
   $('matrix-details-source').href = content.source;
   $('circuit-buffs').open = false;
   $('matrix-circuits').replaceChildren();
@@ -393,14 +397,17 @@ function renderMatrixDetails() {
   $('matrix-enhancements').replaceChildren();
   $('matrix-stamina-enhancements').replaceChildren();
   $('other-enhancements').open = false;
-  const enhancements = content.characters.map(character => ({
+  $('matrix-character-heading').hidden = Boolean(reference);
+  $('other-enhancements').hidden = Boolean(reference);
+  const bonusIds = content.stamina?.bonusCharacterIds || [];
+  const enhancements = (content.characters || []).map(character => ({
     ...character,
     enhancements: character.enhancements.filter(effect => effect.kind !== 'stamina-bonus' && !/^角色拥有额外疲劳值/.test(effect.description)),
   })).filter(character => character.enhancements.length > 0);
-  for (const id of season.stamina.bonusCharacterIds) {
+  for (const id of bonusIds) {
     let character = enhancements.find(item => item.id === id);
     if (!character) { character = { ...characterMap.get(id), enhancements: [] }; enhancements.push(character); }
-    character.enhancements.push({ kind: 'stamina-bonus', description: `角色拥有额外${season.stamina.extraStamina}点体力（${season.name}限定）。` });
+    character.enhancements.push({ kind: 'stamina-bonus', description: `角色拥有额外${content.stamina.extraStamina}点体力（${content.name}限定）。` });
   }
   for (const character of enhancements) {
     const card = element('article', 'matrix-character-enhancement');
@@ -408,7 +415,7 @@ function renderMatrixDetails() {
     const heading = element('div', 'enhancement-character');
     heading.append(portrait(character.id), element('h4', '', character.name)); card.append(heading);
     for (const effect of character.enhancements) card.append(element('p', effect.kind === 'stamina-bonus' ? 'stamina-bonus-description' : '', effect.description));
-    const persistent = season.stamina.bonusCharacterIds.includes(character.id);
+    const persistent = bonusIds.includes(character.id);
     $(persistent ? 'matrix-stamina-enhancements' : 'matrix-enhancements').append(card);
   }
   $('other-enhancements-count').textContent = `（${$('matrix-enhancements').children.length}）`;
@@ -417,16 +424,23 @@ function renderMatrixDetails() {
 function renderBossPropertiesText(container, boss) {
   container.replaceChildren();
   const properties = boss.specialProperties || [];
-  if (!properties.length) container.append(element('p', 'muted', '暂无特殊性质说明。'));
+  if (!properties.length) container.append(element('p', 'muted', '无特殊增伤性质'));
   else for (const description of properties) container.append(element('p', '', description));
 }
 
 let bossSeasonFilter = 'all';
+let hideBossesWithoutProperties = false;
 const bossKeywordFilters = new Set();
 const bossPropertyKeywords = ['同奏', '效应', '声骸', '护盾', '谐度'];
+// Historical property references do not create playable seasons or scoring tables.
+const bossPropertySeasons = bossPropertyData.seasons.map(reference => {
+  const playable = seasonDefinitions.find(season => season.id === reference.id);
+  if (!playable) return reference;
+  return { ...reference, bosses: playable.bosses.map(boss => ({ ...reference.bosses.find(entry => entry.id === boss.id), ...boss })) };
+});
 function renderBossPropertyFilters() {
   $('boss-season-filters').replaceChildren(element('span', 'muted', '赛季'));
-  for (const [value, label] of [['all', '全部'], ...seasonDefinitions.map(season => [`${season.season}-${season.stage}`, `${season.season}-${season.stage}`])]) {
+  for (const [value, label] of [['all', '全部'], ...bossPropertySeasons.map(season => [season.label, season.label])]) {
     const button = element('button', 'boss-filter-button', label); button.type = 'button';
     button.setAttribute('aria-pressed', String(bossSeasonFilter === value));
     button.addEventListener('click', () => { bossSeasonFilter = value; renderBossPropertyFilters(); renderBossPropertiesCatalog(); });
@@ -447,32 +461,47 @@ function renderBossPropertyFilters() {
 }
 function renderBossPropertiesCatalog() {
   const catalog = new Map();
-  for (const season of seasonDefinitions) {
+  const ordered = [...bossPropertySeasons.filter(season => seasonDefinitions.some(playable => playable.id === season.id)), ...bossPropertySeasons.filter(season => !seasonDefinitions.some(playable => playable.id === season.id))];
+  for (const season of ordered) {
     for (const boss of season.bosses) {
-      if (!boss.specialProperties?.some(text => text.trim())) continue;
-      const key = `${boss.id}:${JSON.stringify(boss.specialProperties || [])}`;
+      const key = boss.propertyGroup || boss.name;
       if (!catalog.has(key)) catalog.set(key, { boss, seasons: [] });
-      catalog.get(key).seasons.push(`${season.season}-${season.stage}`);
+      if (!catalog.get(key).seasons.includes(season.label)) catalog.get(key).seasons.push(season.label);
     }
   }
   const entries = [...catalog.values()];
   const query = $('boss-properties-search').value.trim().toLowerCase();
+  const selectedPeriod = bossPropertySeasons.find(season => season.label === bossSeasonFilter || (bossSeasonFilter === 'all' && season.label.toLowerCase() === query));
   const matches = entries.filter(({ boss, seasons }) => (bossSeasonFilter === 'all' || seasons.includes(bossSeasonFilter)) &&
+    (!hideBossesWithoutProperties || boss.specialProperties.some(text => text.trim())) &&
     (!bossKeywordFilters.size || [...bossKeywordFilters].some(word => boss.specialProperties.some(text => text.includes(word)))) &&
     [boss.name, boss.alias, ...seasons, ...boss.specialProperties].join(' ').toLowerCase().includes(query));
+  const periodOrder = new Map();
+  for (const [index, boss] of (selectedPeriod?.bosses || []).entries()) {
+    const key = boss.propertyGroup || boss.name;
+    if (!periodOrder.has(key)) periodOrder.set(key, index);
+  }
+  matches.sort((left, right) => Number(left.boss.name === '矩阵奇藏') - Number(right.boss.name === '矩阵奇藏') ||
+    (selectedPeriod ? periodOrder.get(left.boss.propertyGroup || left.boss.name) - periodOrder.get(right.boss.propertyGroup || right.boss.name) : 0));
   $('boss-properties-count').textContent = `（${entries.length}）`;
-  $('boss-properties-results').textContent = `${matches.length} / ${entries.length} 只 Boss`;
+  $('boss-properties-results').textContent = `${matches.length} / ${entries.length} 条 Boss 记录`;
+  $('boss-property-hide-empty').setAttribute('aria-pressed', String(hideBossesWithoutProperties));
   $('boss-properties-list').replaceChildren();
   for (const { boss, seasons } of matches) {
     const card = element('article', 'boss-property-card');
     card.dataset.bossId = boss.id;
+    if (boss.propertyGroup) card.dataset.propertyGroup = boss.propertyGroup;
     const heading = element('div', 'boss-property-heading');
-    const image = element('img'); image.src = boss.icon_file; image.alt = ''; image.loading = 'lazy';
+    const image = boss.icon_file ? element('img') : element('span', 'boss-property-icon-placeholder', boss.name === '矩阵集群' ? '群' : boss.name[0]);
+    if (boss.icon_file) { image.src = boss.icon_file; image.alt = ''; image.loading = 'lazy'; }
+    else image.setAttribute('aria-hidden', 'true');
     const title = element('div');
-    title.append(element('h4', '', boss.name), element('span', 'muted', seasons.join(' · ')));
+    title.append(element('h4', '', boss.name));
+    if (boss.name !== '矩阵奇藏') title.append(element('span', 'muted', seasons.join(' · ')));
     heading.append(image, title);
     const copy = element('div', 'boss-properties-copy');
-    renderBossPropertiesText(copy, boss); card.append(heading, copy);
+    card.append(heading);
+    if (boss.name !== '矩阵奇藏') { renderBossPropertiesText(copy, boss); card.append(copy); }
     $('boss-properties-list').append(card);
   }
   if (!matches.length) $('boss-properties-list').append(element('p', 'boss-property-empty muted', '没有找到匹配的 Boss，试试名称、简称或性质关键词。'));
@@ -567,12 +596,19 @@ function characterUsage(excludeTeamId) {
 
 function renderStaminaSeason() {
   const selected = staminaRules.seasons.find(season => season.id === state.staminaSeason);
-  $('stamina-season').value = selected.id;
-  $('stamina-season').title = `${selected.name}（仅体力规则）`;
+  const reference = referencePreviewId && matrixReferences.periods.find(period => period.id === referencePreviewId);
+  $('stamina-season').value = reference ? reference.id : selected.id;
+  if (reference) {
+    $('stamina-season').title = `${reference.name}（仅查看回路，不切换体力）`;
+    $('stamina-season-note').textContent = `仅查看往期回路；队伍体力仍按 ${selected.name}。`;
+    $('stamina-season-note').title = '查看往期增益不会改动队伍、体力、血线、目标或排布存档。';
+    return;
+  }
+  $('stamina-season').title = `${selected.name}（体力规则与增益资料）`;
   const bonusNames = selected.bonusCharacterIds.map(id => characterMap.get(id).name).join('、');
   const baseEntries = Object.entries(selected.baseStamina).filter(([, value]) => value > selected.defaultStamina);
   $('stamina-season-note').textContent = `${bonusNames} 临时 +${selected.extraStamina} 体；${baseEntries.length} 名多体力角色`;
-  $('stamina-season-note').title = `${baseEntries.map(([id, count]) => `${characterMap.get(id).name} ${count}体`).join('、')}。切换此项仅改变体力规则，矩阵期数为${matrixInfo(state).name}。`;
+  $('stamina-season-note').title = `${baseEntries.map(([id, count]) => `${characterMap.get(id).name} ${count}体`).join('、')}。切换此项更新体力规则与增益资料，血线期数仍为${matrixInfo(state).name}。`;
 }
 
 function renderStaminaConflict() {
@@ -618,6 +654,7 @@ function renderStaminaConflict() {
 }
 
 function tryChangeStaminaSeason(id) {
+  referencePreviewId = null;
   const conflicts = staminaConflicts(state.teams, staminaRules, id, identityById);
   if (conflicts.length) {
     pendingStaminaSeason = id; $('stamina-season').value = state.staminaSeason;
@@ -1781,6 +1818,10 @@ $('close-copy-config').addEventListener('click', () => $('copy-config-dialog').c
 $('close-boss-dialog').addEventListener('click', () => $('boss-dialog').close());
 $('boss-hp-percent').addEventListener('input', renderBossScoreCalculation);
 $('boss-properties-search').addEventListener('input', renderBossPropertiesCatalog);
+$('boss-property-hide-empty').addEventListener('click', () => {
+  hideBossesWithoutProperties = !hideBossesWithoutProperties;
+  renderBossPropertiesCatalog();
+});
 $('boss-dialog').addEventListener('close', () => { inspectedBossWave = null; });
 $('select-copy-config').addEventListener('click', () => { $('copy-config-text').focus(); $('copy-config-text').select(); });
 $('plan-form').addEventListener('submit', event => {
@@ -1802,15 +1843,27 @@ for (const season of staminaRules.seasons) {
   option.value = season.id; $('stamina-season').append(option);
   const planOption = element('option', '', season.name); planOption.value = season.id; $('plan-season').append(planOption);
 }
+const historicalOptions = element('optgroup'); historicalOptions.label = '往期回路（仅查看）';
+for (const period of matrixReferences.periods.filter(period => period.viewOnly)) {
+  const option = element('option', '', `${period.name} · 回路查看`);
+  option.value = period.id; historicalOptions.append(option);
+}
+$('stamina-season').append(historicalOptions);
 $('plan-season').addEventListener('change', renderNewPlanSeasonNote);
 $('export-season-config').addEventListener('click', () => {
-  const season = getSeason(state);
+  const season = referencePreviewId ? matrixReferences.periods.find(period => period.id === referencePreviewId) : getSeason(state.staminaSeason);
   const url = URL.createObjectURL(new Blob([JSON.stringify(season, null, 2) + '\n'], { type: 'application/json' }));
-  const link = element('a'); link.href = url; link.download = `${season.name}-赛季配置.json`; link.click();
+  const link = element('a'); link.href = url; link.download = `${season.name}-${referencePreviewId ? '回路增益' : '赛季配置'}.json`; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 $('stamina-season').addEventListener('change', () => {
-  tryChangeStaminaSeason($('stamina-season').value);
+  const period = matrixReferences.periods.find(period => period.id === $('stamina-season').value);
+  if (period?.viewOnly) {
+    referencePreviewId = period.id; pendingStaminaSeason = null; renderAll(); $('circuit-buffs').open = true;
+  } else {
+    tryChangeStaminaSeason($('stamina-season').value);
+    $('circuit-buffs').open = true;
+  }
 });
 $('zoom').min = MIN_ZOOM;
 $('zoom').max = MAX_ZOOM;

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "source": "用户于2026-11-18提供的游戏截图与文字",
+  "bosses": {
+    "朔雷之鳞": {
+      "specialProperties": [
+        "朔雷之鳞拥有集谐·偏移或集谐·干涉时受到的伤害最终提升20%。",
+        "朔雷之鳞的集谐·干涉层数上限提升2层。",
+        "处于集谐·偏移状态下，被谐度破坏命中时，额外获得来自角色附加的2层【集谐·干涉】，该效果每场战斗仅可触发1次。"
+      ]
+    },
+    "炉芯机骸": {
+      "specialProperties": [
+        "炉芯机骸被附加异常效应时，会直接暴露「破绽核心」。若炉芯机骸拥有异常效应时被破坏装甲，其受到的异常效应伤害最终提升100%，持续30秒。该效果存在期间，不再暴露「破绽核心」。"
+      ]
+    },
+    "伤痕": {
+      "specialProperties": [
+        "受到聚爆效应最终伤害提升100%。"
+      ]
+    }
+  },
+  "clusters": {
+    "s1-phase3": {
+      "propertyGroup": "matrix-cluster-s1-3",
+      "representativeName": "冥渊守卫",
+      "representativeMonsterId": "320000070",
+      "specialProperties": []
+    },
+    "s2-phase1": {
+      "propertyGroup": "matrix-cluster-s2-1",
+      "representativeName": "奏谕乐师",
+      "representativeMonsterId": "320000040",
+      "specialProperties": [
+        "敌方所受到的湮灭伤害最终提升10%，当受虚湮效应影响时，该效果提升至40%。"
+      ]
+    }
+  }
+}

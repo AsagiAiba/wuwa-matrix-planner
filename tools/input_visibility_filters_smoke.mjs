@@ -46,13 +46,14 @@ try {
   await page.locator('#enable-all-characters').click(); await page.locator('#save-disabled-characters').click();
   await page.locator('#quick-team').click(); await page.locator('#character-search').fill('lili'); assert.equal(await page.locator('.character-choice').count(), 1); await page.keyboard.press('Escape');
   await page.locator('#boss-properties-details > summary').click();
-  assert.equal((await bossNames()).length, 6);
+  await page.locator('#boss-property-hide-empty').click();
+  assert.equal((await bossNames()).length, 14);
   assert.ok(!(await bossNames()).some(name => ['燎照之骑','矩阵奇藏'].includes(name)));
   await season('S2-3'); assert.deepEqual(await bossNames(), ['封庭械囿','无冠者','天傀劫煞']);
   await keyword('效应'); assert.deepEqual(await bossNames(), ['天傀劫煞']);
   await keyword('同奏'); assert.deepEqual(await bossNames(), ['无冠者','天傀劫煞']);
-  await season('S2-4'); assert.deepEqual(await bossNames(), ['无冠者','达妮娅']);
-  await keyword('声骸'); assert.deepEqual(await bossNames(), ['无冠者','达妮娅','辛吉勒姆']);
+  await season('S2-4'); assert.deepEqual(await bossNames(), ['达妮娅','无冠者']);
+  await keyword('声骸'); assert.deepEqual(await bossNames(), ['达妮娅','无冠者','辛吉勒姆']);
   await page.locator('#boss-properties-details').screenshot({ path: 'outputs/boss-property-filters.png' });
   await keyword('全部'); await page.locator('#boss-properties-search').fill('飞廉'); assert.deepEqual(await bossNames(), ['飞廉之猩']);
   await season('S2-3'); assert.deepEqual(await bossNames(), []);

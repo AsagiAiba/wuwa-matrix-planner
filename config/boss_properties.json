@@ -1,0 +1,1141 @@
+{
+  "version": 1,
+  "siteDataVersion": "3.8",
+  "checkedAt": "2026-11-17",
+  "indexSource": "https://ww.nanoka.cc/newtower",
+  "scope": "影响玩家对 Boss 输出的伤害增减；排除纯防护、行动变化、Boss 攻击增强及共振度/偏谐积累。",
+  "seasons": [
+    {
+      "id": "s0-phase1",
+      "label": "S0-1",
+      "name": "矩阵叠兵S0-1",
+      "activityName": "矩阵叠兵",
+      "namingSource": "用户自定义赛季名",
+      "towerId": 2,
+      "source": "https://ww.nanoka.cc/newtower/2",
+      "mode": "奇点扩张",
+      "bosses": [
+        {
+          "id": "650000053",
+          "name": "飞廉之猩",
+          "alias": "飞廉之猩",
+          "icon_file": "assets/bosses/T_IconMonsterHead_996_UI.webp",
+          "specialProperties": [
+            "受到伤害降低20%。",
+            "被谐度破坏时，飞廉之猩受到伤害提升12.5%，持续至本场战斗结束，可叠加4层。"
+          ],
+          "status": "confirmed",
+          "propertySource": "same-boss-user-confirmed",
+          "sourceWaveIds": [
+            5,
+            9,
+            13
+          ],
+          "source": "https://ww.nanoka.cc/newtower/2",
+          "propertyEvidence": [
+            {
+              "description": "飞廉之猩受到伤害降低20%。",
+              "waveIds": [
+                5,
+                9,
+                13
+              ]
+            },
+            {
+              "description": "被谐度破坏时，飞廉之猩受到伤害提升12.5%，持续至本场战斗结束，可叠加4层。",
+              "waveIds": [
+                5,
+                9,
+                13
+              ]
+            }
+          ],
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_996_UI.webp",
+          "originalSpecialProperties": [
+            "飞廉之猩受到伤害降低20%。",
+            "被谐度破坏时，飞廉之猩受到伤害提升12.5%，持续至本场战斗结束，可叠加4层。"
+          ],
+          "syncNote": "按用户确认，同名矩阵Boss的伤害性质跨期同步。"
+        },
+        {
+          "id": "650000050",
+          "name": "燎照之骑",
+          "alias": "燎照之骑",
+          "icon_file": "assets/bosses/T_Boss_33020.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            6,
+            10,
+            14
+          ],
+          "source": "https://ww.nanoka.cc/newtower/2",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_33020.webp"
+        },
+        {
+          "id": "882900013",
+          "name": "异构武装",
+          "alias": "异构武装",
+          "icon_file": "assets/bosses/T_IconMonsterHead_33012_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            7
+          ],
+          "source": "https://ww.nanoka.cc/newtower/2",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_33012_UI.webp",
+          "icon_sha256": "e4728d965456f68e95f448464cfe8d4c6e150d52d5b59e63c299260f4f6df682"
+        },
+        {
+          "id": "650000052",
+          "name": "辉萤军势",
+          "alias": "辉萤军势",
+          "icon_file": "assets/bosses/T_IconMonsterHead_994_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            8,
+            12,
+            16
+          ],
+          "source": "https://ww.nanoka.cc/newtower/2",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_994_UI.webp",
+          "icon_sha256": "2aa3c6d2a5976b8984725a7842b4314f1f3904988e7c4d6afefb3fd837b5e66f"
+        },
+        {
+          "id": "882700017",
+          "name": "异构武装",
+          "alias": "异构武装",
+          "icon_file": "assets/bosses/T_IconMonsterHead_33012_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            11,
+            15
+          ],
+          "source": "https://ww.nanoka.cc/newtower/2",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_33012_UI.webp",
+          "icon_sha256": "e4728d965456f68e95f448464cfe8d4c6e150d52d5b59e63c299260f4f6df682"
+        }
+      ]
+    },
+    {
+      "id": "s0-phase2",
+      "label": "S0-2",
+      "name": "矩阵叠兵S0-2",
+      "activityName": "矩阵叠兵",
+      "namingSource": "用户自定义赛季名",
+      "towerId": 4,
+      "source": "https://ww.nanoka.cc/newtower/4",
+      "mode": "奇点扩张",
+      "bosses": [
+        {
+          "id": "607750002",
+          "name": "飞廉之猩",
+          "alias": "飞廉之猩",
+          "icon_file": "assets/bosses/T_IconMonsterHead_996_UI.webp",
+          "specialProperties": [
+            "受到伤害降低20%。",
+            "被谐度破坏时，飞廉之猩受到伤害提升12.5%，持续至本场战斗结束，可叠加4层。"
+          ],
+          "status": "confirmed",
+          "propertySource": "same-boss-user-confirmed",
+          "sourceWaveIds": [
+            21,
+            25,
+            29
+          ],
+          "source": "https://ww.nanoka.cc/newtower/4",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_996_UI.webp",
+          "originalSpecialProperties": [],
+          "syncNote": "按用户确认，同名矩阵Boss的伤害性质跨期同步。"
+        },
+        {
+          "id": "607750001",
+          "name": "异构武装",
+          "alias": "异构武装",
+          "icon_file": "assets/bosses/T_IconMonsterHead_33012_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            22,
+            26,
+            30
+          ],
+          "source": "https://ww.nanoka.cc/newtower/4",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_33012_UI.webp",
+          "icon_sha256": "e4728d965456f68e95f448464cfe8d4c6e150d52d5b59e63c299260f4f6df682"
+        },
+        {
+          "id": "607750000",
+          "name": "无常凶鹭",
+          "alias": "无常凶鹭",
+          "icon_file": "assets/bosses/T_IconMonsterHead_995_UI.webp",
+          "specialProperties": [
+            "共鸣者生命值大于50%时，无常凶鹭受到的最终伤害提升10%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "nanoka",
+          "sourceWaveIds": [
+            23,
+            27,
+            31
+          ],
+          "source": "https://ww.nanoka.cc/newtower/4",
+          "propertyEvidence": [
+            {
+              "description": "共鸣者生命值大于50%时，无常凶鹭受到的最终伤害提升10%。",
+              "waveIds": [
+                23
+              ]
+            }
+          ],
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_995_UI.webp",
+          "icon_sha256": "a5f11589b4a1b2c0b72ac0fc7d4f8c94cfdc61901cd1048098b84a5a417ebb05"
+        },
+        {
+          "id": "607750003",
+          "name": "海维夏",
+          "alias": "海维夏",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34021_UI.webp",
+          "specialProperties": [
+            "海维夏受到的震谐伤害最终提高100%，其处于震谐·偏移状态下，被谐度破坏命中时，受到的伤害最终提升15%，持续15秒。"
+          ],
+          "status": "confirmed",
+          "propertySource": "monster-description",
+          "sourceWaveIds": [
+            24,
+            28,
+            32
+          ],
+          "source": "https://ww.nanoka.cc/newtower/4",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000210",
+              "monsterId": "340000210",
+              "descriptions": [
+                "海维夏受到的震谐伤害最终提高100%，其处于震谐·偏移状态下，被谐度破坏命中时，受到的伤害最终提升15%，持续15秒。"
+              ]
+            }
+          ],
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_34021_UI.webp",
+          "icon_sha256": "e8552ca21bdd5955928496c3e284fac9efafca9d8856c4c6bb44516237710d94"
+        }
+      ]
+    },
+    {
+      "id": "s1-phase1",
+      "label": "S1-1",
+      "name": "终焉矩阵S1-1",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 6,
+      "source": "https://ww.nanoka.cc/newtower/6",
+      "mode": "奇点扩张",
+      "bosses": [
+        {
+          "id": "650000046",
+          "name": "云闪之鳞",
+          "alias": "云闪之鳞",
+          "icon_file": "assets/bosses/T_IconMonsterHead_226_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            37,
+            42,
+            47
+          ],
+          "source": "https://ww.nanoka.cc/newtower/6",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_226_UI.webp",
+          "icon_sha256": "ef76463d95e05a93960ce9a64e744cd37fc03ef205867a3d8d0c2bcc787947b1"
+        },
+        {
+          "id": "670800003",
+          "name": "无铭探索者",
+          "alias": "无铭探索者",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34026_UI.webp",
+          "specialProperties": [
+            "无铭探索者的受到【集谐·干涉】效果的层数上限增加2层。",
+            "当无铭探索者处于集谐·偏移的状态时被谐度破坏命中，将被额外附加1层【集谐·干涉】。",
+            "每层【集谐·干涉】将使无铭探索者受到的最终伤害额外提升4%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "monster-description",
+          "sourceWaveIds": [
+            38,
+            43,
+            48
+          ],
+          "source": "https://ww.nanoka.cc/newtower/6",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000260",
+              "monsterId": "340000260",
+              "descriptions": [
+                "无铭探索者的受到【集谐·干涉】效果的层数上限增加2层。",
+                "当无铭探索者处于集谐·偏移的状态时被谐度破坏命中，将被额外附加1层【集谐·干涉】。",
+                "每层【集谐·干涉】将使无铭探索者受到的最终伤害额外提升4%。"
+              ]
+            }
+          ],
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_34026_UI.webp",
+          "icon_sha256": "28f6245642a540217fb35d113e6889fd762e13409112804e90435b40ac335df7"
+        },
+        {
+          "id": "650000049",
+          "name": "无常凶鹭",
+          "alias": "无常凶鹭",
+          "icon_file": "assets/bosses/T_IconMonsterHead_995_UI.webp",
+          "specialProperties": [
+            "共鸣者生命值大于50%时，无常凶鹭受到的最终伤害提升10%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "nanoka",
+          "sourceWaveIds": [
+            39,
+            44,
+            49
+          ],
+          "source": "https://ww.nanoka.cc/newtower/6",
+          "propertyEvidence": [
+            {
+              "description": "共鸣者生命值大于50%时，无常凶鹭受到的最终伤害提升10%。",
+              "waveIds": [
+                39
+              ]
+            }
+          ],
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_995_UI.webp",
+          "icon_sha256": "a5f11589b4a1b2c0b72ac0fc7d4f8c94cfdc61901cd1048098b84a5a417ebb05"
+        },
+        {
+          "id": "676750008",
+          "name": "辛吉勒姆",
+          "alias": "辛吉勒姆",
+          "icon_file": "assets/bosses/T_Boss_340251.webp",
+          "specialProperties": [
+            "辛吉勒姆受到伤害最终降低25%。",
+            "声骸技能命中辛吉勒姆时，将为其附加一层【迷航】，最多叠加5层，同名声骸仅可触发一次。",
+            "每层【迷航】使辛吉勒姆受到的最终伤害提升10%。",
+            "【迷航】达到5层时，辛吉勒姆受到的最终伤害额外提升30%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            40,
+            45,
+            50
+          ],
+          "source": "https://ww.nanoka.cc/newtower/6",
+          "propertyEvidence": [
+            {
+              "description": "辛吉勒姆受到伤害最终降低25%。",
+              "waveIds": [
+                40
+              ]
+            }
+          ],
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000250",
+              "monsterId": "340000250",
+              "descriptions": [
+                "声骸技能命中辛吉勒姆时，将为其附加一层【迷航】，最多叠加5层，同名声骸仅可触发一次。",
+                "每层【迷航】使辛吉勒姆受到的最终伤害提升10%。",
+                "【迷航】达到5层时，辛吉勒姆受到的最终伤害额外提升30%。"
+              ]
+            }
+          ],
+          "mergeNote": "用户确认：25%减伤为此前遗漏，与迷航共同保留，适用于其历期矩阵记录。"
+        },
+        {
+          "id": "401800000",
+          "name": "矩阵奇藏",
+          "alias": "矩阵奇藏",
+          "icon_file": "assets/bosses/T_Boss_35220.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            41,
+            46,
+            51
+          ],
+          "source": "https://ww.nanoka.cc/newtower/6",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_35220.webp"
+        }
+      ]
+    },
+    {
+      "id": "s1-phase2",
+      "label": "S1-2",
+      "name": "终焉矩阵S1-2",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 8,
+      "source": "https://ww.nanoka.cc/newtower/8",
+      "mode": "奇点扩张",
+      "bosses": [
+        {
+          "id": "670800003",
+          "name": "无铭探索者",
+          "alias": "无铭探索者",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34026_UI.webp",
+          "specialProperties": [
+            "无铭探索者的受到【集谐·干涉】效果的层数上限增加2层。",
+            "当无铭探索者处于集谐·偏移的状态时被谐度破坏命中，将被额外附加1层【集谐·干涉】。",
+            "每层【集谐·干涉】将使无铭探索者受到的最终伤害额外提升4%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "monster-description",
+          "sourceWaveIds": [
+            57,
+            62,
+            67
+          ],
+          "source": "https://ww.nanoka.cc/newtower/8",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000260",
+              "monsterId": "340000260",
+              "descriptions": [
+                "无铭探索者的受到【集谐·干涉】效果的层数上限增加2层。",
+                "当无铭探索者处于集谐·偏移的状态时被谐度破坏命中，将被额外附加1层【集谐·干涉】。",
+                "每层【集谐·干涉】将使无铭探索者受到的最终伤害额外提升4%。"
+              ]
+            }
+          ],
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_34026_UI.webp",
+          "icon_sha256": "28f6245642a540217fb35d113e6889fd762e13409112804e90435b40ac335df7"
+        },
+        {
+          "id": "650000046",
+          "name": "云闪之鳞",
+          "alias": "云闪之鳞",
+          "icon_file": "assets/bosses/T_IconMonsterHead_226_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            58,
+            63,
+            68
+          ],
+          "source": "https://ww.nanoka.cc/newtower/8",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_226_UI.webp",
+          "icon_sha256": "ef76463d95e05a93960ce9a64e744cd37fc03ef205867a3d8d0c2bcc787947b1"
+        },
+        {
+          "id": "947700006",
+          "name": "炉芯机骸",
+          "alias": "炉芯机骸",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34022_UI.webp",
+          "specialProperties": [
+            "炉芯机骸被附加异常效应时，会直接暴露「破绽核心」。若炉芯机骸拥有异常效应时被破坏装甲，其受到的异常效应伤害最终提升100%，持续30秒。该效果存在期间，不再暴露「破绽核心」。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            59,
+            64,
+            69
+          ],
+          "source": "https://ww.nanoka.cc/newtower/8",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000220",
+              "monsterId": "340000220",
+              "descriptions": [
+                "炉芯机骸的特殊远程攻击「炽能斩」可以被弹回，对炉芯机骸造成伤害，并削减共振度。",
+                "炉芯机骸发动攻击，或经历数次逆势回击后，将暂时暴露左臂的「破绽核心」。此时攻击「破绽核心」，可破坏炉芯机骸的装甲，使其进入无法攻击状态。",
+                "炉芯机骸被附加异常效应时，会直接暴露「破绽核心」。若炉芯机骸拥有异常效应时被破坏装甲，其受到的异常效应伤害最终提升100%，持续30秒。该效果存在期间，不再暴露「破绽核心」。"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "650000040",
+          "name": "伤痕",
+          "alias": "伤痕",
+          "icon_file": "assets/bosses/T_IconMonsterHead_990_UI.webp",
+          "specialProperties": [
+            "受到聚爆效应最终伤害提升100%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            60,
+            65,
+            70
+          ],
+          "source": "https://ww.nanoka.cc/newtower/8"
+        },
+        {
+          "id": "401800000",
+          "name": "矩阵奇藏",
+          "alias": "矩阵奇藏",
+          "icon_file": "assets/bosses/T_Boss_35220.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            61,
+            66,
+            71
+          ],
+          "source": "https://ww.nanoka.cc/newtower/8",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_35220.webp"
+        }
+      ]
+    },
+    {
+      "id": "s1-phase3",
+      "label": "S1-3",
+      "name": "终焉矩阵S1-3",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 10,
+      "source": "https://ww.nanoka.cc/newtower/10",
+      "mode": "奇点扩张",
+      "bosses": [
+        {
+          "id": "24000049",
+          "name": "矩阵集群",
+          "alias": "矩阵集群 冥渊守卫",
+          "icon_file": "assets/bosses/T_IconMonsterHead_215_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            78,
+            85,
+            92
+          ],
+          "source": "https://ww.nanoka.cc/newtower/10",
+          "propertyGroup": "matrix-cluster-s1-3",
+          "representativeName": "冥渊守卫",
+          "representativeMonsterId": "320000070",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_215_UI.webp",
+          "icon_sha256": "d8f8c934424a6472a64723f3d5cd3db4a4f29c2db953e727d008780ba26bfc75"
+        },
+        {
+          "id": "24000014",
+          "name": "矩阵集群",
+          "alias": "矩阵集群 冥渊守卫",
+          "icon_file": "assets/bosses/T_IconMonsterHead_215_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            79,
+            80,
+            86,
+            87,
+            93,
+            94
+          ],
+          "source": "https://ww.nanoka.cc/newtower/10",
+          "propertyGroup": "matrix-cluster-s1-3",
+          "representativeName": "冥渊守卫",
+          "representativeMonsterId": "320000070",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_215_UI.webp",
+          "icon_sha256": "d8f8c934424a6472a64723f3d5cd3db4a4f29c2db953e727d008780ba26bfc75"
+        },
+        {
+          "id": "665000020",
+          "name": "芙露德莉斯",
+          "alias": "芙露德莉斯",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34012_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "missing",
+          "sourceWaveIds": [
+            81,
+            88,
+            95
+          ],
+          "source": "https://ww.nanoka.cc/newtower/10",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_34012_UI.webp",
+          "icon_sha256": "6fe3b125fef396d6f6a671259f7ceeda6808e1e62dfbc740211e4737cef55b3b"
+        },
+        {
+          "id": "676750008",
+          "name": "辛吉勒姆",
+          "alias": "辛吉勒姆",
+          "icon_file": "assets/bosses/T_Boss_340251.webp",
+          "specialProperties": [
+            "辛吉勒姆受到伤害最终降低25%。",
+            "声骸技能命中辛吉勒姆时，将为其附加一层【迷航】，最多叠加5层，同名声骸仅可触发一次。",
+            "每层【迷航】使辛吉勒姆受到的最终伤害提升10%。",
+            "【迷航】达到5层时，辛吉勒姆受到的最终伤害额外提升30%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            82,
+            89,
+            96
+          ],
+          "source": "https://ww.nanoka.cc/newtower/10",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000250",
+              "monsterId": "340000250",
+              "descriptions": [
+                "声骸技能命中辛吉勒姆时，将为其附加一层【迷航】，最多叠加5层，同名声骸仅可触发一次。",
+                "每层【迷航】使辛吉勒姆受到的最终伤害提升10%。",
+                "【迷航】达到5层时，辛吉勒姆受到的最终伤害额外提升30%。"
+              ]
+            }
+          ],
+          "mergeNote": "用户确认：25%减伤为此前遗漏，与迷航共同保留，适用于其历期矩阵记录。"
+        },
+        {
+          "id": "947700006",
+          "name": "炉芯机骸",
+          "alias": "炉芯机骸",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34022_UI.webp",
+          "specialProperties": [
+            "炉芯机骸被附加异常效应时，会直接暴露「破绽核心」。若炉芯机骸拥有异常效应时被破坏装甲，其受到的异常效应伤害最终提升100%，持续30秒。该效果存在期间，不再暴露「破绽核心」。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            83,
+            90,
+            97
+          ],
+          "source": "https://ww.nanoka.cc/newtower/10",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000220",
+              "monsterId": "340000220",
+              "descriptions": [
+                "炉芯机骸的特殊远程攻击「炽能斩」可以被弹回，对炉芯机骸造成伤害，并削减共振度。",
+                "炉芯机骸发动攻击，或经历数次逆势回击后，将暂时暴露左臂的「破绽核心」。此时攻击「破绽核心」，可破坏炉芯机骸的装甲，使其进入无法攻击状态。",
+                "炉芯机骸被附加异常效应时，会直接暴露「破绽核心」。若炉芯机骸拥有异常效应时被破坏装甲，其受到的异常效应伤害最终提升100%，持续30秒。该效果存在期间，不再暴露「破绽核心」。"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "401800000",
+          "name": "矩阵奇藏",
+          "alias": "矩阵奇藏",
+          "icon_file": "assets/bosses/T_Boss_35220.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "missing",
+          "sourceWaveIds": [
+            84,
+            91,
+            98
+          ],
+          "source": "https://ww.nanoka.cc/newtower/10",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_35220.webp"
+        }
+      ]
+    },
+    {
+      "id": "s2-phase1",
+      "label": "S2-1",
+      "name": "终焉矩阵S2-1",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 12,
+      "source": "https://ww.nanoka.cc/newtower/12",
+      "mode": "奇点扩张",
+      "bosses": [
+        {
+          "id": "24000046",
+          "name": "矩阵集群",
+          "alias": "矩阵集群 奏谕乐师",
+          "icon_file": "assets/bosses/T_IconMonsterHead_195_UI.webp",
+          "specialProperties": [
+            "敌方所受到的湮灭伤害最终提升10%，当受虚湮效应影响时，该效果提升至40%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            107,
+            114,
+            121
+          ],
+          "source": "https://ww.nanoka.cc/newtower/12",
+          "propertyGroup": "matrix-cluster-s2-1",
+          "representativeName": "奏谕乐师",
+          "representativeMonsterId": "320000040",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_195_UI.webp",
+          "icon_sha256": "cc03c1b9e0779780865d8ba2c82e81f32b26781d046948044a2d14fc27b577f7"
+        },
+        {
+          "id": "882000025",
+          "name": "矩阵集群",
+          "alias": "矩阵集群 奏谕乐师",
+          "icon_file": "assets/bosses/T_IconMonsterHead_195_UI.webp",
+          "specialProperties": [
+            "敌方所受到的湮灭伤害最终提升10%，当受虚湮效应影响时，该效果提升至40%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            108,
+            109,
+            115,
+            116,
+            122,
+            123
+          ],
+          "source": "https://ww.nanoka.cc/newtower/12",
+          "propertyGroup": "matrix-cluster-s2-1",
+          "representativeName": "奏谕乐师",
+          "representativeMonsterId": "320000040",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_195_UI.webp",
+          "icon_sha256": "cc03c1b9e0779780865d8ba2c82e81f32b26781d046948044a2d14fc27b577f7"
+        },
+        {
+          "id": "650000047",
+          "name": "哀声鸷",
+          "alias": "哀声鸷",
+          "icon_file": "assets/bosses/T_IconMonsterHead_997_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            110,
+            117,
+            124
+          ],
+          "source": "https://ww.nanoka.cc/newtower/12",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_997_UI.webp",
+          "icon_sha256": "a724f60963bb8b992f92c516f6a8f0a12aa203818180b03bb7647156b104aae2"
+        },
+        {
+          "id": "665000020",
+          "name": "芙露德莉斯",
+          "alias": "芙露德莉斯",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34012_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "missing",
+          "sourceWaveIds": [
+            111,
+            118,
+            125
+          ],
+          "source": "https://ww.nanoka.cc/newtower/12",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_34012_UI.webp",
+          "icon_sha256": "6fe3b125fef396d6f6a671259f7ceeda6808e1e62dfbc740211e4737cef55b3b"
+        },
+        {
+          "id": "947700006",
+          "name": "炉芯机骸",
+          "alias": "炉芯机骸",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34022_UI.webp",
+          "specialProperties": [
+            "炉芯机骸被附加异常效应时，会直接暴露「破绽核心」。若炉芯机骸拥有异常效应时被破坏装甲，其受到的异常效应伤害最终提升100%，持续30秒。该效果存在期间，不再暴露「破绽核心」。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            112,
+            119,
+            126
+          ],
+          "source": "https://ww.nanoka.cc/newtower/12",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000220",
+              "monsterId": "340000220",
+              "descriptions": [
+                "炉芯机骸的特殊远程攻击「炽能斩」可以被弹回，对炉芯机骸造成伤害，并削减共振度。",
+                "炉芯机骸发动攻击，或经历数次逆势回击后，将暂时暴露左臂的「破绽核心」。此时攻击「破绽核心」，可破坏炉芯机骸的装甲，使其进入无法攻击状态。",
+                "炉芯机骸被附加异常效应时，会直接暴露「破绽核心」。若炉芯机骸拥有异常效应时被破坏装甲，其受到的异常效应伤害最终提升100%，持续30秒。该效果存在期间，不再暴露「破绽核心」。"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "401800000",
+          "name": "矩阵奇藏",
+          "alias": "矩阵奇藏",
+          "icon_file": "assets/bosses/T_Boss_35220.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "no-confirmed-damage-property",
+          "sourceWaveIds": [
+            113,
+            120,
+            127
+          ],
+          "source": "https://ww.nanoka.cc/newtower/12",
+          "note": "页面仅有辅助或非输出机制，或说明与 Boss 名称不符；伤害性质留空待补。",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_35220.webp"
+        }
+      ]
+    },
+    {
+      "id": "s2-phase2",
+      "label": "S2-2",
+      "name": "终焉矩阵S2-2",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 14,
+      "source": "https://ww.nanoka.cc/newtower/14",
+      "mode": "奇点扩张",
+      "bosses": [
+        {
+          "id": "650000047",
+          "name": "哀声鸷",
+          "alias": "哀声鸷",
+          "icon_file": "assets/bosses/T_IconMonsterHead_997_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "missing",
+          "sourceWaveIds": [
+            135,
+            140,
+            145
+          ],
+          "source": "https://ww.nanoka.cc/newtower/14",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_997_UI.webp",
+          "icon_sha256": "a724f60963bb8b992f92c516f6a8f0a12aa203818180b03bb7647156b104aae2"
+        },
+        {
+          "id": "243750011",
+          "name": "万囮牢·朽躯",
+          "alias": "万囮牢·朽躯",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34030_UI.webp",
+          "specialProperties": [
+            "万囮牢·朽躯被施加虚湮效应时，受到的最终伤害提升5%，最多可叠加5层，持续30秒。",
+            "万囮牢·朽躯被施加的虚湮效应被消耗时，受到的最终伤害提升20%，持续30秒。"
+          ],
+          "status": "confirmed",
+          "propertySource": "monster-description",
+          "sourceWaveIds": [
+            136,
+            141,
+            146
+          ],
+          "source": "https://ww.nanoka.cc/newtower/14",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000300",
+              "monsterId": "340000300",
+              "descriptions": [
+                "万囮牢·朽躯被施加虚湮效应时，受到的最终伤害提升5%，最多可叠加5层，持续30秒。",
+                "万囮牢·朽躯被施加的虚湮效应被消耗时，受到的最终伤害提升20%，持续30秒。"
+              ]
+            }
+          ],
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_34030_UI.webp",
+          "icon_sha256": "8092efeb665367002468ccb20361fe29cc71f8e2ca52184d7327cdfaff49e4dc"
+        },
+        {
+          "id": "607750001",
+          "name": "异构武装",
+          "alias": "异构武装",
+          "icon_file": "assets/bosses/T_IconMonsterHead_33012_UI.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "missing",
+          "sourceWaveIds": [
+            137,
+            142,
+            147
+          ],
+          "source": "https://ww.nanoka.cc/newtower/14",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_33012_UI.webp",
+          "icon_sha256": "e4728d965456f68e95f448464cfe8d4c6e150d52d5b59e63c299260f4f6df682"
+        },
+        {
+          "id": "650000045",
+          "name": "朔雷之鳞",
+          "alias": "朔雷之鳞",
+          "icon_file": "assets/bosses/T_IconMonsterHead_225_UI.webp",
+          "specialProperties": [
+            "朔雷之鳞拥有集谐·偏移或集谐·干涉时受到的伤害最终提升20%。",
+            "朔雷之鳞的集谐·干涉层数上限提升2层。",
+            "处于集谐·偏移状态下，被谐度破坏命中时，额外获得来自角色附加的2层【集谐·干涉】，该效果每场战斗仅可触发1次。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            138,
+            143,
+            148
+          ],
+          "source": "https://ww.nanoka.cc/newtower/14"
+        },
+        {
+          "id": "401800000",
+          "name": "矩阵奇藏",
+          "alias": "矩阵奇藏",
+          "icon_file": "assets/bosses/T_Boss_35220.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "missing",
+          "sourceWaveIds": [
+            139,
+            144,
+            149
+          ],
+          "source": "https://ww.nanoka.cc/newtower/14",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/ImgBoss/T_Boss_35220.webp"
+        }
+      ]
+    },
+    {
+      "id": "s2-phase3",
+      "label": "S2-3",
+      "name": "终焉矩阵S2-3",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 16,
+      "source": "https://ww.nanoka.cc/newtower/16",
+      "mode": "奇点扩张",
+      "bosses": [
+        {
+          "id": "650000050",
+          "name": "燎照之骑",
+          "alias": "摩托",
+          "icon_file": "assets/bosses/T_Boss_33020.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "missing",
+          "sourceWaveIds": [
+            155,
+            160,
+            165
+          ],
+          "source": "https://ww.nanoka.cc/newtower/16"
+        },
+        {
+          "id": "602850001",
+          "name": "封庭械囿",
+          "alias": "盾山",
+          "icon_file": "assets/bosses/T_Boss_32068.webp",
+          "specialProperties": [
+            "附近敌方目标获得护盾时，封庭械囿受到的最终伤害提升10%，持续6秒，每0.5秒可触发一次，最多可叠加4层。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            156,
+            161,
+            166
+          ],
+          "source": "https://ww.nanoka.cc/newtower/16",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/320000680",
+              "monsterId": "320000680",
+              "descriptions": [
+                "附近敌方目标获得护盾时，封庭械囿受到的最终伤害提升10%，持续6秒，每0.5秒可触发一次，最多可叠加4层。"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "650000041",
+          "name": "无冠者",
+          "alias": "无冠者",
+          "icon_file": "assets/bosses/T_Boss_34010_1.webp",
+          "specialProperties": [
+            "共鸣者响应同奏时，该共鸣者在30秒内对无冠者造成的伤害最终提升40%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            157,
+            162,
+            167
+          ],
+          "source": "https://ww.nanoka.cc/newtower/16"
+        },
+        {
+          "id": "665850005",
+          "name": "天傀劫煞",
+          "alias": "天人",
+          "icon_file": "assets/bosses/T_Boss_34032.webp",
+          "specialProperties": [
+            "被施加异常效应时，受到的伤害最终提升20%，持续6秒。",
+            "天傀劫煞受到的电磁效应伤害最终提升100%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            158,
+            163,
+            168
+          ],
+          "source": "https://ww.nanoka.cc/newtower/16",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000320",
+              "monsterId": "340000320",
+              "descriptions": [
+                "该敌人被施加异常效应时，受到的最终伤害提升20%，持续6秒。",
+                "该敌人受到的最终电磁效应伤害提升100%。"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "401800000",
+          "name": "矩阵奇藏",
+          "alias": "宝箱",
+          "icon_file": "assets/bosses/T_Boss_35220.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "missing",
+          "sourceWaveIds": [
+            159,
+            164,
+            169
+          ],
+          "source": "https://ww.nanoka.cc/newtower/16"
+        }
+      ]
+    },
+    {
+      "id": "s2-phase4",
+      "label": "S2-4",
+      "name": "终焉矩阵S2-4",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 18,
+      "source": "https://ww.nanoka.cc/newtower/18",
+      "mode": "奇点扩张",
+      "bosses": [
+        {
+          "id": "607750002",
+          "name": "飞廉之猩",
+          "alias": "飞廉之猩",
+          "icon_file": "assets/bosses/T_IconMonsterHead_996_UI.webp",
+          "specialProperties": [
+            "受到伤害降低20%。",
+            "被谐度破坏时，飞廉之猩受到伤害提升12.5%，持续至本场战斗结束，可叠加4层。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            175,
+            180,
+            185
+          ],
+          "source": "https://ww.nanoka.cc/newtower/18"
+        },
+        {
+          "id": "665700003",
+          "name": "达妮娅",
+          "alias": "达妮娅",
+          "icon_file": "assets/bosses/T_IconMonsterHead_34028_UI.webp",
+          "specialProperties": [
+            "受到的异常效应伤害最终提升25%。",
+            "受到【霜结】后，受到的最终伤害提升30%，持续15秒。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            176,
+            181,
+            186
+          ],
+          "source": "https://ww.nanoka.cc/newtower/18",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000280",
+              "monsterId": "340000280",
+              "descriptions": [
+                "达妮娅受到的异常效应伤害最终提升25%。",
+                "受到【霜结】后，受到的最终伤害提升30%，持续15秒。"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "650000041",
+          "name": "无冠者",
+          "alias": "无冠者",
+          "icon_file": "assets/bosses/T_Boss_34010_1.webp",
+          "specialProperties": [
+            "共鸣者响应同奏时，该共鸣者在30秒内对无冠者造成的伤害最终提升40%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            177,
+            182,
+            187
+          ],
+          "source": "https://ww.nanoka.cc/newtower/18"
+        },
+        {
+          "id": "676750008",
+          "name": "辛吉勒姆",
+          "alias": "辛吉勒姆",
+          "icon_file": "assets/bosses/T_Boss_340251.webp",
+          "specialProperties": [
+            "辛吉勒姆受到伤害最终降低25%。",
+            "声骸技能命中辛吉勒姆时，将为其附加一层【迷航】，最多叠加5层，同名声骸仅可触发一次。",
+            "每层【迷航】使辛吉勒姆受到的最终伤害提升10%。",
+            "【迷航】达到5层时，辛吉勒姆受到的最终伤害额外提升30%。"
+          ],
+          "status": "confirmed",
+          "propertySource": "user-confirmed",
+          "sourceWaveIds": [
+            178,
+            183,
+            188
+          ],
+          "source": "https://ww.nanoka.cc/newtower/18",
+          "monsterSources": [
+            {
+              "source": "https://ww.nanoka.cc/monster/340000250",
+              "monsterId": "340000250",
+              "descriptions": [
+                "声骸技能命中辛吉勒姆时，将为其附加一层【迷航】，最多叠加5层，同名声骸仅可触发一次。",
+                "每层【迷航】使辛吉勒姆受到的最终伤害提升10%。",
+                "【迷航】达到5层时，辛吉勒姆受到的最终伤害额外提升30%。"
+              ]
+            }
+          ],
+          "mergeNote": "用户确认：25%减伤为此前遗漏，与迷航共同保留，适用于其历期矩阵记录。"
+        },
+        {
+          "id": "401800000",
+          "name": "矩阵奇藏",
+          "alias": "宝箱",
+          "icon_file": "assets/bosses/T_Boss_35220.webp",
+          "specialProperties": [],
+          "status": "pending",
+          "propertySource": "missing",
+          "sourceWaveIds": [
+            179,
+            184,
+            189
+          ],
+          "source": "https://ww.nanoka.cc/newtower/18"
+        }
+      ]
+    }
+  ]
+}

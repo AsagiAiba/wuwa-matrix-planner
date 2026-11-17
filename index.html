@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>终焉矩阵血线排布 V0.3.1</title>
+  <title>终焉矩阵血线排布 V0.3.5</title>
   <link rel="icon" type="image/png" sizes="256x256" href="assets/app/lily.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.3.1</span></span></a>
+    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.3.5</span></span></a>
     <div class="header-actions"><span class="stage-label">终焉矩阵S2-3（S2第三阶段） · 奇点扩张</span><button id="import-button" class="quiet">导入 JSON</button><button id="export-button">导出 JSON <span aria-hidden="true">↗</span></button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
   </header>
   <main>
@@ -70,10 +70,11 @@
           <summary>Boss 特殊性质<span id="boss-properties-count"></span></summary>
           <div id="boss-season-filters" class="boss-filter-row" role="group" aria-label="按赛季筛选"></div>
           <div id="boss-keyword-filters" class="boss-filter-row" role="group" aria-label="按性质关键词筛选"></div>
+          <div class="boss-filter-row"><button id="boss-property-hide-empty" type="button" class="boss-filter-button" aria-pressed="false">排除无特殊性质</button></div>
           <div class="boss-property-search"><input id="boss-properties-search" type="search" placeholder="搜索 Boss 名称、简称或性质…" aria-label="搜索 Boss 特殊性质"><span id="boss-properties-results" class="muted" role="status"></span></div>
           <div id="boss-properties-list" class="boss-properties-list"></div>
         </details>
-        <h3>角色强化</h3><div id="matrix-stamina-enhancements" class="matrix-enhancements matrix-stamina-enhancements"></div>
+        <h3 id="matrix-character-heading">角色强化</h3><div id="matrix-stamina-enhancements" class="matrix-enhancements matrix-stamina-enhancements"></div>
         <details id="other-enhancements" class="matrix-content-collapse">
           <summary>其他角色强化<span id="other-enhancements-count"></span></summary>
           <p class="muted matrix-content-note">以下保留来源中的阶段限定说明；增益不会自动叠加到手动填写的队伍分数。</p><div id="matrix-enhancements" class="matrix-enhancements"></div>

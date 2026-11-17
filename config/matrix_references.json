@@ -1,0 +1,756 @@
+{
+  "version": 1,
+  "siteDataVersion": "3.8",
+  "checkedAt": "2026-11-17",
+  "periods": [
+    {
+      "id": "s0-phase1",
+      "label": "S0-1",
+      "name": "矩阵叠兵S0-1",
+      "activityName": "矩阵叠兵",
+      "namingSource": "用户自定义赛季名",
+      "towerId": 2,
+      "source": "https://ww.nanoka.cc/newtower/2",
+      "dataSource": "https://static.nanoka.cc/ww/3.8/zh/newtower/2.json",
+      "viewOnly": true,
+      "circuits": [
+        {
+          "id": "1",
+          "name": "异常效应强化",
+          "description": "角色附加异常效应时，使目标受到最终伤害提升20%，持续30秒；敌人拥有风蚀效应时，每层使其受到最终伤害提升5%，最多提升30%。",
+          "sourceDescription": "角色附加异常效应时，使目标受到最终伤害提升{0}，持续{1}秒；敌人拥有风蚀效应时，每层使其受到最终伤害提升{2}，最多提升{3}。",
+          "sourceParameters": [
+            "20%",
+            "30",
+            "5%",
+            "30%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertybluewind_UI.T_Iconpropertybluewind_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertybluewind_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertybluewind_UI.webp",
+          "icon_sha256": "4dfd1c5e3c99fd2932b47cc280b11b2b67e634cd9d7b2cdeffb4b5ab5a6f139e",
+          "icon_bytes": 5232,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "2",
+          "name": "谐度破坏强化",
+          "description": "敌人处于震谐·偏移或集谐·偏移状态时，受到最终伤害提升20%。\n敌人受到震谐伤害提升200%。",
+          "sourceDescription": "敌人处于震谐·偏移或集谐·偏移状态时，受到最终伤害提升{0}。\n敌人受到震谐伤害提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "200%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+          "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+          "icon_bytes": 6678,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "8",
+          "name": "声骸技能强化",
+          "description": "敌人受到声骸技能最终伤害提升48%，角色每施放1次声骸技能，使队伍中的所有角色湮灭最终伤害提升5%，最多可提升至30%，同角色的同名声骸技能无法重复触发该效果。",
+          "sourceDescription": "敌人受到声骸技能最终伤害提升{0}，角色每施放1次声骸技能，使队伍中的所有角色湮灭最终伤害提升{1}，最多可提升至{2}，同角色的同名声骸技能无法重复触发该效果。",
+          "sourceParameters": [
+            "48%",
+            "5%",
+            "30%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.T_IconpropertyLuokekeBuff1_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_file": "assets/circuits/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_sha256": "daedee7c62623ab1e8a135bc503cacf94aacf741b97d225fbb8616fdae908d1e",
+          "icon_bytes": 1560,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "9",
+          "name": "通用强化",
+          "description": "敌人受到最终伤害提升20%。",
+          "sourceDescription": "敌人受到最终伤害提升{0}。",
+          "sourceParameters": [
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+          "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+          "icon_bytes": 3600,
+          "icon_width": 96,
+          "icon_height": 96
+        }
+      ]
+    },
+    {
+      "id": "s0-phase2",
+      "label": "S0-2",
+      "name": "矩阵叠兵S0-2",
+      "activityName": "矩阵叠兵",
+      "namingSource": "用户自定义赛季名",
+      "towerId": 4,
+      "source": "https://ww.nanoka.cc/newtower/4",
+      "dataSource": "https://static.nanoka.cc/ww/3.8/zh/newtower/4.json",
+      "viewOnly": true,
+      "circuits": [
+        {
+          "id": "10",
+          "name": "异常效应强化",
+          "description": "角色附加异常效应时，使目标受到最终伤害提升20%，持续30秒；敌人拥有聚爆效应时，受到最终伤害提升30%。",
+          "sourceDescription": "角色附加异常效应时，使目标受到最终伤害提升{0}，持续{1}秒；敌人拥有聚爆效应时，受到最终伤害提升{2}。",
+          "sourceParameters": [
+            "20%",
+            "30",
+            "30%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertybluewind_UI.T_Iconpropertybluewind_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertybluewind_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertybluewind_UI.webp",
+          "icon_sha256": "4dfd1c5e3c99fd2932b47cc280b11b2b67e634cd9d7b2cdeffb4b5ab5a6f139e",
+          "icon_bytes": 5232,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "11",
+          "name": "声骸技能强化",
+          "description": "我方声骸技能最终伤害提升20%，热熔最终伤害提升20%，重击最终伤害提升20%。",
+          "sourceDescription": "我方声骸技能最终伤害提升{0}，热熔最终伤害提升{1}，重击最终伤害提升{2}。",
+          "sourceParameters": [
+            "20%",
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.T_IconpropertyLuokekeBuff1_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_file": "assets/circuits/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_sha256": "daedee7c62623ab1e8a135bc503cacf94aacf741b97d225fbb8616fdae908d1e",
+          "icon_bytes": 1560,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "12",
+          "name": "谐度破坏强化",
+          "description": "敌人处于震谐·偏移或震谐·干涉状态时，受到最终伤害提升20%。敌人受到震谐伤害提升200%。\n敌人处于集谐·偏移或集谐·干涉状态时，受到最终伤害提升50%。",
+          "sourceDescription": "敌人处于震谐·偏移或震谐·干涉状态时，受到最终伤害提升{0}。敌人受到震谐伤害提升{1}。\n敌人处于集谐·偏移或集谐·干涉状态时，受到最终伤害提升{2}。",
+          "sourceParameters": [
+            "20%",
+            "200%",
+            "50%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+          "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+          "icon_bytes": 6678,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "13",
+          "name": "通用强化",
+          "description": "敌人受到最终伤害提升20%，敌人受到普攻最终伤害提升20%。",
+          "sourceDescription": "敌人受到最终伤害提升{0}，敌人受到普攻最终伤害提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+          "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+          "icon_bytes": 3600,
+          "icon_width": 96,
+          "icon_height": 96
+        }
+      ]
+    },
+    {
+      "id": "s1-phase1",
+      "label": "S1-1",
+      "name": "终焉矩阵S1-1",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 6,
+      "source": "https://ww.nanoka.cc/newtower/6",
+      "dataSource": "https://static.nanoka.cc/ww/3.8/zh/newtower/6.json",
+      "viewOnly": true,
+      "circuits": [
+        {
+          "id": "14",
+          "name": "异常效应强化",
+          "description": "角色附加异常效应时，使目标受到最终伤害提升20%，持续30秒；敌人受到的光噪效应最终伤害提升50%。",
+          "sourceDescription": "角色附加异常效应时，使目标受到最终伤害提升{0}，持续{1}秒；敌人受到的光噪效应最终伤害提升{2}。",
+          "sourceParameters": [
+            "20%",
+            "30",
+            "50%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredlight_UI.T_Iconpropertyredlight_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredlight_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredlight_UI.webp",
+          "icon_sha256": "5229479a57c3541e001646f74a28b754348793e77114d328b2c2a233bea7dd84",
+          "icon_bytes": 4788,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "15",
+          "name": "声骸技能强化",
+          "description": "我方声骸技能最终伤害提升40%，气动最终伤害提升20%。",
+          "sourceDescription": "我方声骸技能最终伤害提升{0}，气动最终伤害提升{1}。",
+          "sourceParameters": [
+            "40%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.T_IconpropertyLuokekeBuff1_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_file": "assets/circuits/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_sha256": "daedee7c62623ab1e8a135bc503cacf94aacf741b97d225fbb8616fdae908d1e",
+          "icon_bytes": 1560,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "16",
+          "name": "谐度破坏强化",
+          "description": "角色附加震谐·偏移状态时，最终伤害提升20%，造成震谐最终伤害提升200%，持续15秒。\n角色附加集谐·偏移状态时，最终伤害提升50%，持续15秒。",
+          "sourceDescription": "角色附加震谐·偏移状态时，最终伤害提升{0}，造成震谐最终伤害提升{1}，持续15秒。\n角色附加集谐·偏移状态时，最终伤害提升{2}，持续15秒。",
+          "sourceParameters": [
+            "20%",
+            "200%",
+            "50%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+          "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+          "icon_bytes": 6678,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "17",
+          "name": "通用强化",
+          "description": "敌人受到最终伤害提升20%，敌人受到重击最终伤害提升20%。",
+          "sourceDescription": "敌人受到最终伤害提升{0}，敌人受到重击最终伤害提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+          "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+          "icon_bytes": 3600,
+          "icon_width": 96,
+          "icon_height": 96
+        }
+      ]
+    },
+    {
+      "id": "s1-phase2",
+      "label": "S1-2",
+      "name": "终焉矩阵S1-2",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 8,
+      "source": "https://ww.nanoka.cc/newtower/8",
+      "dataSource": "https://static.nanoka.cc/ww/3.8/zh/newtower/8.json",
+      "viewOnly": true,
+      "circuits": [
+        {
+          "id": "18",
+          "name": "异常效应强化",
+          "description": "角色附加异常效应时，使目标受到最终伤害提升20%，受到冷凝最终伤害提升30%，持续30秒；\n敌人受到霜渐和聚爆效应最终伤害提升80%。",
+          "sourceDescription": "角色附加异常效应时，使目标受到最终伤害提升{0}，受到冷凝最终伤害提升{1}，持续{2}秒；\n敌人受到霜渐和聚爆效应最终伤害提升{3}。",
+          "sourceParameters": [
+            "20%",
+            "30%",
+            "30",
+            "80%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.T_Iconpropertyredice_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredice_UI.webp",
+          "icon_sha256": "33468cbc1d094ca2dd318e5ef47c15df89f08547e98c4d93581e356805c006c6",
+          "icon_bytes": 5986,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "19",
+          "name": "声骸技能强化",
+          "description": "我方声骸技能最终伤害提升20%，湮灭最终伤害提升20%，共鸣技能最终伤害提升20%。",
+          "sourceDescription": "我方声骸技能最终伤害提升{0}，湮灭最终伤害提升{1}，共鸣技能最终伤害提升{2}。",
+          "sourceParameters": [
+            "20%",
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.T_IconpropertyLuokekeBuff1_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_file": "assets/circuits/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_sha256": "daedee7c62623ab1e8a135bc503cacf94aacf741b97d225fbb8616fdae908d1e",
+          "icon_bytes": 1560,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "20",
+          "name": "谐度破坏强化",
+          "description": "角色附加谐度·偏移状态时，全队最终伤害提升20%，持续30秒。角色附加集谐·偏移状态时，最终伤害提升30%，持续15秒。",
+          "sourceDescription": "角色附加谐度·偏移状态时，全队最终伤害提升{0}，持续30秒。角色附加集谐·偏移状态时，最终伤害提升{1}，持续15秒。",
+          "sourceParameters": [
+            "20%",
+            "30%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+          "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+          "icon_bytes": 6678,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "21",
+          "name": "通用强化",
+          "description": "敌人受到伤害最终提升20%，受到共鸣解放伤害最终提升20%。",
+          "sourceDescription": "敌人受到伤害最终提升{0}，受到共鸣解放伤害最终提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+          "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+          "icon_bytes": 3600,
+          "icon_width": 96,
+          "icon_height": 96
+        }
+      ]
+    },
+    {
+      "id": "s1-phase3",
+      "label": "S1-3",
+      "name": "终焉矩阵S1-3",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 10,
+      "source": "https://ww.nanoka.cc/newtower/10",
+      "dataSource": "https://static.nanoka.cc/ww/3.8/zh/newtower/10.json",
+      "viewOnly": true,
+      "circuits": [
+        {
+          "id": "22",
+          "name": "异常效应强化",
+          "description": "共鸣者附加异常效应时，使目标受到伤害最终提升20%，持续30秒；\n敌人受到霜渐效应和聚爆效应伤害最终提升80%。",
+          "sourceDescription": "共鸣者附加异常效应时，使目标受到伤害最终提升{0}，持续30秒；\n敌人受到霜渐效应和聚爆效应伤害最终提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "80%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.T_Iconpropertyredice_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredice_UI.webp",
+          "icon_sha256": "33468cbc1d094ca2dd318e5ef47c15df89f08547e98c4d93581e356805c006c6",
+          "icon_bytes": 5986,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "23",
+          "name": "声骸技能强化",
+          "description": "我方声骸技能伤害最终提升40%，气动伤害最终提升20%。",
+          "sourceDescription": "我方声骸技能伤害最终提升{0}，气动伤害最终提升{1}。",
+          "sourceParameters": [
+            "40%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.T_IconpropertyLuokekeBuff1_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_file": "assets/circuits/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_sha256": "daedee7c62623ab1e8a135bc503cacf94aacf741b97d225fbb8616fdae908d1e",
+          "icon_bytes": 1560,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "24",
+          "name": "骇破强化",
+          "description": "共鸣者附加谐度·偏移状态时，全队伤害最终提升20%，持续30秒。\n共鸣者附加骇破·偏移状态时，造成伤害最终提升30%，持续30秒。",
+          "sourceDescription": "共鸣者附加谐度·偏移状态时，全队伤害最终提升{0}，持续30秒。\n共鸣者附加骇破·偏移状态时，造成伤害最终提升{1}，持续30秒。",
+          "sourceParameters": [
+            "20%",
+            "30%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+          "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+          "icon_bytes": 6678,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "25",
+          "name": "通用强化",
+          "description": "敌人受到伤害最终提升20%，敌人受到普攻伤害最终提升20%。",
+          "sourceDescription": "敌人受到伤害最终提升{0}，敌人受到普攻伤害最终提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+          "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+          "icon_bytes": 3600,
+          "icon_width": 96,
+          "icon_height": 96
+        }
+      ]
+    },
+    {
+      "id": "s2-phase1",
+      "label": "S2-1",
+      "name": "终焉矩阵S2-1",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 12,
+      "source": "https://ww.nanoka.cc/newtower/12",
+      "dataSource": "https://static.nanoka.cc/ww/3.8/zh/newtower/12.json",
+      "viewOnly": true,
+      "circuits": [
+        {
+          "id": "26",
+          "name": "异常效应强化",
+          "description": "角色附加异常效应时，使目标受到伤害最终提升25%，持续30秒。\n角色附加虚湮效应时，自身造成伤害最终提升30%，持续15秒。",
+          "sourceDescription": "角色附加异常效应时，使目标受到伤害最终提升{0}，持续30秒。\n角色附加虚湮效应时，自身造成伤害最终提升{1}，持续15秒。",
+          "sourceParameters": [
+            "25%",
+            "30%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyreddark_UI.T_Iconpropertyreddark_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyreddark_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyreddark_UI.webp",
+          "icon_sha256": "9494094eb6771b18d26f7f0e1d570082d9fca29bb673a4b5d9f685aff18b2b94",
+          "icon_bytes": 5448,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "27",
+          "name": "声骸技能强化",
+          "description": "我方声骸技能伤害最终提升30%，热熔伤害最终提升20%，重击伤害最终提升20%。",
+          "sourceDescription": "我方声骸技能伤害最终提升{0}，热熔伤害最终提升{1}，重击伤害最终提升{2}。",
+          "sourceParameters": [
+            "30%",
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.T_IconpropertyLuokekeBuff1_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_file": "assets/circuits/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_sha256": "daedee7c62623ab1e8a135bc503cacf94aacf741b97d225fbb8616fdae908d1e",
+          "icon_bytes": 1560,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "28",
+          "name": "谐度破坏强化",
+          "description": "角色震谐伤害最终提升150%。\n角色附加谐度·偏移状态时，伤害最终提升25%，持续30秒。",
+          "sourceDescription": "角色震谐伤害最终提升{0}。\n角色附加谐度·偏移状态时，伤害最终提升{1}，持续30秒。",
+          "sourceParameters": [
+            "150%",
+            "25%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+          "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+          "icon_bytes": 6678,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "29",
+          "name": "通用强化",
+          "description": "敌人受到伤害最终提升20%，敌人受到共鸣技能伤害最终提升20%。",
+          "sourceDescription": "敌人受到伤害最终提升{0}，敌人受到共鸣技能伤害最终提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+          "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+          "icon_bytes": 3600,
+          "icon_width": 96,
+          "icon_height": 96
+        }
+      ]
+    },
+    {
+      "id": "s2-phase2",
+      "label": "S2-2",
+      "name": "终焉矩阵S2-2",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 14,
+      "source": "https://ww.nanoka.cc/newtower/14",
+      "dataSource": "https://static.nanoka.cc/ww/3.8/zh/newtower/14.json",
+      "viewOnly": true,
+      "circuits": [
+        {
+          "id": "30",
+          "name": "异常效应强化",
+          "description": "角色附加异常效应时，使目标受到伤害最终提升25%，持续30秒；\n敌人受到霜渐效应伤害最终提升80%。",
+          "sourceDescription": "角色附加异常效应时，使目标受到伤害最终提升{0}，持续30秒；\n敌人受到霜渐效应伤害最终提升{1}。",
+          "sourceParameters": [
+            "25%",
+            "80%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.T_Iconpropertyredice_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredice_UI.webp",
+          "icon_sha256": "33468cbc1d094ca2dd318e5ef47c15df89f08547e98c4d93581e356805c006c6",
+          "icon_bytes": 5986,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "31",
+          "name": "声骸技能强化",
+          "description": "我方声骸技能伤害最终提升30%，湮灭伤害最终提升20%，共鸣技能伤害最终提升20%。",
+          "sourceDescription": "我方声骸技能伤害最终提升{0}，湮灭伤害最终提升{1}，共鸣技能伤害最终提升{2}。",
+          "sourceParameters": [
+            "30%",
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.T_IconpropertyLuokekeBuff1_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_file": "assets/circuits/T_IconpropertyLuokekeBuff1_UI.webp",
+          "icon_sha256": "daedee7c62623ab1e8a135bc503cacf94aacf741b97d225fbb8616fdae908d1e",
+          "icon_bytes": 1560,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "32",
+          "name": "谐度破坏强化",
+          "description": "角色附加谐度·偏移状态时，全队伤害最终提升25%，持续30秒。角色附加集谐·偏移状态时，伤害最终提升30%，持续15秒。",
+          "sourceDescription": "角色附加谐度·偏移状态时，全队伤害最终提升{0}，持续30秒。角色附加集谐·偏移状态时，伤害最终提升{1}，持续15秒。",
+          "sourceParameters": [
+            "25%",
+            "30%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+          "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+          "icon_bytes": 6678,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "33",
+          "name": "通用强化",
+          "description": "敌人受到伤害最终提升20%，敌人受到重击伤害最终提升20%。",
+          "sourceDescription": "敌人受到伤害最终提升{0}，敌人受到重击伤害最终提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+          "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+          "icon_bytes": 3600,
+          "icon_width": 96,
+          "icon_height": 96
+        }
+      ]
+    },
+    {
+      "id": "s2-phase3",
+      "label": "S2-3",
+      "name": "终焉矩阵S2-3",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 16,
+      "source": "https://ww.nanoka.cc/newtower/16",
+      "dataSource": "https://static.nanoka.cc/ww/3.8/zh/newtower/16.json",
+      "viewOnly": false,
+      "circuits": [
+        {
+          "id": "34",
+          "name": "异常效应强化",
+          "description": "角色附加异常效应时，使目标受到最终伤害提升25%，受到导电最终伤害额外提升30%，持续30秒。",
+          "sourceDescription": "角色附加异常效应时，使目标受到最终伤害提升{0}，受到导电最终伤害额外提升{1}，持续{2}秒。",
+          "sourceParameters": [
+            "25%",
+            "30%",
+            "30"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredmine_UI.T_Iconpropertyredmine_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredmine_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredmine_UI.webp",
+          "icon_sha256": "121dfd8e8579ecf8227af1327d8f15673c5bf974074f49a607b154081acb2383",
+          "icon_bytes": 5024,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "35",
+          "name": "基础伤害强化",
+          "description": "声骸技能伤害最终提升40%；\n角色响应同奏时，造成伤害最终提升55%，持续30秒；\n角色获得护盾时造成的最终伤害提升11%，最大可叠加5层，持续2秒，角色下场时清空；",
+          "sourceDescription": "声骸技能伤害最终提升{0}；\n角色响应同奏时，造成伤害最终提升{1}，持续{2}秒；\n角色获得护盾时造成的最终伤害提升{3}，最大可叠加{4}层，持续{5}秒，角色下场时清空；",
+          "sourceParameters": [
+            "40%",
+            "55%",
+            "30",
+            "11%",
+            "5",
+            "2"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredphysics_UI.T_Iconpropertyredphysics_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredphysics_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredphysics_UI.webp",
+          "icon_sha256": "1f777db2e8378e6b7031935f52c235eefbafe476644c27e1f5f826a9f14fa09b",
+          "icon_bytes": 1580,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "36",
+          "name": "谐度破坏强化",
+          "description": "角色附加谐度·偏移状态时，全队伤害最终提升25%，持续30秒。\n角色附加骇破·偏移状态时，造成伤害最终提升30%，持续30秒。",
+          "sourceDescription": "角色附加谐度·偏移状态时，全队伤害最终提升{0}，持续30秒。\n角色附加骇破·偏移状态时，造成伤害最终提升{1}，持续30秒。",
+          "sourceParameters": [
+            "25%",
+            "30%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+          "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+          "icon_bytes": 6678,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "37",
+          "name": "通用强化",
+          "description": "敌人受到伤害最终提升20%，敌人受到普攻伤害最终提升20%。",
+          "sourceDescription": "敌人受到伤害最终提升{0}，敌人受到普攻伤害最终提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+          "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+          "icon_bytes": 3600,
+          "icon_width": 96,
+          "icon_height": 96
+        }
+      ]
+    },
+    {
+      "id": "s2-phase4",
+      "label": "S2-4",
+      "name": "终焉矩阵S2-4",
+      "activityName": "终焉矩阵",
+      "namingSource": "Nanoka",
+      "towerId": 18,
+      "source": "https://ww.nanoka.cc/newtower/18",
+      "dataSource": "https://static.nanoka.cc/ww/3.8/zh/newtower/18.json",
+      "viewOnly": false,
+      "circuits": [
+        {
+          "id": "39",
+          "name": "异常效应强化",
+          "description": "角色附加异常效应时，使目标受到伤害最终提升25%，持续30秒；\n敌人受到霜渐效应伤害最终提升80%。",
+          "sourceDescription": "角色附加异常效应时，使目标受到伤害最终提升{0}，持续30秒；\n敌人受到霜渐效应伤害最终提升{1}。",
+          "sourceParameters": [
+            "25%",
+            "80%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.T_Iconpropertyredice_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredice_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredice_UI.webp",
+          "icon_sha256": "33468cbc1d094ca2dd318e5ef47c15df89f08547e98c4d93581e356805c006c6",
+          "icon_bytes": 5986,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "40",
+          "name": "基础伤害强化",
+          "description": "角色获得护盾时，伤害最终提升25%，持续2秒；\n声骸技能伤害最终提升65%；\n角色响应同奏时，造成伤害最终提升55%，持续30秒。",
+          "sourceDescription": "角色获得护盾时，伤害最终提升{0}，持续{1}秒；\n声骸技能伤害最终提升{2}；\n角色响应同奏时，造成伤害最终提升{3}，持续{4}秒。",
+          "sourceParameters": [
+            "25%",
+            "2",
+            "65%",
+            "55%",
+            "30"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredphysics_UI.T_Iconpropertyredphysics_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredphysics_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredphysics_UI.webp",
+          "icon_sha256": "1f777db2e8378e6b7031935f52c235eefbafe476644c27e1f5f826a9f14fa09b",
+          "icon_bytes": 1580,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "41",
+          "name": "谐度破坏强化",
+          "description": "角色附加谐度·偏移状态时，全队伤害最终提升25%，持续30秒。\n角色造成震谐伤害后，造成伤害最终提升30%，持续30秒。",
+          "sourceDescription": "角色附加谐度·偏移状态时，全队伤害最终提升{0}，持续30秒。\n角色造成震谐伤害后，造成伤害最终提升{1}，持续30秒。",
+          "sourceParameters": [
+            "25%",
+            "30%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.T_Iconpropertyredcrit_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredcrit_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredcrit_UI.webp",
+          "icon_sha256": "cad8df6b2d836e06b30f73cc227beacdbcafc204fdc9f9cfd9ed28b3c867f46b",
+          "icon_bytes": 6678,
+          "icon_width": 96,
+          "icon_height": 96
+        },
+        {
+          "id": "42",
+          "name": "通用强化",
+          "description": "敌人受到伤害最终提升20%，受到共鸣解放伤害最终提升20%。",
+          "sourceDescription": "敌人受到伤害最终提升{0}，受到共鸣解放伤害最终提升{1}。",
+          "sourceParameters": [
+            "20%",
+            "20%"
+          ],
+          "icon_source_path": "/Game/Aki/UI/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.T_Iconpropertyredattack_UI",
+          "icon_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconAttribute/T_Iconpropertyredattack_UI.webp",
+          "icon_file": "assets/circuits/T_Iconpropertyredattack_UI.webp",
+          "icon_sha256": "171aa5647e29885e834ddd710fe3d5221d713c80404f9428c9191a5e27763132",
+          "icon_bytes": 3600,
+          "icon_width": 96,
+          "icon_height": 96
+        }
+      ]
+    }
+  ]
+}

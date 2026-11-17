@@ -31,11 +31,17 @@ $env:PATH = "$env:SystemRoot\System32"
 $process = $null
 $serverProcessId = $null
 try {
-    $process = Start-Process -FilePath $launcher -ArgumentList @('--headless','--port','4186') -WindowStyle Hidden -PassThru
+    # Ask Windows for an available port; fixed 4186 can fall in a reserved range.
+    $reservation = New-Object System.Net.Sockets.TcpListener([Net.IPAddress]::Loopback, 0)
+    $reservation.Start()
+    $testBasePort = ([Net.IPEndPoint]$reservation.LocalEndpoint).Port
+    $reservation.Stop()
+    if ($testBasePort -gt 65524) { throw 'Allocated port is outside launcher range; retry the check.' }
+    $process = Start-Process -FilePath $launcher -ArgumentList @('--headless','--port',"$testBasePort") -WindowStyle Hidden -PassThru
     $health = $null
     for ($attempt = 0; $attempt -lt 50; $attempt++) {
         Start-Sleep -Milliseconds 150
-        for ($port = 4186; $port -lt 4196; $port++) {
+        for ($port = $testBasePort; $port -lt ($testBasePort + 10); $port++) {
             try {
                 $candidate = Invoke-RestMethod -Uri "http://127.0.0.1:$port/__matrix_health" -TimeoutSec 1
                 if ($candidate.root -eq $ReleaseDirectory -and $candidate.app -eq 'wuwa-matrix-hp-planner') { $health = $candidate; $testPort = $port; break }
@@ -70,14 +76,14 @@ try {
         if (-not $manifestPaths.ContainsKey($asset)) { throw "Configured asset missing from manifest: $asset" }
         if ((Invoke-WebRequest -Uri "$baseUrl/$asset" -Method Head -UseBasicParsing).StatusCode -ne 200) { throw "Configured asset not served: $asset" }
     }
-    $second = Start-Process -FilePath $launcher -ArgumentList @('--headless','--port','4186') -WindowStyle Hidden -PassThru
+    $second = Start-Process -FilePath $launcher -ArgumentList @('--headless','--port',"$testBasePort") -WindowStyle Hidden -PassThru
     if (-not $second.WaitForExit(8000) -or $second.ExitCode -ne 0) { throw 'Second launch did not reuse existing service.' }
     $after = Invoke-RestMethod -Uri "$baseUrl/__matrix_health"
     if ($after.pid -ne $serverProcessId) { throw 'Server reuse changed the process.' }
     $env:MATRIX_URL = $baseUrl
     Push-Location $projectRoot
     try {
-        foreach ($script in @('tools/browser_smoke.mjs','tools/matrix_plans_smoke.mjs','tools/boss_details_smoke.mjs','tools/boss_properties_smoke.mjs','tools/pending_delete_smoke.mjs','tools/picker_overview_smoke.mjs','tools/score_table_migration_smoke.mjs','tools/features_1_2_smoke.mjs','tools/picker_animation_smoke.mjs','tools/drag_preview_smoke.mjs','tools/pinyin_search_smoke.mjs','tools/rover_merge_smoke.mjs','tools/picker_order_sidebar_smoke.mjs','tools/lily_smoke.mjs','tools/input_visibility_filters_smoke.mjs','tools/disable_cleanup_egg_smoke.mjs','tools/guaranteed_roles_smoke.mjs','tools/disabled_plan_scope_smoke.mjs')) {
+        foreach ($script in @('tools/browser_smoke.mjs','tools/matrix_plans_smoke.mjs','tools/boss_details_smoke.mjs','tools/boss_properties_smoke.mjs','tools/boss_corrections_smoke.mjs','tools/collapse_animation_smoke.mjs','tools/reference_periods_smoke.mjs','tools/pending_delete_smoke.mjs','tools/picker_overview_smoke.mjs','tools/score_table_migration_smoke.mjs','tools/features_1_2_smoke.mjs','tools/picker_animation_smoke.mjs','tools/drag_preview_smoke.mjs','tools/pinyin_search_smoke.mjs','tools/rover_merge_smoke.mjs','tools/picker_order_sidebar_smoke.mjs','tools/lily_smoke.mjs','tools/input_visibility_filters_smoke.mjs','tools/disable_cleanup_egg_smoke.mjs','tools/guaranteed_roles_smoke.mjs','tools/disabled_plan_scope_smoke.mjs')) {
             & $sourceNode $script
             if ($LASTEXITCODE -ne 0) { throw "Packaged browser checks failed: $script" }
         }

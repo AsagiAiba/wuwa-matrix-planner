@@ -27,6 +27,11 @@ OMITTED_PARTS = {
     'raw', 'runtime', 'outputs', 'build', 'dist',
 }
 REQUIRED_FILES = {
+    'tools/collapse_animation_smoke.mjs', 'tools/boss_corrections_smoke.mjs',
+    'config/boss_property_overrides.json',
+    'config/matrix_references.json', 'tools/sync_matrix_references.py', 'tools/reference_periods_smoke.mjs',
+    'config/boss_properties.json', 'data/boss_property_sources.json',
+    'tools/sync_boss_properties.py', 'tests/boss-catalog.test.mjs',
     'assets/app/lily.png', 'assets/app/lily.ico',
     'assets/characters/Lily_UserPortrait_v1.png', 'tests/score-input.test.mjs',
     'tests/server.test.mjs', 'tests/test_season_generation.py', 'tools/lily_smoke.mjs',

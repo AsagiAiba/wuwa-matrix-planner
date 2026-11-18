@@ -1,4 +1,4 @@
-# 鸣潮终焉矩阵血线排布 V0.3.5
+# 鸣潮终焉矩阵血线排布 V0.3.6
 
 本项目由GPT-6.1全程coding
 
@@ -6,7 +6,7 @@
 
 ## 下载和运行
 
-在 [Releases](https://github.com/KazamiSora/wuwa-matrix-planner/releases/tag/v0.3.5) 下载 `WuwaMatrixPlanner-v0.3.5-win-x64.zip`，完整解压后双击 **终焉矩阵血线排布.exe**。
+在 [Releases](https://github.com/KazamiSora/wuwa-matrix-planner/releases/tag/v0.3.6) 下载 `WuwaMatrixPlanner-v0.3.6-win-x64.zip`，完整解压后双击 **终焉矩阵血线排布.exe**。
 
 便携版适用于 Windows 10/11 x64，已附带运行时和本地头像，无需另装 Node.js 或 Python。窗口优先使用本机 Edge，其次 Chrome；都没有时会打开默认浏览器。
 
@@ -54,6 +54,8 @@ S2-4 的 Boss 顺序为飞廉之猩、达妮娅、无冠者、辛吉勒姆、矩
 “撤回”“恢复”和“重置”只处理本次快捷选人，不影响已经排好的队伍。重置也可以撤回。支持 Ctrl+Z、Ctrl+Y，以及 Ctrl+Shift+Z。
 
 搜索支持中文、英文、全拼和首字母，例如 jinxi / jx 可找到今汐，shouanren / sar 可找到守岸人。“全部”页把七位基础双体力角色放在最前，角色组合按固定顺序排列，四种漂泊者放在最后。同属性男女漂泊者合并为一个选项，旧排布仍可导入和编辑。
+
+血线轴顶部显示当前总分，以及总分所在 Boss 的已消耗、剩余分数和百分比；待填队伍的预览分数不计入，百分比按该 Boss 总分计算，包含击杀奖励。
 
 目标总分右侧显示与实际已填队伍分数的差额，待填队伍的 5000 分预览不计入。主界面左侧队伍列表和血线轴均可拖动调整顺序，拖动时预览换位，松开保存，Esc 取消。
 
@@ -164,7 +166,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_release.ps1 -Nod
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/test_release.ps1
 ```
 
-Windows 启动器用 C# 编写，通过系统的 .NET Framework 4 编译器构建。打包脚本会生成便携目录、ZIP 和 SHA-256 校验文件；V0.3.5 附带的 Node.js 版本是 24.22.1。
+Windows 启动器用 C# 编写，通过系统的 .NET Framework 4 编译器构建。打包脚本会生成便携目录、ZIP 和 SHA-256 校验文件；V0.3.6 附带的 Node.js 版本是 24.22.1。
 
 ## 素材与说明
 

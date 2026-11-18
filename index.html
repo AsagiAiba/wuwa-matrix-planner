@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>终焉矩阵血线排布 V0.3.5</title>
+  <title>终焉矩阵血线排布 V0.3.6</title>
   <link rel="icon" type="image/png" sizes="256x256" href="assets/app/lily.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.3.5</span></span></a>
+    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.3.6</span></span></a>
     <div class="header-actions"><span class="stage-label">终焉矩阵S2-3（S2第三阶段） · 奇点扩张</span><button id="import-button" class="quiet">导入 JSON</button><button id="export-button">导出 JSON <span aria-hidden="true">↗</span></button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
   </header>
   <main>
@@ -47,7 +47,7 @@
       <section id="startup-error" class="restore-warning" role="alert" hidden></section>
       <section id="stamina-conflict-panel" class="stamina-conflict-panel" role="alert" hidden></section>
       <div class="timeline-card">
-        <div class="timeline-toolbar"><div class="legend"><span class="legend-line"></span>分数条与 Boss 血线共用积分刻度</div><div class="view-controls"><label for="max-round">显示至</label><select id="max-round"></select><span class="control-divider"></span><button id="zoom-out" title="缩小" aria-label="缩小">−</button><input id="zoom" aria-label="时间轴缩放" type="range" min="0.000001" max="0.24" step="0.000001"><span id="zoom-level" class="zoom-level">100%</span><button id="zoom-in" title="放大" aria-label="放大">＋</button><button id="fit-teams" class="quiet">全部队伍</button><button id="fit-bloodline" class="quiet">全部血线</button><button id="jump-selected" class="quiet">定位选中队伍</button></div></div>
+        <div class="timeline-toolbar"><div class="current-total-summary" aria-live="polite"><div class="current-total-heading"><span>当前总分：</span><strong id="current-total-value">0</strong><span>分</span><small id="current-total-pending" class="muted"></small></div><div class="current-total-details"><div id="current-total-position" class="current-total-position"></div><div id="current-total-progress" class="current-total-progress" title="百分比按该 Boss 总分计算，包含击杀奖励"></div></div></div><div class="view-controls"><label for="max-round">显示至</label><select id="max-round"></select><span class="control-divider"></span><button id="zoom-out" title="缩小" aria-label="缩小">−</button><input id="zoom" aria-label="时间轴缩放" type="range" min="0.000001" max="0.24" step="0.000001"><span id="zoom-level" class="zoom-level">100%</span><button id="zoom-in" title="放大" aria-label="放大">＋</button><button id="fit-teams" class="quiet">全部队伍</button><button id="fit-bloodline" class="quiet">全部血线</button><button id="jump-selected" class="quiet">定位选中队伍</button></div></div>
         <form id="score-locator" class="score-locator">
           <label for="target-score">目标总分</label><div class="input-unit"><input id="target-score" aria-label="目标总分" type="text" title="支持1k/1w/1.1m等缩写，以及科学计数法1e2" autocomplete="off" spellcheck="false" maxlength="100" required><span>分</span></div>
           <button type="submit" id="locate-score">定位并标记</button><button type="button" id="clear-score-marker" class="quiet">清除标记</button>

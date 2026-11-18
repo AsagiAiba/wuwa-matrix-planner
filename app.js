@@ -844,6 +844,31 @@ function renderAxisLocation(node, score, preview) {
   if (preview) node.prepend(element('span', 'axis-preview-tag', '预览 · '));
 }
 
+function renderCurrentTotal() {
+  const actual = state.teams.reduce((sum, team) => sum + (team.needsScore ? 0 : team.score), 0);
+  const pending = state.teams.filter(team => team.needsScore).length;
+  $('current-total-value').textContent = fmt(actual);
+  $('current-total-pending').textContent = pending ? `${pending} 队待填分数，未计入` : '';
+  const summary = $('current-total-position');
+  const progress = $('current-total-progress');
+  summary.replaceChildren(); progress.replaceChildren();
+  if (!hasBloodline()) { summary.textContent = 'Boss 血线待配置'; return; }
+  // This is the actual total's position, independent of zoom/displayed rounds or previews.
+  const position = locateScore(actual, scores.records);
+  const { wave } = position;
+  const consumed = Math.max(0, Math.min(wave.full_kill_points, wave.full_kill_points - position.remainingPoints));
+  const consumedPercent = consumed / wave.full_kill_points * 100;
+  const name = `R${wave.round} ${wave.name}`;
+  summary.append(element('span', 'current-total-label', '总分位置'), element('strong', '', name));
+  if (position.inBonus) summary.append(element('span', 'axis-preview-tag', '击杀奖励区'));
+  else if (position.completed) summary.append(element('span', 'axis-preview-tag', '已完成全部血线'));
+  for (const [label, value, percentage] of [['已消耗', consumed, consumedPercent], ['剩余', position.remainingPoints, 100 - consumedPercent]]) {
+    const item = element('span', 'current-total-stat');
+    item.append(element('span', 'muted', label), element('strong', 'remaining-score-value', `${fmt(value)} 分`), element('span', 'current-total-percent', `${percentage.toFixed(1)}%`));
+    progress.append(item);
+  }
+}
+
 function renderTargetScoreGap() {
   const input = $('target-score'), output = $('target-score-gap');
   const text = input.value.trim(), target = parseScoreInput(text);
@@ -1246,6 +1271,7 @@ function renderRulerTicks() {
 
 function renderAll() {
   syncSeasonRuntime();
+  renderCurrentTotal();
   normalizeTeamNames();
   renderRoundOptions();
   renderPlanControls();

@@ -27,6 +27,7 @@ OMITTED_PARTS = {
     'raw', 'runtime', 'outputs', 'build', 'dist',
 }
 REQUIRED_FILES = {
+    'tools/current_total_smoke.mjs',
     'tools/collapse_animation_smoke.mjs', 'tools/boss_corrections_smoke.mjs',
     'config/boss_property_overrides.json',
     'config/matrix_references.json', 'tools/sync_matrix_references.py', 'tools/reference_periods_smoke.mjs',

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>椰果工程 · 队伍资料</title>
+<link rel="stylesheet" href="/replay.css">
+<div class="project-layout">
+<aside class="project-sidebar"><h2>我的队伍</h2><label class="button import-project">＋ 导入椰果 JSON<input id="file" type="file" accept=".json,application/json"></label><nav id="team-library" aria-label="选择队伍"></nav>
+<div class="library-actions"><button id="delete-project" class="danger" disabled>删除所选工程</button><button id="undo-project" disabled>撤回删除</button></div>
+<p id="project-notice" role="status"></p><button id="sample">载入心锁守样例</button><p id="library-status" role="status"></p></aside>
+<dialog id="delete-dialog" aria-labelledby="delete-title" aria-describedby="delete-description"><form method="dialog">
+<h2 id="delete-title">删除椰果工程？</h2><p id="delete-description"></p>
+<div class="library-actions"><button value="cancel" autofocus>取消</button><button class="danger" value="delete">确认删除</button></div></form></dialog>
+<div class="project-content"><header><div><h1>椰果工程</h1><p id="project-name"></p></div><button id="export" disabled>导出复算结果</button></header>
+<main><p id="status" role="status"></p><section id="overview" hidden><h2>导入核对</h2><p id="axis-audit"></p><div id="gear"></div><details class="project-settings"><summary>敌人配置与工程 Buff</summary><h3>敌人配置</h3><div id="enemy" class="stat-list"></div><h3>工程 Buff</h3><div id="buff-directory"></div></details></section>
+<section id="totals"></section><article><h2>工程操作轴</h2><p id="team"></p>
+<section id="execution-editor" hidden><h3>处决位置</h3><p id="execution-hint"></p><div id="execution-positions"></div><button id="recalculate-execution" type="button">重新计算并应用到血线</button><p id="execution-status" role="status"></p></section>
+<div class="scroll" id="axis"></div><p id="axis-info"></p></article>
+<article><div class="controls"><h2 id="detail-title">逐段伤害</h2><button id="all">全部条目</button></div><p id="detail-note"></p><div id="results" class="scroll"></div></article><details class="native"><summary>原版椰果简表 · 编辑配装与敌人</summary><div id="host"></div></details></main></div></div><script type="module" src="/replay.js"></script></html>

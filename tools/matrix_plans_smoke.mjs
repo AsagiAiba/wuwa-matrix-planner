@@ -21,7 +21,9 @@ try {
   assert.match(await page.locator('#coverage-note').innerText(), /类比/);
   const content16 = JSON.parse(await readFile('data/matrix_content_16.json', 'utf8'));
   assert.equal(await page.locator('.matrix-circuit').count(), 4);
-  assert.equal(await page.locator('.matrix-character-enhancement').count(), 13);
+  assert.equal(await page.locator('.matrix-character-enhancement').count(), 6);
+  assert.equal(await page.locator('.matrix-character-enhancement .enhancement-character').count(), 13);
+  assert.equal(await page.locator('.matrix-grouped-enhancement .enhancement-character').count(), 8);
   assert.equal(await page.locator('#circuit-buffs').evaluate(node => node.open), false);
   assert.equal(await page.locator('#other-enhancements').evaluate(node => node.open), false);
   assert.equal(await page.locator('#matrix-stamina-enhancements .matrix-character-enhancement').isVisible(), true);

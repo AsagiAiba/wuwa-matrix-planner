@@ -8,10 +8,24 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const version = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 const port = Number(process.env.MATRIX_PORT || 4173);
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml' };
-const allowed = new Set(['index.html', 'app.js', 'styles.css', 'score-axis.js', 'plan-library.js', 'season-config.js']);
+const allowed = new Set(['index.html', 'app.js', 'styles.css', 'score-axis.js', 'plan-library.js', 'season-config.js','afyg-preset.js','cingulum.js','afyg-replay/site/execution-position.js']);
+const replayRoot = path.join(root, 'afyg-replay', 'site');
+const replayPages = new Map(['replay.html','replay.js','replay.css','execution-position.js','sample.json'].map(name=>['/'+name,name]));
+replayPages.set('/fast-calc','fast-calc.html');
 const server = http.createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+    // The local engine uses root-relative asset and character-info URLs.
+    const replayName = replayPages.get(pathname) ?? (/^\/(?:_app\/immutable\/|api\/v[13]\/|fonts\/|icons\/)/.test(pathname) ? pathname.slice(1) : null);
+    if (replayName !== null) {
+      if (!['GET','HEAD'].includes(request.method)) { response.writeHead(405).end(); return; }
+      const file = path.resolve(replayRoot,replayName);
+      if (replayName.includes('..') || replayName.includes('\\') || !file.startsWith(replayRoot+path.sep) || !(await stat(file)).isFile()) { response.writeHead(404).end(); return; }
+      const type = pathname.startsWith('/api/') ? mime['.json'] : mime[path.extname(file)] || 'application/octet-stream';
+      response.writeHead(200, {'Content-Type':type,'Cache-Control':'no-cache','X-Content-Type-Options':'nosniff'});
+      if(request.method==='HEAD') response.end(); else createReadStream(file).on('error',()=>response.destroy()).pipe(response);
+      return;
+    }
     if (pathname === '/__matrix_health') {
       response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
       response.end(JSON.stringify({ app: 'wuwa-matrix-hp-planner', version, root, pid: process.pid })); return;

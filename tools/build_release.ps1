@@ -24,13 +24,20 @@ $appIcon = Join-Path $projectRoot 'assets\app\lily.ico'
 if (-not (Test-Path -LiteralPath $appIcon -PathType Leaf)) { throw 'Missing app icon: assets/app/lily.ico' }
 & $compiler /nologo /codepage:65001 /target:winexe /platform:x64 /optimize+ "/win32icon:$appIcon" "/out:$launcher" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Web.Extensions.dll (Join-Path $projectRoot 'desktop\Launcher.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Launcher compilation failed.' }
-foreach ($name in @('index.html','app.js','styles.css','score-axis.js','plan-library.js','season-config.js','server.mjs','package.json','README.md','THIRD_PARTY_NOTICES.md','CHANGELOG.md')) {
+foreach ($name in @('index.html','app.js','afyg-preset.js','cingulum.js','styles.css','score-axis.js','plan-library.js','season-config.js','server.mjs','package.json','README.md','THIRD_PARTY_NOTICES.md','CHANGELOG.md')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot $name) -Destination (Join-Path $releaseRoot $name) -Force
 }
 foreach ($name in @('assets','config')) {
     $destination = Join-Path $releaseRoot $name
     [void](New-Item -ItemType Directory -Force -Path $destination)
     Copy-Item -Path (Join-Path $projectRoot "$name\*") -Destination $destination -Recurse -Force
+}
+$replay = Join-Path $releaseRoot 'afyg-replay'
+$site = Join-Path $replay 'site'
+[void](New-Item -ItemType Directory -Force -Path $site)
+Copy-Item -LiteralPath (Join-Path $projectRoot 'afyg-replay/LICENSE.txt') -Destination $replay -Force
+foreach ($part in @('replay.html','replay.js','replay.css','execution-position.js','sample.json','fast-calc.html','_app','api','icons','fonts')) {
+    Copy-Item -LiteralPath (Join-Path $projectRoot "afyg-replay/site/$part") -Destination $site -Recurse -Force
 }
 $docsRoot = Join-Path $releaseRoot 'docs'
 [void](New-Item -ItemType Directory -Force -Path $docsRoot)

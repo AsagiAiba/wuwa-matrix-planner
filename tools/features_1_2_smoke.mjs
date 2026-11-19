@@ -62,7 +62,7 @@ try {
   await page.locator(`.team-bar[data-id="${pending.id}"]`).dblclick();
   await page.locator('#dialog-team-score').fill('4000'); await page.locator('#confirm-characters').click();
   await gap(page, 'shortfall', 22000);
-  await page.locator('#delete-team').click(); await gap(page, 'shortfall', 26000);
+  page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click(); await gap(page, 'shortfall', 26000);
   await page.locator('#undo-team-delete').click(); await gap(page, 'shortfall', 22000);
   await page.locator('#redo-team-delete').click(); await gap(page, 'shortfall', 26000);
   await page.locator('.team-card[data-id="team-1"]').click();

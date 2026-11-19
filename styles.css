@@ -271,6 +271,9 @@ input[readonly] { color: #94a6b5; border-style: dashed; cursor: default; }
 .matrix-enhancements { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
 .enhancement-character { display: flex; align-items: center; gap: 9px; }
 .enhancement-character .portrait { width: 34px; height: 34px; }
+.matrix-grouped-enhancement { grid-column: 1 / -1; }
+.grouped-enhancement-roster { display: flex; flex-wrap: wrap; gap: 14px 24px; }
+.grouped-enhancement-roster > .enhancement-character { min-width: 105px; }
 .matrix-content-note { font-size: 11px; line-height: 1.8; margin-bottom: 12px; }
 .bloodline-unavailable { padding: 28px 25px 20px 138px; color: #b9c8d3; font-size: 13px; line-height: 1.9; }
 @media(max-width:760px) {
@@ -672,3 +675,45 @@ input[readonly] { color: #94a6b5; border-style: dashed; cursor: default; }
  #disabled-characters-dialog .dialog-footer { flex-wrap: wrap; gap: 10px; }
  #disabled-characters-dialog .dialog-footer button { padding: 8px; font-size: 12px; }
 }
+#add-afyg { margin:0 0 14px; color:#9bd6d3; }
+#afyg-details { margin-top:10px; padding:10px; background:#18272d; border:1px solid #364c55; border-radius:6px; }
+#afyg-details summary { cursor:pointer; color:#aed3d3; }
+#afyg-breakdown p { margin:8px 0; font-size:12px; }
+#afyg-breakdown small { display:block; font-size:10px; }
+.app-views { display:flex; gap:16px; padding:0 clamp(16px,3vw,44px); background:#141c22; border-bottom:1px solid var(--line); }
+.app-views button { background:none; border:0; border-radius:0; border-bottom:2px solid transparent; padding:10px 4px; color:#9fb0bb; }
+.app-views button[aria-selected=true] { color:var(--gold); border-bottom-color:var(--gold); }
+#planner-view[hidden], #project-view[hidden], .header-actions[hidden] { display:none; }
+#project-frame { display:block; width:100%; height:calc(100dvh - 124px); min-height:420px; border:0; }
+#delete-team{color:#fff;background:#c53238;border:1px solid #e05b60;border-radius:5px;padding:5px 11px;font-weight:650}
+#delete-team:hover:not(:disabled){background:#e03c43;color:#fff}
+#delete-team:disabled{opacity:.45}
+.inspector #afyg-details{border:0;border-top:1px solid #374551;border-radius:0;padding:14px 0 0;margin-top:16px;background:transparent}
+.inspector #afyg-breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:7px;margin:10px 0}
+.inspector #afyg-breakdown p{margin:0;padding:7px 9px;background:#19262e;border-radius:4px}
+.inspector #afyg-breakdown .preset-summary,.inspector #afyg-breakdown .preset-note{grid-column:1/-1}
+.preset-summary{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 16px}
+.preset-summary>*{white-space:nowrap}
+.effective-damage{color:#82dca2}
+#team-circuit{display:block;width:100%;margin-top:7px}
+#team-circuit-note{white-space:pre-line;line-height:1.6;margin-top:-10px}
+#team-circuit-note:empty{display:none}
+.overflow-damage{color:#ff9596}
+.kill-bonus{color:#efd079}
+.overflow-badge{display:inline-block;white-space:nowrap;color:#ffbf80;background:#352922;border:1px solid #a5693d;border-radius:4px;padding:0 5px}
+#afyg-manual{background:#ea9c53;color:#24170c;border-color:#ffc585;font-weight:600}
+#afyg-manual:hover{background:#ffb16a}
+#forget-mode-field[hidden]{display:none}
+#forget-mode{display:block;margin:6px 0;width:100%}
+
+.axis-import-dialog{width:min(460px,90vw);box-sizing:border-box;color:#edf1f3;background:#192731;border:1px solid #506576;border-radius:9px;padding:20px}
+.axis-import-dialog::backdrop{background:#04090dbd}
+.axis-import-dialog label{display:grid;gap:5px;margin:12px 0;color:#c6d4dc}
+.axis-import-dialog select{width:100%;min-width:0;padding:7px;color:#edf1f3;background:#101c24;border:1px solid #506576;border-radius:4px}
+.axis-import-dialog p{margin:8px 0}.axis-import-dialog .controls{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.axis-import-dialog .axis-feedback{color:#edcb91}
+
+.simulation-notes{margin-top:14px;padding:12px 16px;border:1px solid #344652;border-radius:6px;background:#16212a}
+.simulation-notes summary{cursor:pointer;color:#c9d7df}
+.simulation-notes dt{font-weight:600;color:#ebc68a;margin:14px 0 4px}
+.simulation-notes dd{margin:0;line-height:1.7;color:#b7c6d0}

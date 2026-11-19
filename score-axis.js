@@ -269,4 +269,113 @@ export const MIN_ZOOM = 0.000001;
 export const MAX_ZOOM = 0.24;
 
 import { getSeason } from './season-config.js';
+import matrixDamageRules from './config/matrix_damage_rules.json' with {type:'json'};
+import characters from './data/characters.json' with {type:'json'};
+import {specialEchoCast} from './cingulum.js';
+const roleNames=new Map(characters.entries.map(c=>[c.id,c.name]));
 
+export function circuitDamageRules(id){
+  return matrixDamageRules.circuits[id]??null;
+}
+
+export function matrixFinalFactor(hit,boss,round,circuit){
+  const responding=Boolean((hit.unisonRounds??0)&(1<<round));
+  let extra=circuit?.all??0;
+  if(responding)extra+=(circuit?.unison??0)+(matrixDamageRules.bosses[boss.id]?.unison??0);
+  if(hit.echo)extra+=circuit?.echo??0;
+  if(hit.basic)extra+=circuit?.basic??0;
+  if(hit.liberation)extra+=circuit?.liberation??0;
+  const existing=hit.finalZone??1;
+  return existing>0?1+extra/(100*existing):1;
+}
+
+function recordStack(hit,stage,rule,round,roster,mode){
+  if(stage.stacks>=rule.maxStacks)return;
+  function add(key,trigger,repeat=false){
+    if(stage.stacks>=rule.maxStacks||(!repeat && stage.stackEvents.some(e=>e.key===key)))return;
+    stage.stacks++;
+    stage.stackEvents.push({key,hit:stage.hits+(hit.castOnly?0:1),round:round+1,trigger,stacks:stage.stacks,castOnly:!!hit.castOnly});
+  }
+  if(rule.tuneBreak && (hit.tuneBreak || hit.name==='谐度破坏') && hit.part===1){
+    add('break','谐度破坏',true);
+  }else if(rule.echo){
+    if(!hit.castOnly && !hit.offField && roster.has(hit.source))add('role:'+hit.source,hit.source+'首次输出');
+    const cast=hit.specialEcho??(hit.part===1?specialEchoCast(hit.source,hit.name,roster.has('洛可可')):undefined);
+    if(!cast||!roster.has(cast==='珍奇箱'?'洛可可':hit.source))return;
+    if(cast==='遗忘' && (mode==='echo'||(mode==='auto'&&hit.forgetMode==='echo')))add(cast,'遗忘',true);
+    else if(cast!=='遗忘')add('cast:'+cast,cast);
+  }
+}
+
+// A cycle is ordered by the project's operation/reference positions. Each row
+// below is one independent hit, including repeats inside a single action.
+export function simulatePreset(preset, season, waves, start, damageFactor, forgetMode='auto') {
+  let index = waves.findIndex(wave => start < wave.cumulative_points_after - 1e-7);
+  if (index < 0) return { reason: '起点已到血线末端' };
+  const opening = waves[index];
+  const offset = Math.max(0, start - opening.cumulative_points_before);
+  if (opening.kill_bonus && offset >= opening.damage_points_at_full_hp)
+    return { reason: '起点位于宝箱击杀奖励区，请调整前队分数' };
+  const keys = season.bosses.map(boss => [1,2,3,4,5,6].map(id => boss.resistances.values[id]).join(','));
+  // Invert partial scores using the same per-damage coefficient used below.
+  let hp = opening.max_hp - offset / opening.points_per_damage;
+  let end = start, applied = 0, lost = 0, bonuses = 0, kills = 0, count = 0;
+  const stages = [];
+  const roster=new Set((preset.roles??[]).map(id=>roleNames.get(id)));
+  for (let round = 0; round < preset.cycles; round++) {
+    const hits=preset.roundOrders ? preset.roundOrders[round].map(i=>preset.hits[i]) : preset.hits;
+    for (const hit of hits) {
+      if (index === waves.length) break;
+      const wave = waves[index];
+      const boss=season.bosses[wave.boss_position-1];
+      const rule=damageFactor && preset.bossEventVersion===2 && season.id==='s2-phase4'?matrixDamageRules.s2Phase4Bosses[boss.id]:null;
+      if(hit.castOnly && !rule?.echo)continue;
+      const baseDamage = hit.castOnly?0:hit.damage[keys[wave.boss_position - 1]];
+      if (!Number.isFinite(baseDamage)) return { reason: '此预设尚未计算该 Boss 的抗性组合' };
+      if (stages.at(-1)?.index !== index){
+        const next={index, name: 'R'+wave.round+' '+wave.name, score:0, lost:0, hits:0};
+        if(rule?.maxStacks)Object.assign(next,{stacks:0,stackLabel:rule.echo?'迷航':'谐度破坏',stackEvents:[]});
+        stages.push(next);
+      }
+      const stage = stages.at(-1);
+      if(hit.castOnly){recordStack(hit,stage,rule,round,roster,forgetMode);continue;}
+      let factor=damageFactor?damageFactor(hit,boss,round):1;
+      if(rule){
+        const equippedEcho=hit.echoName || (hit.echo && /\(声骸技能\)$/.test(hit.name));
+        const damageStacks=rule.echo && equippedEcho ? 2 : (stage.stacks??0);
+        let extra=damageStacks*(rule.tuneBreak??rule.echo??0);
+        if(rule.fullStacks && damageStacks===rule.maxStacks)extra+=rule.fullStacks;
+        if(hit.abnormal)extra+=rule.abnormal??0;
+        if((hit.finalZone??1)>0)factor+=extra/(100*(hit.finalZone??1));
+        const vulnerability=hit.vulnerabilityZone??1;
+        if(rule.vulnerability && vulnerability>0)factor*=Math.max(0,1+rule.vulnerability/(100*vulnerability));
+        // The triggering hit uses the previous stack count, including the fifth Echo.
+        if(rule.maxStacks)recordStack(hit,stage,rule,round,roster,forgetMode);
+      }
+      const damage=baseDamage*Math.max(0,factor);
+      const effective = Math.min(hp, damage);
+      applied += effective; lost += damage - effective;
+      stage.lost += damage - effective; stage.hits++; count++;
+      hp -= effective;
+      const before = end;
+      if (hp <= 0) {
+        kills++; bonuses += wave.kill_bonus;
+        stage.finisher = hit.source+' · '+hit.name+' 第'+hit.part+'击';
+        stage.bonus = wave.kill_bonus;
+        end = wave.cumulative_points_after;
+        index++;
+        hp = waves[index]?.max_hp ?? 0;
+      } else {
+        end = Math.max(before, wave.cumulative_points_before + Math.floor((wave.max_hp - hp) * wave.points_per_damage + 1e-8));
+      }
+      stage.score += end-before;
+    }
+  }
+  const last = stages.at(-1);
+  if (stages.length > 1 && !last.finisher && last.score < 300) {
+    last.uncreditedScore = last.score;
+    last.score = 0;
+    end = waves[last.index].cumulative_points_before;
+  }
+  return {score:end-start, end, applied, lost, bonuses, kills, count, stages, capped:index===waves.length};
+}

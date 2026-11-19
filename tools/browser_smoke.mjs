@@ -157,7 +157,7 @@ try {
   assert.equal(config.teams[3].name, '气动混合队');
   assert.equal(config.teams[3].score, 100000.5);
   assert.equal(new Set(config.teams.flatMap(team => team.characterIds)).size, 12);
-  await page.locator('#delete-team').click(); connected(await exported());
+  page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click(); connected(await exported());
   await page.locator('#add-team').click(); await page.locator('#close-dialog').click();
   assert.equal(await page.locator('.team-bar').count(), 3);
   config = await exported();
@@ -214,7 +214,7 @@ try {
   assert.equal((await exported()).teams.filter(team => team.characterIds.includes('1505')).length, 2);
   await page.reload(); await page.locator('.team-bar').first().waitFor();
   assert.equal((await exported()).teams.filter(team => team.characterIds.includes('1505')).length, 2);
-  await page.locator('.team-card[data-id="team-1"]').click(); await page.locator('#delete-team').click();
+  await page.locator('.team-card[data-id="team-1"]').click(); page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click();
   await page.locator('#add-team').click();
   assert.ok(await page.getByRole('button', { name: '守岸人', exact: true }).isEnabled());
   await page.locator('#close-dialog').click();

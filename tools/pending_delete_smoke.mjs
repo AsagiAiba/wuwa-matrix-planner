@@ -24,7 +24,7 @@ async function exported() {
   const file = await event; return JSON.parse(await readFile(await file.path(), 'utf8'));
 }
 async function selectTeam(id) { await page.locator(`.team-card[data-id="${id}"]`).click(); }
-async function deleteTeam(id) { await selectTeam(id); await page.locator('#delete-team').click(); }
+async function deleteTeam(id) { await selectTeam(id); page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click(); }
 async function manualPending() {
   await page.locator('#add-team').click();
   for (const name of ['今汐', '长离', '守岸人']) await page.getByRole('button', { name, exact: true }).click();

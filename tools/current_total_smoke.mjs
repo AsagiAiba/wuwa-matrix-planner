@@ -39,7 +39,7 @@ try {
  assert.ok(controls.y>=summary.y+summary.height && Math.abs(controlLabel.x-summary.x)<2);
  await page.locator('.timeline-toolbar').screenshot({path:'outputs/current-total-toolbar.png'});
  await page.locator('#team-score').fill('1w');await page.locator('#apply-team').click();await check(26000);
- await page.locator('#delete-team').click();await check(16000);
+ page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click();await check(16000);
  await page.reload();await page.locator('.team-bar').first().waitFor();await check(16000);
  const pending=structuredClone(example);pending.teams[0].score=0;pending.teams[0].needsScore=true;pending.teams=packTeams(pending.teams);
  await fixture(pending);await check(16000);assert.match(await page.locator('#current-total-pending').innerText(),/1 队待填/);

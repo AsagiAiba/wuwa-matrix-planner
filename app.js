@@ -1,9 +1,18 @@
+import {axisLabels,confirmImportAxis} from './afyg-replay/site/execution-position.js';
+import { compileProjectPreset } from './afyg-preset.js';
 import { visibleWaves, locateScore, packTeams, reorderTeams, nearestTeamSlot, characterIdentity, validateConfig, staminaLimits, staminaConflicts, defaultTeamName, splitQuickTeams, axisTickStep, matrixInfo, bossScoreAtRemainingHp, layoutTeamPreviews, PENDING_TEAM_SCORE, createTeamDeletionHistory, deleteTeamWithHistory, undoTeamDeletion, redoTeamDeletion, MIN_ZOOM, MAX_ZOOM } from './score-axis.js';
 import { normalizePlanLibrary, createPlanLibrary, addPlan, copyPlan, renamePlan, updatePlan, activatePlan, deletePlan } from './plan-library.js';
 import { parseScoreInput } from './score-axis.js';
+import { simulatePreset, circuitDamageRules, matrixFinalFactor } from './score-axis.js';
+import simulationNotes from './config/simulation_notes.json' with {type:'json'};
+import heartPreset from './data/xinsuosho_preset.json' with { type: 'json' };
 import { seasonDefinitions, getSeason, seasonStaminaRules, buildSeasonScores } from './season-config.js';
 
 const $ = id => document.getElementById(id);
+for(const [title,body] of simulationNotes){
+  const term=document.createElement('dt'),detail=document.createElement('dd');
+  term.textContent=title;detail.textContent=body;$('simulation-notes').append(term,detail);
+}
 const LABEL = 112;
 const COLORS = ['#e6bd79', '#79c8c6', '#a9a1e6', '#e39599', '#8fb78c', '#82b2db'];
 const STORAGE = 'wuwa-matrix-demo-v1';
@@ -60,7 +69,78 @@ const staminaRules = seasonStaminaRules();
 const scoreTables = new Map(seasonDefinitions.map(season => [season.id, buildSeasonScores(season.id)]));
 let scores = scoreTables.get(example.matrixSeason);
 let bossMap = new Map();
+const checkedProjectPresets=new WeakSet();
+function teamPreset(team){
+  if(team?.presetId===heartPreset.id)return heartPreset;
+  if(team?.presetId==='afyg-project-v1'){
+    const data=team.projectPreset;
+    if(!checkedProjectPresets.has(data)){
+      if(data?.id!==team.presetId||![1,4,5].includes(data.cycles)||(data.cycles===5&&!Array.isArray(data.roundOrders))||typeof data.name!=='string'||
+         !Array.isArray(data.roles)||data.roles.length!==3||!data.roles.every(id=>characterIds.has(id))||
+         !Array.isArray(data.hits)||(data.roundOrders===undefined?(!data.hits.length||data.hits.length>2000):
+           (![4,5].includes(data.cycles)||data.hits.length>2000*data.cycles||!Array.isArray(data.roundOrders)||data.roundOrders.length!==data.cycles||
+            !data.roundOrders.every(order=>Array.isArray(order)&&order.length<=2000&&order.every(i=>Number.isInteger(i)&&i>=0&&i<data.hits.length))))||
+         !data.hits.every(h=>h&&typeof h.name==='string'&&typeof h.source==='string'&&Number.isInteger(h.part)&&h.part>0&&h.damage&&Object.values(h.damage).every(v=>Number.isFinite(v)&&v>=0)))
+        throw Error('工程预设数据无效，请重新应用');
+      if((data.bossEventVersion!==2 || data.mistVersion!==1) && data.roundOrders===undefined && data.cycles===heartPreset.cycles && matchesPreset(team,heartPreset) &&
+         data.hits.length===heartPreset.hits.length && data.hits.every((h,i)=>{
+           const ref=heartPreset.hits[i];
+           return h.name===ref.name && h.source===ref.source && h.part===ref.part &&
+             Object.entries(ref.damage).every(([key,value])=>h.damage[key]===value);
+         })){
+        data.hits=structuredClone(heartPreset.hits);
+        data.matrixBuffVersion=heartPreset.matrixBuffVersion;
+        data.bossEventVersion=heartPreset.bossEventVersion;data.mistVersion=heartPreset.mistVersion;
+      }
+      if(data.matrixBuffVersion===1 && !data.hits.every(h=>(h.finalZone===undefined||(Number.isFinite(h.finalZone)&&h.finalZone>=0)) &&
+         (h.unisonRounds===undefined||(Number.isInteger(h.unisonRounds)&&h.unisonRounds>=0&&h.unisonRounds<(1<<data.cycles))) &&
+         (h.vulnerabilityZone===undefined||(Number.isFinite(h.vulnerabilityZone)&&h.vulnerabilityZone>=0)) &&
+         (h.echoName===undefined||(typeof h.echoName==='string'&&h.echoName.length>0)) &&
+         [h.echo,h.basic,h.liberation,h.tuneBreak,h.abnormal].every(flag=>flag===undefined||typeof flag==='boolean')))throw Error('工程的回路计算数据无效，请重新应用');
+      checkedProjectPresets.add(data);
+    }
+    return data;
+  }
+  return null;
+}
+function matchesPreset(team,preset){return team.characterIds?.length===3&&preset.roles.every(id=>team.characterIds.includes(id));}
+function selectedCircuit(team,season){
+  if(!team)return null;
+  if(team.circuitId!==undefined)return season.circuits.find(c=>c.id===team.circuitId)??null;
+  if(team.presetId && matchesPreset(team,heartPreset))return season.circuits.find(c=>c.name==='基础伤害强化')??null;
+  return null;
+}
+function updatePresetScores(plan) {
+  const reports = new Map();
+  if (!plan.teams.some(team=>teamPreset(team))) return reports;
+  const season=getSeason(plan), records=scoreTables.get(season.id).records;
+  let start=0, waiting=false;
+  let manualLeft=plan.teams.reduce((sum,t)=>sum+(teamPreset(t)?0:t.score),0);
+  for (const team of plan.teams) {
+    team.startScore=start;
+    const preset=teamPreset(team);
+    if(preset && team.circuitId===undefined)team.circuitId=selectedCircuit(team,season)?.id??'';
+    if(preset) {
+      if(!matchesPreset(team,preset)){delete team.projectPreset;delete team.presetId;team.score=0;team.needsScore=true;}
+      else {
+        const circuit=selectedCircuit(team,season), rules=circuitDamageRules(circuit?.id);
+        const factor=preset.matrixBuffVersion===1?(hit,boss,round)=>matrixFinalFactor(hit,boss,round,rules):undefined;
+        let report=waiting?{reason:'请先填写前序队伍的分数'}:simulatePreset(preset,season,records,start,factor,team.forgetMode??'auto');
+        if(report.end+manualLeft>records.at(-1).cumulative_points_after+1e-7)report={reason:'预设与后续队伍总分超出 R15'};
+        team.score=report.score || 0;
+        if(team.score>0)delete team.needsScore;else team.needsScore=true;
+        reports.set(team.id,report);
+      }
+    } else manualLeft-=team.score;
+    start+=team.score;
+    waiting ||= !!team.needsScore;
+  }
+  const last=records.find(w=>w.cumulative_points_after>=start);
+  if(last)plan.maxRound=Math.max(plan.maxRound,last.round);
+  return reports;
+}
 function validatePlan(value, options = {}) {
+  if(Array.isArray(value?.teams))for(const team of value.teams)teamPreset(team);
   return validateConfig(value, characterIds, scoreTables.get(matrixInfo(value).id).records, identityById, staminaRules, options);
 }
 function restorePlan(value) {
@@ -258,6 +338,7 @@ function toast(message) {
 }
 
 function persist() {
+  updatePresetScores(state);
   state.disabledCharacterIds = [...new Set((state.disabledCharacterIds || []).map(id => pickerChoiceIdByMember.get(id)).filter(id => id && !alwaysAvailableChoices.has(id)))];
   normalizeTeamNames();
   planLibrary = updatePlan(planLibrary, planLibrary.activePlanId, state);
@@ -409,7 +490,20 @@ function renderMatrixDetails() {
     if (!character) { character = { ...characterMap.get(id), enhancements: [] }; enhancements.push(character); }
     character.enhancements.push({ kind: 'stamina-bonus', description: `角色拥有额外${content.stamina.extraStamina}点体力（${content.name}限定）。` });
   }
+  const sharedDamageCharacters = enhancements.filter(character => !bonusIds.includes(character.id) && character.enhancements.length === 1 && character.enhancements[0].description.trim() === '角色最终伤害提升25%。');
+  const sharedDamageIds = new Set(sharedDamageCharacters.map(character => character.id));
+  if (sharedDamageCharacters.length) {
+    const card = element('article', 'matrix-character-enhancement matrix-grouped-enhancement');
+    const roster = element('div', 'grouped-enhancement-roster');
+    for (const character of sharedDamageCharacters) {
+      const member = element('div', 'enhancement-character'); member.dataset.characterId = character.id;
+      member.append(portrait(character.id), element('h4', '', character.name)); roster.append(member);
+    }
+    card.append(roster, element('p', '', '角色最终伤害提升25%。'));
+    $('matrix-enhancements').append(card);
+  }
   for (const character of enhancements) {
+    if (sharedDamageIds.has(character.id)) continue;
     const card = element('article', 'matrix-character-enhancement');
     card.dataset.characterId = character.id;
     const heading = element('div', 'enhancement-character');
@@ -418,7 +512,7 @@ function renderMatrixDetails() {
     const persistent = bonusIds.includes(character.id);
     $(persistent ? 'matrix-stamina-enhancements' : 'matrix-enhancements').append(card);
   }
-  $('other-enhancements-count').textContent = `（${$('matrix-enhancements').children.length}）`;
+  $('other-enhancements-count').textContent = `（${enhancements.filter(character => !bonusIds.includes(character.id)).length}）`;
 }
 
 function renderBossPropertiesText(container, boss) {
@@ -714,7 +808,7 @@ function renderList() {
     button.classList.toggle('stamina-conflicted', conflictTeamIds.has(team.id));
     button.setAttribute('aria-label', `选择${team.name}`);
     const main = element('div', 'team-card-main');
-    main.append(element('div', 'team-card-title', team.name + (team.needsCharacters ? ' · 待补选' : '')));
+    main.append(element('div', 'team-card-title', team.name + (teamPreset(team) ? ' · 预设' : team.needsCharacters ? ' · 待补选' : '')));
     const images = element('div', 'tiny-portraits');
     team.characterIds.forEach(id => images.append(portrait(id)));
     main.append(images);
@@ -804,6 +898,21 @@ function startSidebarDrag(event, team, card) {
 
 function renderEditor() {
   const team = current();
+  const season=getSeason(state),circuit=selectedCircuit(team,season);
+  const selector=$('team-circuit');
+  selector.replaceChildren(new Option('不使用回路增益',''));
+  for(const option of season.circuits)selector.add(new Option(option.name,option.id));
+  selector.value=circuit?.id??'';
+  const preset=teamPreset(team);
+  let status='';
+  if(circuit && !preset)status='已记录本队回路，手填分数按原值使用。';
+  else if(preset && preset.matrixBuffVersion!==1)status='此旧预设缺少逐击标签，请在椰果工程中选中原工程并重新应用。';
+  else if(circuit && !circuitDamageRules(circuit.id))status='本回路已记录，触发效果尚未参与推演。';
+  else if(circuitDamageRules(circuit?.id)?.unison)status='按响应同奏和声骸命中结算；护盾触发暂未建模。';
+  $('team-circuit-note').textContent=[circuit?.description,status].filter(Boolean).join('\n');
+  $('forget-mode-field').hidden=!(preset && season.id==='s2-phase4' && team.characterIds.includes('1109'));
+  $('forget-mode').value=team?.forgetMode??'auto';
+  $('team-score').readOnly=Boolean(teamPreset(team));
   $('team-form').inert = !team;
   $('team-form').style.opacity = team ? '1' : '.4';
   $('delete-team').disabled = !team;
@@ -962,8 +1071,52 @@ function showTeamTooltip(team, x, y) {
 function renderInspector() {
   // Keep a first click from shortening the page and moving a pending team before its second click.
   const inspector = document.querySelector('.inspector');
-  inspector.style.minHeight = `${inspector.getBoundingClientRect().height}px`;
+  inspector.style.minHeight = '';
+  if(!teamPreset(current()) && $('afyg-details').hidden)inspector.style.minHeight = `${inspector.getBoundingClientRect().height}px`;
   const team = current();
+  $('afyg-details').hidden = !teamPreset(team);
+  if(teamPreset(team)){
+    $('afyg-title').textContent=team.name+' · 预设推演';
+    const report=updatePresetScores(state).get(team.id),box=$('afyg-breakdown');box.replaceChildren();
+    if(report?.reason)box.append(element('p','muted',report.reason));
+    else if(report){
+      const summary=element('p','preset-summary');
+      summary.append(element('strong','',`预计 ${fmt(report.score)} 分 · 击杀 ${report.kills} 只`),
+        element('span','effective-damage','有效伤害 '+fmt(report.applied)),
+        element('span','overflow-damage','溢出 '+fmt(report.lost)),
+        element('span','kill-bonus','击杀奖励 '+fmt(report.bonuses)+' 分'));
+      box.append(summary);
+      for(const stage of report.stages){
+        const line=element('p','',`${stage.name}　+${fmt(stage.score)} 分`);
+        if(stage.finisher){
+          const detail=element('small','muted',stage.finisher+'击杀 ');
+          detail.append(element('span','overflow-badge','溢出 '+fmt(stage.lost)));
+          line.append(detail);
+        }else if(stage.uncreditedScore!==undefined){
+          line.append(element('small','muted',`转火所得 ${fmt(stage.uncreditedScore)} 分，未满 300 分，按 0 分计`));
+        }
+        if(stage.stackEvents){
+          const label=stage.stackLabel;
+          line.append(element('small','muted',label+' '+stage.stacks+' 层'));
+          if(stage.stackEvents.length){
+            line.append(element('small','muted',stage.stackEvents.map(e=>(e.trigger==='谐度破坏' && teamPreset(team).cycles>1?'第 '+e.round+' 轮 · ':'')+(e.castOnly?(e.hit?'第 '+e.hit+' 击后':'首击前'):'第 '+e.hit+' 击')+' '+e.trigger).join(' → ')));
+          }
+        }
+        box.append(line);
+      }
+      const preset=teamPreset(team);
+      box.append(element('p','muted preset-note',preset.name+' · '+(axisLabels[preset.axisKind]??axisLabels[preset.cycles===1?'full':'single'])));
+      if(preset.matrixBuffVersion===1){
+        const circuit=selectedCircuit(team,getSeason(state)),rules=circuitDamageRules(circuit?.id);
+        const label=rules?circuit.name+'已计入':circuit?circuit.name+'（仅记录）':'无回路';
+        const season=getSeason(state);
+        const note=season.id!=='s2-phase4'?'无冠者的同奏增伤按当前目标逐击结算':
+          preset.bossEventVersion===2?'迷航按角色首次输出和特殊施放叠层；装备声骸 Q 伤害按 2 层计算':'请重新应用此工程，以载入逐击易伤区并结算 S2-4 Boss 性质';
+        box.append(element('p','muted preset-note',label+' · '+note));
+      }
+      if(report.capped)box.append(element('p','muted preset-note','已到 R15 血线终点。'));
+    }
+  }
   $('selection-name').textContent = team?.name || '尚未选择队伍';
   $('selection-roster').replaceChildren();
   for (const id of team?.characterIds || []) {
@@ -1152,6 +1305,11 @@ function renderTimeline() {
     });
     bar.addEventListener('focus', () => { if (selectedId !== team.id && !dragging) { selectedId = team.id; renderList(); renderEditor(); renderPositions(); } });
     bar.addEventListener('keydown', event => {
+      if(event.key==='Delete'){
+        event.preventDefault();
+        if(!event.repeat)confirmTeamDeletion(team.id);
+        return;
+      }
       if (event.key === 'Enter') { event.preventDefault(); editAxisTeam(team.id); return; }
       if (event.key === 'Escape') hideTeamTooltip();
       if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
@@ -1271,6 +1429,7 @@ function renderRulerTicks() {
 
 function renderAll() {
   syncSeasonRuntime();
+  updatePresetScores(state);
   renderCurrentTotal();
   normalizeTeamNames();
   renderRoundOptions();
@@ -1409,6 +1568,7 @@ function disabledCharacterImpact(disabled) {
     if (!affected.length) continue;
     removed.push({ planId: plan.id, planName: plan.name, teams: affected });
     plan.config.teams = packTeams(plan.config.teams.filter(team => !teamUsesDisabledCharacter(team, disabled)));
+    updatePresetScores(plan.config);
   }
   return { library: next, removed, count: removed.reduce((sum, item) => sum + item.teams.length, 0) };
 }
@@ -1532,6 +1692,7 @@ function openCharacters() {
   dialogAutoName = Boolean(pendingTeam) || team.nameMode === 'auto';
   $('dialog-team-name').value = pendingTeam ? '' : team.name;
   $('dialog-team-score').value = pendingTeam || team.needsScore ? '' : team.score;
+  $('dialog-team-score').readOnly=Boolean(teamPreset(team));
   $('dialog-team-score').placeholder = pendingTeam || team.needsScore ? '可稍后填写（5,000分预览）' : '填写本队分数';
   $('dialog-title').textContent = pendingTeam ? '新建队伍' : '编辑队伍';
   $('confirm-characters').textContent = pendingTeam ? '创建队伍' : '保存队伍';
@@ -1648,9 +1809,24 @@ function renderCharacters() {
   }
 }
 
+$('forget-mode').addEventListener('change',event=>{
+  const team=current();if(!team)return;
+  team.forgetMode=event.target.value;persist();renderAll();
+});
+$('team-circuit').addEventListener('change',event=>{
+  const team=current();
+  if(!team)return;
+  team.circuitId=event.target.value;
+  persist();renderAll();
+});
 $('team-form').addEventListener('submit', event => {
   event.preventDefault();
   const team = current(); if (!team) return;
+  if(teamPreset(team)){
+    const name=$('team-name').value.trim();
+    if(!name||name.length>30){toast('请填写有效队名');return;}
+    team.name=name;team.nameMode=name===defaultTeamName(team.characterIds,characterMap)?'auto':'custom';persist();renderAll();return;
+  }
   const score = parseScoreInput($('team-score').value);
   const name = $('team-name').value.trim();
   if (!name || !Number.isFinite(score) || score <= 0) { toast('请输入队名与正数得分'); return; }
@@ -1666,7 +1842,67 @@ $('add-team').addEventListener('click', () => {
   pendingTeam = { id: crypto.randomUUID(), name: '', nameMode: 'auto', characterIds: [], score: 0, startScore: end, color: COLORS[state.teams.length % COLORS.length] };
   openCharacters();
 });
-$('delete-team').addEventListener('click', () => changeTeamDeletion('delete'));
+function applyPreset(preset, name){
+  if(libraryRecoveryLocked||restoreError)throw new Error('请先完成排布恢复');
+  const candidate=structuredClone(state);
+  if(teamUsesDisabledCharacter({characterIds:preset.roles},disabledCharacters))throw new Error('请先在当前方案启用该工程的三名角色');
+  let team=candidate.teams.find(t=>t.id===selectedId&&matchesPreset(t,preset))||candidate.teams.find(t=>matchesPreset(t,preset));
+  if(!team){
+    team={id:crypto.randomUUID(),name:defaultTeamName(preset.roles,characterMap),nameMode:'auto',characterIds:[...preset.roles],score:0,startScore:0,needsScore:true,color:COLORS[candidate.teams.length%COLORS.length]};
+    candidate.teams.push(team);
+  }
+  team.presetId=preset.id;
+  if(preset.id===heartPreset.id)delete team.projectPreset;else team.projectPreset=preset;
+  const report=updatePresetScores(candidate).get(team.id);
+  state=validatePlan(candidate);selectedId=team.id;persist();renderAll();
+  $('afyg-details').open=true;
+  toast(report.reason||`已应用「${name}」，预计 ${fmt(report.score)} 分`);
+  return report;
+}
+async function applySelectedProject(){
+  const stored=JSON.parse(localStorage.getItem('afyg-project-library-v1')||'null');
+  if(!stored){applyPreset(heartPreset,heartPreset.name);return;}
+  const item=stored.items?.find(entry=>entry.id===stored.activeId);
+  if(!item)throw Error('请先在椰果工程页选择队伍');
+  const raw=item.edited??item.raw;
+  await applyProject(raw.project??raw,stored.activeId);
+}
+let projectCalculation=0;
+async function applyProject(project,projectId){
+  const ticket=++projectCalculation;
+  if(!Array.isArray(project.team))throw Error('工程中缺少队伍配置');
+  const roles=project.team.map(slot=>characters.find(c=>c.name===slot.character)?.id);
+  if(roles.length!==3||roles.some(id=>!id))throw Error('工程中有未识别的角色，请检查阵容');
+  const planId=planLibrary.activePlanId;
+  const preset=await compileProjectPreset(project,roles,seasonDefinitions);
+  if(ticket!==projectCalculation)throw Error('已开始新的工程计算');
+  if(planLibrary.activePlanId!==planId)throw Error('排布方案已切换，请在当前方案重新应用');
+  if(projectId && JSON.parse(localStorage.getItem('afyg-project-library-v1')||'null')?.activeId!==projectId)throw Error('所选椰果工程已切换，请重新应用');
+  return applyPreset(preset,preset.name);
+}
+window.addEventListener('message',async event=>{
+  const view=$('project-frame').contentWindow;
+  if(event.origin!==location.origin||event.source!==view||event.data?.type!=='matrix:apply-execution')return;
+  const {project,projectId,request}=event.data;
+  let message;
+  try{
+    const report=await applyProject(project,projectId);
+    message=report.reason||`已应用到当前排布，预计 ${fmt(report.score)} 分 · 击杀 ${report.kills} 只`;
+  }catch(error){message='血线未更新：'+error.message;}
+  view.postMessage({type:'matrix:execution-result',request,message},location.origin);
+});
+$('add-afyg').onclick=async()=>{
+  const button=$('add-afyg');button.disabled=true;button.textContent='正在计算预设…';
+  try{await applySelectedProject();}catch(error){toast(error.message);}
+  finally{button.disabled=false;button.textContent='一键应用预设';}
+};
+$('afyg-manual').onclick=()=>{const team=current();if(!team)return;delete team.projectPreset;delete team.presetId;persist();renderAll();$('team-score').focus();};
+function confirmTeamDeletion(id){
+  const team=current();
+  if(!team||team.id!==id||dragging||document.querySelector('dialog[open]'))return;
+  if(confirm('删除队伍「'+team.name+'」？'))changeTeamDeletion('delete');
+}
+$('delete-team').addEventListener('click',()=>confirmTeamDeletion(selectedId));
 $('undo-team-delete').addEventListener('click', () => changeTeamDeletion('undo'));
 $('redo-team-delete').addEventListener('click', () => changeTeamDeletion('redo'));
 $('confirm-characters').addEventListener('click', () => {
@@ -1807,11 +2043,40 @@ $('export-button').addEventListener('click', () => {
   downloadPlanConfig(state, activePlan().name);
 });
 $('import-button').addEventListener('click', () => $('import-file').click());
+function selectView(tab) {
+  const projectOpen = tab.id === 'tab-project';
+  $('planner-view').hidden = projectOpen;
+  $('project-view').hidden = !projectOpen;
+  document.querySelector('.header-actions').hidden = projectOpen;
+  for(const button of document.querySelectorAll('.app-views [role=tab]')){
+    button.setAttribute('aria-selected',String(button===tab));
+    button.tabIndex = button===tab ? 0 : -1;
+  }
+  if(projectOpen && !$('project-frame').hasAttribute('src')) $('project-frame').src='./replay.html';
+  if(!projectOpen) requestAnimationFrame(renderTimeline);
+}
+for(const tab of document.querySelectorAll('.app-views [role=tab]')){
+  tab.disabled=false;
+  tab.onclick=()=>selectView(tab);
+  tab.onkeydown=event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    event.preventDefault();
+    const next=event.key==='Home'?$('tab-planner'):event.key==='End'?$('tab-project'):tab===$('tab-project')?$('tab-planner'):$('tab-project');
+    selectView(next);next.focus();
+  };
+}
 $('import-file').addEventListener('change', async event => {
   const file = event.target.files[0]; if (!file) return;
+  event.target.value='';
   try {
     if (file.size > 1_000_000) throw new Error('配置文件不能超过 1 MB');
-    const parsed = JSON.parse(await file.text());
+    const parsed = JSON.parse((await file.text()).replace(/^\uFEFF/,''));
+    const raw=parsed.engine==='wuwa-afyg-tool@441852a'&&parsed.result?parsed.project:parsed;
+    const afyg=raw.project??raw;
+    if(Array.isArray(afyg.team)&&(afyg.phases||afyg.encounter)){
+      if(await confirmImportAxis(afyg))await applyProject(afyg);
+      return;
+    }
     if (parsed.schemaVersion === 1 && Array.isArray(parsed.bosses) && parsed.scoring) throw new Error('这是赛季数据配置，请放到 config/seasons 目录；此处用于导入队伍排布 JSON。');
     const imported = validatePlan(parsed);
     const importedName = typeof imported.planName === 'string' ? imported.planName : file.name.replace(/\.json$/i, '');

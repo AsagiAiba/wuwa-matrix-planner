@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
     '.gitignore', '启动Demo.cmd', 'app.js', 'CHANGELOG.md', 'index.html',
-    'package.json', 'plan-library.js', 'README.md', 'score_core.py',
+    'afyg-preset.js', 'cingulum.js', 'package.json', 'plan-library.js', 'README.md', 'score_core.py',
     'score-axis.js', 'season-config.js', 'server.mjs', 'styles.css',
     'THIRD_PARTY_NOTICES.md',
 )
@@ -71,6 +71,12 @@ def source_files():
         for file in (ROOT / 'assets' / directory).rglob('*'):
             if file.is_file() and file.suffix.lower() in ASSET_TYPES:
                 selected.add(file.relative_to(ROOT).as_posix())
+    replay = ROOT / 'afyg-replay'
+    selected.add('afyg-replay/LICENSE.txt')
+    for name in ['replay.html','replay.js','replay.css','execution-position.js','sample.json','fast-calc.html']:
+        selected.add(f'afyg-replay/site/{name}')
+    for name in ['_app','api','icons','fonts']:
+        selected.update(p.relative_to(ROOT).as_posix() for p in (replay/'site'/name).rglob('*') if p.is_file())
     files = []
     root = ROOT.resolve()
     for name in sorted(selected):
@@ -103,18 +109,10 @@ def upload_guide(version, short_version, core_count, asset_count):
 可运行软件：WuwaMatrixPlanner-v{version}-win-x64.zip
 
 一、更新仓库源码
-1. 打开现有仓库 https://github.com/KazamiSora/wuwa-matrix-planner 。
-2. 在仓库首页点 Add file → Upload files。
-3. 打开本说明同级的 wuwa-matrix-planner 文件夹，进入直接能看到 README.md、app.js 的那一层。
-4. 第一批：选中除 assets 之外的所有内容，连同 config、data、desktop、docs、tests、tools 文件夹一起拖入上传区，共 {core_count} 个文件。提交说明填“更新 V{short_version} 源码与配置”，点击 Commit changes。
-5. 第二批：重新在仓库根目录进入 Upload files，把 assets 整个文件夹拖入，共 {asset_count} 个文件。提交说明填“更新 V{short_version} 角色、Boss 与回路素材”，点击 Commit changes。
-6. 同路径文件会被更新，新增文件会加入仓库。完成后仓库根目录应直接显示 README.md、app.js、plan-library.js、season-config.js、assets、config 等。
-
-请拖入文件夹里面的内容，不要把 wuwa-matrix-planner 总文件夹再套到仓库里；也不要只上传源码 ZIP，GitHub 不会替你展开。
-两批总计 {core_count + asset_count} 个文件。GitHub 网页每次最多上传 100 个文件、单文件最多 25 MiB；以上两批和每个文件均已按此限制检查。
+在本地克隆 KazamiSora/wuwa-matrix-planner，把上述源码目录的内容复制到仓库根目录，核对 git diff 后提交并推送。离线椰果资料包含多个子目录，使用 Git 可保留完整目录结构。
 
 二、发布 V{short_version} 软件
-1. 源码两批都提交后，进入仓库的 Releases，点 Draft a new release。
+1. 源码提交后，进入仓库的 Releases，点 Draft a new release。
 2. 新建标签 v{version}，Target 选择 main，标题填写 V{short_version}。
 3. 说明正文可复制 dist 下的 V{short_version}发布说明.txt；附件上传 WuwaMatrixPlanner-v{version}-win-x64.zip 和 SHA256SUMS.txt。需要时也可附上 WuwaMatrixPlanner-v{version}-source.zip。
 4. 确认文件已传完后点 Publish release。旧版本的 Release 保留即可。
@@ -148,8 +146,6 @@ def main():
     files = source_files()
     core = [name for name in files if not name.startswith('assets/')]
     assets = [name for name in files if name.startswith('assets/')]
-    if max(len(core), len(assets)) > 100:
-        raise ValueError('Source exceeds two browser-upload batches; update upload instructions before packaging')
     report = {'version': version, 'files': len(files), 'core_files': len(core), 'asset_files': len(assets),
               'total_bytes': sum((ROOT / name).stat().st_size for name in files)}
     if args.dry_run:

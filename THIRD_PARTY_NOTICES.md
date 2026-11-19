@@ -12,6 +12,10 @@
 
 莉莉头像由作者提供的角色介绍图片抠图制作，文件为 `assets/characters/Lily_UserPortrait_v1.png`，来源说明与哈希保存在角色清单中。相关游戏人物与原素材的权利仍归原权利人。
 
+## 椰果工具箱
+
+椰果工程的本地复算页面使用 d4rkOfficial 的椰果工具箱，基于提交 `441852a7626f06dcd8b62206767fc1420c4e21a9`。本项目适配了离线资料、旧版工程的链阶条件及逐击数据传递。原项目采用 MIT 许可证，便携包与源码均附带原许可全文。[上游源码](https://github.com/d4rkOfficial/wuwa-afyg-tool/tree/441852a7626f06dcd8b62206767fc1420c4e21a9) · [许可证](afyg-replay/LICENSE.txt)
+
 ## Node.js
 
 Windows 便携版附带 Node.js v24.22.1 Windows x64 运行时，源项目为 [nodejs/node](https://github.com/nodejs/node)。完整许可证随便携包放在 `runtime/LICENSE.node.txt`，包含其第三方依赖的通知。

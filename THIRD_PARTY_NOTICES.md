@@ -14,7 +14,7 @@
 
 ## 椰果工具箱
 
-椰果工程的本地复算页面使用 d4rkOfficial 的椰果工具箱，基于提交 `441852a7626f06dcd8b62206767fc1420c4e21a9`。本项目适配了离线资料、旧版工程的链阶条件及逐击数据传递。原项目采用 MIT 许可证，便携包与源码均附带原许可全文。[上游源码](https://github.com/d4rkOfficial/wuwa-afyg-tool/tree/441852a7626f06dcd8b62206767fc1420c4e21a9) · [许可证](afyg-replay/LICENSE.txt)
+本软件集成 D4RK（d4rkOfficial）开发的椰果工具箱计算引擎及其 fast-calc 页面作为代码的一部分，基于提交 `441852a7626f06dcd8b62206767fc1420c4e21a9`。本项目适配了离线资料、旧版工程的链阶条件及逐击数据传递。原项目采用 MIT 许可证，便携包与源码均附带原版权声明、许可全文、免责声明和原作者的补充声明。[上游源码](https://github.com/d4rkOfficial/wuwa-afyg-tool/tree/441852a7626f06dcd8b62206767fc1420c4e21a9) · [许可证](afyg-replay/LICENSE.txt)
 
 ## Node.js
 

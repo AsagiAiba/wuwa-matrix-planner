@@ -24,7 +24,7 @@ $appIcon = Join-Path $projectRoot 'assets\app\lily.ico'
 if (-not (Test-Path -LiteralPath $appIcon -PathType Leaf)) { throw 'Missing app icon: assets/app/lily.ico' }
 & $compiler /nologo /codepage:65001 /target:winexe /platform:x64 /optimize+ "/win32icon:$appIcon" "/out:$launcher" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Web.Extensions.dll (Join-Path $projectRoot 'desktop\Launcher.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Launcher compilation failed.' }
-foreach ($name in @('index.html','app.js','afyg-preset.js','cingulum.js','styles.css','score-axis.js','plan-library.js','season-config.js','server.mjs','package.json','README.md','THIRD_PARTY_NOTICES.md','CHANGELOG.md')) {
+foreach ($name in @('index.html','app.js','afyg-preset.js','cingulum.js','styles.css','score-axis.js','plan-library.js','season-config.js','server.mjs','package.json','README.md','LICENSE','THIRD_PARTY_NOTICES.md','CHANGELOG.md')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot $name) -Destination (Join-Path $releaseRoot $name) -Force
 }
 foreach ($name in @('assets','config')) {

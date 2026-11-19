@@ -13,7 +13,7 @@ ROOT_FILES = (
     '.gitignore', '启动Demo.cmd', 'app.js', 'CHANGELOG.md', 'index.html',
     'afyg-preset.js', 'cingulum.js', 'package.json', 'plan-library.js', 'README.md', 'score_core.py',
     'score-axis.js', 'season-config.js', 'server.mjs', 'styles.css',
-    'THIRD_PARTY_NOTICES.md',
+    'LICENSE', 'THIRD_PARTY_NOTICES.md',
 )
 DESKTOP_FILES = ('Launcher.cs', '使用说明.txt', 'LICENSE.node.txt')
 TREE_TYPES = {

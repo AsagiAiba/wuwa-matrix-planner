@@ -1,4 +1,4 @@
-import {refreshBundledProject,isExecution,projectStages,repositionExecutions,inspectProjectAxis,axisLabels,confirmImportAxis,verifyEngineDamage} from './execution-position.js';
+import {refreshBundledProject,rosterKey,libraryEntry,isExecution,projectStages,repositionExecutions,inspectProjectAxis,axisLabels,confirmImportAxis,verifyEngineDamage} from './execution-position.js';
 const $=id=>document.getElementById(id);
 function elem(tag,text){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;}
 const fmt=n=>new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2}).format(n);
@@ -81,20 +81,29 @@ function drawLibrary(){
   const nav=$('team-library');nav.replaceChildren();
   $('delete-project').disabled=!library.some(item=>item.id===activeId);
   $('undo-project').disabled=!lastDeletion;
+  const groups=new Map();
   for(const item of library){
-    const p=item.raw.project??item.raw,button=elem('button');button.type='button';button.className='team-entry';button.setAttribute('aria-pressed',String(item.id===activeId));
-    const portraits=elem('span');portraits.className='team-portraits';for(const slot of p.team)portraits.append(gearIcon('role',slot.character));
-    button.append(portraits,elem('strong',p.name||'未命名工程'),elem('small',p.team.map(x=>x.character).join(' · ')));
-    button.onclick=()=>{if(activeId!==item.id)load(async()=>item.edited??item.raw,item.id);};nav.append(button);
+    const file=item.edited??item.raw,p=file.project??file;
+    const key=rosterKey(p);
+    let group=groups.get(key);
+    if(!group){
+      group=elem('section');group.className='roster-group';
+      const names=p.team.map(slot=>slot.character).join(' · ');
+      group.setAttribute('aria-label',names);
+      const portraits=elem('span');portraits.className='team-portraits';
+      for(const slot of p.team)portraits.append(gearIcon('role',slot.character));
+      group.append(portraits,elem('h3',names));groups.set(key,group);nav.append(group);
+    }
+    const button=elem('button');button.type='button';button.className='team-entry';button.setAttribute('aria-pressed',String(item.id===activeId));
+    const axis=inspectProjectAxis(p,projectStages(p).timeline.data);
+    button.append(elem('strong',p.name||'未命名工程'),elem('span',axisLabels[axis.kind]));
+    for(const [i,slot] of p.team.entries()){
+      const chains=slot.chain??p.conditionProfile?.chains?.[i]??0;
+      const refinement=slot.refinement??p.conditionProfile?.refinements?.[i]??1;
+      button.append(elem('small',slot.character+' '+chains+'链 · '+(slot.weapon||'未设置武器')+' '+refinement+'精'));
+    }
+    button.onclick=()=>{if(activeId!==item.id)load(async()=>item.edited??item.raw,item.id);};group.append(button);
   }
-}
-function registerTeam(raw,key){
-  if(!key){
-    const signature=JSON.stringify(raw);
-    key=library.find(item=>JSON.stringify(item.raw)===signature)?.id??crypto.randomUUID();
-  }
-  if(!library.some(item=>item.id===key))library.push({id:key,raw:structuredClone(raw)});
-  activeId=key;drawLibrary();persistLibrary();
 }
 
 function showProjectData(){
@@ -168,11 +177,15 @@ async function load(read,key=null){
   const ticket=++loadTicket; let seq=generation;$('status').textContent='正在读取工程…';
   try{
     const file=await read();if(ticket!==loadTicket||!file){if(ticket===loadTicket)$('status').textContent='';return;}
-    const raw=file.engine==='wuwa-afyg-tool@441852a'&&file.result?file.project:file;
-    const p=raw.project??raw, t=p.phases?.timeline?.data??p.encounter?.timeline?.data, c=p.phases?.calculation?.data??p.encounter?.calculation?.data;
+    let raw=file.engine==='wuwa-afyg-tool@441852a'&&file.result?file.project:file;
+    let p=raw.project??raw;
     if(!Array.isArray(p.team)||p.team.length!==3)throw Error('请选择含三人队伍的椰果工程 JSON。');
-    if(!Array.isArray(t?.opBlocks)||!Array.isArray(t.refLines)||!Array.isArray(t.damageBlocks)||!Array.isArray(c?.buffSets))throw Error('工程缺少操作轴或拉表数据。');
-    seq=reset();registerTeam(raw,key);
+    const stages=projectStages(p);
+    if(!Array.isArray(stages?.timeline?.data?.opBlocks)||!Array.isArray(stages?.timeline?.data?.refLines)||!Array.isArray(stages?.timeline?.data?.damageBlocks)||!Array.isArray(stages?.calculation?.data?.buffSets))throw Error('工程缺少操作轴或拉表数据。');
+    const item=libraryEntry(library,raw,key);
+    raw=item.edited??item.raw;p=raw.project??raw;
+    const {timeline:{data:t},calculation:{data:c}}=projectStages(p);
+    seq=reset();activeId=item.id;drawLibrary();persistLibrary();
     const assets=p.team.flatMap(slot=>[['v3/info/character',slot.character],['v1/info/weapon',slot.weapon],...(slot.echoes??[]).filter(e=>e?.name).map(e=>['v1/info/echo',e.name])]).filter(([,name])=>name);
     project=p;input=raw;originalEnvelope=raw.project?raw:null;timeline=t;calc=c;lookup=new Map([...t.refLines,...t.opBlocks].map(a=>[a.id,a]));
     const audit=inspectProjectAxis(p,t);$('axis-audit').textContent=axisLabels[audit.kind]+' · '+audit.reason;
@@ -324,7 +337,7 @@ window.addEventListener('message',e=>{
   if(e.data?.type==='fast-calc:state'&&e.data.requestId==='view-equipment'&&e.data.ok){
     showEquipment(project.team,e.data.config,e.data);
     const item=library.find(entry=>entry.id===activeId);
-    if(item){item.edited=editedFile(e.data);persistLibrary();}
+    if(item){item.edited=editedFile(e.data);drawLibrary();persistLibrary();}
     return;
   }
   if(e.data?.type==='fast-calc:ready'){frame.contentWindow.postMessage({type:'fast-calc:load',project:JSON.stringify(originalEnvelope?input:{version:project.version,project})},location.origin);return;}

@@ -1,6 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {repositionExecutions,inspectProjectAxis,verifyEngineDamage} from '../afyg-replay/site/execution-position.js';
+import {repositionExecutions,inspectProjectAxis,verifyEngineDamage,rosterKey,libraryEntry} from '../afyg-replay/site/execution-position.js';
+
+test('library groups reordered rosters, keeps gear and axis variants, and distinguishes Rover elements',()=>{
+  const p={name:'循环',team:['漂泊者·气动','心','莉莉'].map(character=>({character,chain:0,refinement:1})),phases:{timeline:{data:{opBlocks:[],refLines:[],damageBlocks:[]}}}};
+  const items=[],first=libraryEntry(items,{project:p,exportedAt:1});
+  assert.equal(libraryEntry(items,{project:{...p,matrixAxisType:'single'},exportedAt:2}).id,first.id);
+  const reversed={...p,team:[...p.team].reverse()};
+  assert.equal(rosterKey(p),rosterKey(reversed));
+  for(const change of [{chain:4},{refinement:5},{weapon:'另一把武器'}]){
+    const variant=structuredClone(p);Object.assign(variant.team[0],change);
+    assert.equal(rosterKey(variant),rosterKey(p));
+    assert.notEqual(libraryEntry(items,variant).id,first.id);
+  }
+  assert.notEqual(libraryEntry(items,{...p,matrixAxisType:'full'}).id,first.id);
+  const rover=structuredClone(p);rover.team[0].character='漂泊者·湮灭';
+  assert.notEqual(rosterKey(p),rosterKey(rover));
+  assert.equal(items.length,5);
+});
 
 test('a written 120s opening and loop timeline plays once; a selected template plays 1 + 4',()=>{
   const t={refLines:[{id:'a',time:'+26s 首轮',pos:10},{id:'b',time:'+25s 循环轴',pos:20},{id:'z',time:'结束',pos:50}]};

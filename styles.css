@@ -44,7 +44,12 @@ input[readonly] { color: #94a6b5; border-style: dashed; cursor: default; }
 .tooltip-detail strong { font-weight: 500; color: #e0e7ec; }
 .tooltip-detail small { grid-column: 2; color: #879eaf; font-size: 10px; }
 .dialog-header #dialog-title { color: #edf0f2; font-size: 19px; margin: 0; }
-.dialog-team-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.dialog-team-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+.dialog-team-fields select { display: block; width: 100%; margin-top: 7px; }
+@media(max-width:600px) {
+  .dialog-team-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dialog-team-fields label:last-child { grid-column: 1 / -1; }
+}
 .dialog-team-fields label { color: #adbdca; font-size: 12px; }
 .dialog-team-fields label > input, .dialog-team-fields .input-unit { display: block; width: 100%; margin-top: 7px; }
 #character-dialog .character-grid { max-height: min(37vh, 360px); }

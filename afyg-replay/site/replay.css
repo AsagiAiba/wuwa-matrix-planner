@@ -40,3 +40,9 @@ button.danger:hover:enabled{background:#bd3c44;color:white}
 .axis-import-dialog select{width:100%;min-width:0;padding:7px;color:#edf1f3;background:#101c24;border:1px solid #506576;border-radius:4px}
 .axis-import-dialog p{margin:8px 0}.axis-import-dialog .controls{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 .axis-import-dialog .axis-feedback{color:#edcb91}
+.roster-group{display:grid;align-content:start;gap:6px;min-width:0;padding:8px 0}
+.roster-group+.roster-group{border-top:1px solid #354650}
+.roster-group h3{margin:0 0 4px;font-size:13px;color:#e3c58d}
+.roster-group .team-entry{gap:3px}
+.roster-group .team-entry>span{color:#c8d8de;font-size:12px}
+@media(max-width:680px){.roster-group{flex:0 0 min(220px,80vw)}.roster-group+.roster-group{border-top:0}}

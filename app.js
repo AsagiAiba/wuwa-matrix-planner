@@ -1,4 +1,4 @@
-import {axisLabels,confirmImportAxis} from './afyg-replay/site/execution-position.js';
+import {axisLabels,confirmImportAxis,libraryEntry} from './afyg-replay/site/execution-position.js';
 import {setupRosterScan} from './roster-recognition.js';
 import { compileProjectPreset } from './afyg-preset.js';
 import { visibleWaves, locateScore, packTeams, reorderTeams, nearestTeamSlot, characterIdentity, validateConfig, staminaLimits, staminaConflicts, defaultTeamName, splitQuickTeams, axisTickStep, matrixInfo, bossScoreAtRemainingHp, layoutTeamPreviews, PENDING_TEAM_SCORE, createTeamDeletionHistory, deleteTeamWithHistory, undoTeamDeletion, redoTeamDeletion, MIN_ZOOM, MAX_ZOOM } from './score-axis.js';
@@ -104,6 +104,15 @@ function selectedCircuit(team,season){
   if(team.circuitId!==undefined)return season.circuits.find(c=>c.id===team.circuitId)??null;
   if(team.presetId && matchesPreset(team,{roles:['1311','1312','1505']}))return season.circuits.find(c=>c.name==='基础伤害强化')??null;
   return null;
+}
+function fillCircuitSelect(selector,season,circuit){
+  selector.replaceChildren(new Option('不使用回路增益',''));
+  for(const option of season.circuits)selector.add(new Option(option.name,option.id));
+  selector.value=circuit?.id??'';
+}
+function missingCircuitTiming(team,circuitId){
+  const preset=teamPreset(team);
+  return circuitDamageRules(circuitId)?.afterApplication && preset && !preset.roundSeconds;
 }
 function updatePresetScores(plan) {
   const reports = new Map();
@@ -948,10 +957,7 @@ function renderEditor() {
   }
   $('default-carries').disabled=!team?.resistanceRoles;
   const season=getSeason(state),circuit=selectedCircuit(team,season);
-  const selector=$('team-circuit');
-  selector.replaceChildren(new Option('不使用回路增益',''));
-  for(const option of season.circuits)selector.add(new Option(option.name,option.id));
-  selector.value=circuit?.id??'';
+  fillCircuitSelect($('team-circuit'),season,circuit);
   const preset=teamPreset(team);
   let status='';
   if(circuit && !preset)status='已记录本队回路，手填分数按原值使用。';
@@ -1973,6 +1979,8 @@ function openCharacters() {
   $('dialog-team-name').value = pendingTeam ? '' : team.name;
   $('dialog-team-score').value = pendingTeam || team.needsScore ? '' : team.score;
   $('dialog-team-score').readOnly=Boolean(teamPreset(team));
+  const season=getSeason(state);
+  fillCircuitSelect($('dialog-team-circuit'),season,selectedCircuit(team,season));
   $('dialog-team-score').placeholder = pendingTeam || team.needsScore ? '可稍后填写（5,000分预览）' : '填写本队分数';
   $('dialog-title').textContent = pendingTeam ? '新建队伍' : '编辑队伍';
   $('confirm-characters').textContent = pendingTeam ? '创建队伍' : '保存队伍';
@@ -2104,7 +2112,7 @@ $('forget-mode').addEventListener('change',event=>{
 $('team-circuit').addEventListener('change',event=>{
   const team=current();
   if(!team)return;
-  if(circuitDamageRules(event.target.value)?.afterApplication && teamPreset(team) && !teamPreset(team).roundSeconds){
+  if(missingCircuitTiming(team,event.target.value)){
     event.target.value=selectedCircuit(team,getSeason(state))?.id??'';
     toast('请先在椰果工程选中原队伍并重新应用，以补齐异常附加事件和计时。');return;
   }
@@ -2245,6 +2253,13 @@ $('confirm-characters').addEventListener('click', () => {
   const used = characterUsage(team.id);
   const limits = staminaLimits(staminaRules, state.staminaSeason, identityById);
   if (picked.some(id => (used.get(identityById.get(id)) || []).length >= (limits.get(identityById.get(id)) || 1))) { $('character-feedback').textContent = '所选角色体力不足，请重新选择。'; renderCharacters(); return; }
+  const circuitId=$('dialog-team-circuit').value;
+  if(circuitId!==(selectedCircuit(team,getSeason(state))?.id??'')){
+    if(missingCircuitTiming(team,circuitId)){
+      $('character-feedback').textContent='请先在椰果工程选中原队伍并重新应用，以补齐异常附加事件和计时。';return;
+    }
+    team.circuitId=circuitId;
+  }
   Object.assign(team, { name, score, nameMode: dialogAutoName ? 'auto' : 'custom', characterIds: [...picked] }); delete team.needsCharacters;
   if (awaitingScore) team.needsScore = true;
   else delete team.needsScore;
@@ -2394,7 +2409,27 @@ $('import-file').addEventListener('change', async event => {
     const raw=parsed.engine==='wuwa-afyg-tool@441852a'&&parsed.result?parsed.project:parsed;
     const afyg=raw.project??raw;
     if(Array.isArray(afyg.team)&&(afyg.phases||afyg.encounter)){
-      if(await confirmImportAxis(afyg))await applyProject(afyg);
+      if(!await confirmImportAxis(afyg))return;
+      const key='afyg-project-library-v1';
+      let library=await refreshBundledProject();
+      if(!library){
+        const sample=await fetch('/sample.json');
+        if(!sample.ok)throw Error('无法读取内置工程');
+        const bundled=await sample.json();
+        library=JSON.parse(localStorage.getItem(key))??{items:[{id:'sample',raw:bundled}]};
+      }
+      const entry=libraryEntry(library.items,raw),file=entry.edited??entry.raw;
+      const before=localStorage.getItem(key);
+      await applyProject(file.project??file);
+      try{
+        if(localStorage.getItem(key)!==before){
+          library=JSON.parse(localStorage.getItem(key))??{items:[]};
+        }
+        library.activeId=libraryEntry(library.items,raw).id;
+        localStorage.setItem(key,JSON.stringify(library));
+        const frame=$('project-frame');
+        if(frame.hasAttribute('src'))frame.src='./replay.html';
+      }catch{toast('已应用到血线，工程库未能保存此次导入。');}
       return;
     }
     if (parsed.schemaVersion === 1 && Array.isArray(parsed.bosses) && parsed.scoring) throw new Error('这是赛季数据配置，请放到 config/seasons 目录；此处用于导入队伍排布 JSON。');

@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>终焉矩阵血线排布 V0.5.5</title>
+  <title>终焉矩阵血线排布 V0.5.7</title>
   <link rel="icon" type="image/png" sizes="256x256" href="assets/app/lily.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.5.5</span></span></a>
+    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.5.7</span></span></a>
     <div class="header-actions"><span class="stage-label">终焉矩阵S2-3（S2第三阶段） · 奇点扩张</span><button id="import-button" class="quiet">导入 JSON</button><button id="export-button">导出 JSON <span aria-hidden="true">↗</span></button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
   </header>
   <nav class="app-views" aria-label="功能页面" role="tablist">
@@ -131,6 +131,7 @@
         <div class="dialog-team-fields">
       <label>队伍名称<input id="dialog-team-name" maxlength="30" autocomplete="off" placeholder="按角色首字生成，可手动修改"></label>
       <label>本队分数<div class="input-unit"><input id="dialog-team-score" type="text" placeholder="如 5k、1.2w、1e4" autocomplete="off" spellcheck="false" maxlength="100"><span>分</span></div></label>
+      <label>本队回路增益<select id="dialog-team-circuit"></select></label>
         </div>
         <div class="picker-meta-row">
           <p id="picker-stamina-note" class="picker-stamina-note"></p>

@@ -194,6 +194,40 @@ function stableValue(value){
     Object.fromEntries(Object.keys(value).sort().map(key=>[key,stableValue(value[key])])):value;
 }
 
+export function rosterKey(project){
+  return JSON.stringify(project.team.map(slot=>slot.character).sort());
+}
+
+// Export timestamps live on the envelope. Compare the actual project and the
+// effective axis choice so confirming an inferred axis also matches older saves.
+function projectSignature(project){
+  const axis=inspectProjectAxis(project,projectStages(project).timeline.data);
+  const normalized={...project,matrixAxisType:axis.kind};
+  delete normalized.matrixLoopStart;
+  delete normalized.matrixLoopEnd;
+  if(axis.repeats){
+    normalized.matrixLoopStart=axis.split?.id;
+    normalized.matrixLoopEnd=axis.loopEnd?.id??'last';
+  }
+  return JSON.stringify(stableValue(normalized));
+}
+export function libraryEntry(items,raw,key){
+  const project=raw.project??raw;
+  if(key){
+    const existing=items.find(item=>item.id===key);
+    if(existing)return existing;
+  }else{
+    const roster=rosterKey(project),signature=projectSignature(project);
+    for(const item of items){
+      const saved=item.raw.project??item.raw;
+      if(rosterKey(saved)===roster && projectSignature(saved)===signature)return item;
+    }
+  }
+  const item={id:key??crypto.randomUUID(),raw};
+  items.push(item);
+  return item;
+}
+
 // The ID "sample" belonged to the built-in slot; explicitly imported projects have independent IDs.
 export async function refreshBundledProject(){
   const key='afyg-project-library-v1',text=localStorage.getItem(key);

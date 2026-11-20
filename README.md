@@ -1,4 +1,6 @@
-# 鸣潮终焉矩阵血线排布 V0.5.5
+# 鸣潮终焉矩阵血线排布 V0.5.7
+
+**快速获取最新测试版本加入Q群：831447075**
 
 开发血线排布功能时用到了 GPT-6.1。软件代码中集成了 D4RK（d4rkOfficial）开发的椰果工具箱计算引擎，用来读取椰果工程并复算逐段伤害。该组件采用 MIT 许可证，源码和便携包均附原版权声明、许可全文及作者补充声明。[椰果工具箱](https://github.com/d4rkOfficial/wuwa-afyg-tool) · [原许可证](afyg-replay/LICENSE.txt)
 
@@ -14,7 +16,7 @@ D4RK 的椰果工具箱计算引擎沿用其原 MIT 许可证及作者补充声�
 
 ## 下载和运行
 
-在 [Releases](https://github.com/KazamiSora/wuwa-matrix-planner/releases/tag/v0.5.5) 下载 `WuwaMatrixPlanner-v0.5.5-win-x64.zip`，完整解压后双击 **终焉矩阵血线排布.exe**。
+在 [Releases](https://github.com/KazamiSora/wuwa-matrix-planner/releases/tag/v0.5.7) 下载 `WuwaMatrixPlanner-v0.5.7-win-x64.zip`，完整解压后双击 **终焉矩阵血线排布.exe**。
 
 便携版适用于 Windows 10/11 x64，已附带运行时和本地头像，无需另装 Node.js 或 Python。窗口优先使用本机 Edge，其次 Chrome；都没有时会打开默认浏览器。
 
@@ -32,7 +34,7 @@ D4RK 的椰果工具箱计算引擎沿用其原 MIT 许可证及作者补充声�
 | 心锁守 5R2 循环（心、锁暝、守岸人） | 选「单轮轴」，取工程标出的循环段打四轮，约 100 秒。四轮的处决位置可以分别调整，也可以选择「本轮不放」。 |
 | 西仇维 12 复读神轴（西格莉卡、仇远、维里奈，工程名含「01全局9.2w」） | 文件已经写满 120 秒，选「120 秒全局轴」。这份配装在原工程敌人面板下复算为 11,060,604 总伤，约 9.22 万 DPS。 |
 
-在「椰果工程」导入 JSON 并确认轴类型。如果文件只有首轮特化和一段循环模板，选「首轮特化 × 1＋循环模板 × 4」，在弹窗里指定循环起止位置。已写完整场的工程保留原有尾轮。
+在「椰果工程」导入 JSON 并确认轴类型。左边按三人阵容归组，站位互换仍在同一组，漂泊者按属性区分。点选组内工程，可按角色共鸣链、武器精炼和轴类型核对配置。如果文件只有首轮特化和一段循环模板，选「首轮特化 × 1＋循环模板 × 4」，在弹窗里指定循环起止位置。已写完整场的工程保留原有尾轮。
 
 先看「导入核对」里的配装、参考总伤和 DPS，再到血线页点「一键生成导入的轴的分数」。推演会逐击计算转火、溢出和得分。血线轴下方的「为什么推演分数和实战有差距？」列出了轮数、处决位置、迷航层数和高轮次血量等估算口径。
 
@@ -190,7 +192,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_release.ps1 -Nod
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/test_release.ps1
 ```
 
-Windows 启动器用 C# 编写，通过系统的 .NET Framework 4 编译器构建。打包脚本会生成便携目录、ZIP 和 SHA-256 校验文件；V0.5.5 附带的 Node.js 版本是 24.22.1。
+Windows 启动器用 C# 编写，通过系统的 .NET Framework 4 编译器构建。打包脚本会生成便携目录、ZIP 和 SHA-256 校验文件；V0.5.7 附带的 Node.js 版本是 24.22.1。
 
 ## 素材与说明
 

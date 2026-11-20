@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const version = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 const port = Number(process.env.MATRIX_PORT || 4173);
+const update = process.env.MATRIX_LAUNCHER_PID && process.platform === 'win32'
+  ? (await import('./portable-update.mjs')).createUpdateHandler(root, version, port) : null;
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml' };
 const allowed = new Set(['index.html', 'app.js', 'styles.css', 'score-axis.js', 'plan-library.js', 'season-config.js','afyg-preset.js','cingulum.js','roster-recognition.js','afyg-replay/site/execution-position.js']);
 const replayRoot = path.join(root, 'afyg-replay', 'site');
@@ -15,6 +17,13 @@ replayPages.set('/fast-calc','fast-calc.html');
 const server = http.createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+    if (pathname.startsWith('/__update/')) {
+      if (update) await update(request, response, pathname);
+      else if (pathname === '/__update/info') {
+        response.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }).end('{"available":false}');
+      } else response.writeHead(404).end();
+      return;
+    }
     // The local engine uses root-relative asset and character-info URLs.
     const replayName = replayPages.get(pathname) ?? (/^\/(?:_app\/immutable\/|api\/v[13]\/|fonts\/|icons\/)/.test(pathname) ? pathname.slice(1) : null);
     if (replayName !== null) {
@@ -37,7 +46,7 @@ const server = http.createServer(async (request, response) => {
     const resolvedRelative = path.relative(root, file).split(path.sep).join('/');
     const privatePath = process.platform === 'win32' ? resolvedRelative.toLowerCase() : resolvedRelative;
     const rawFile = privatePath === 'data/raw' || privatePath.startsWith('data/raw/');
-    const publicFile = allowed.has(relative) || ['assets/', 'data/', 'config/'].some(prefix => relative.startsWith(prefix));
+    const publicFile = allowed.has(relative) || ['portable-update.js', 'portable-version.js'].includes(relative) || ['assets/', 'data/', 'config/'].some(prefix => relative.startsWith(prefix));
     if (!inside || !publicFile || relative.includes('..') || rawFile) {
       response.writeHead(404).end('Not found'); return;
     }

@@ -1,4 +1,4 @@
-# 鸣潮终焉矩阵血线排布 V0.5.2
+# 鸣潮终焉矩阵血线排布 V0.5.5
 
 开发血线排布功能时用到了 GPT-6.1。软件代码中集成了 D4RK（d4rkOfficial）开发的椰果工具箱计算引擎，用来读取椰果工程并复算逐段伤害。该组件采用 MIT 许可证，源码和便携包均附原版权声明、许可全文及作者补充声明。[椰果工具箱](https://github.com/d4rkOfficial/wuwa-afyg-tool) · [原许可证](afyg-replay/LICENSE.txt)
 
@@ -14,7 +14,7 @@ D4RK 的椰果工具箱计算引擎沿用其原 MIT 许可证及作者补充声�
 
 ## 下载和运行
 
-在 [Releases](https://github.com/KazamiSora/wuwa-matrix-planner/releases/tag/v0.5.2) 下载 `WuwaMatrixPlanner-v0.5.2-win-x64.zip`，完整解压后双击 **终焉矩阵血线排布.exe**。
+在 [Releases](https://github.com/KazamiSora/wuwa-matrix-planner/releases/tag/v0.5.5) 下载 `WuwaMatrixPlanner-v0.5.5-win-x64.zip`，完整解压后双击 **终焉矩阵血线排布.exe**。
 
 便携版适用于 Windows 10/11 x64，已附带运行时和本地头像，无需另装 Node.js 或 Python。窗口优先使用本机 Edge，其次 Chrome；都没有时会打开默认浏览器。
 
@@ -122,7 +122,9 @@ V0.3 修复了旧测试版禁用角色时误删其他方案队伍的问题。升
 
 便携版和之前网页调试版的存储是分开的。从旧版迁移时，先在旧版导出 JSON，再到便携版导入。
 
-更新便携版前，请切换到每套需要保留的方案，分别导出 JSON。再右键旧版的系统托盘图标，选择“退出软件”，将新版完整解压到新目录后启动，不要只替换 exe。保存记录与浏览器数据及访问端口有关；新版如果没有显示旧排布，逐个导入备份即可。
+**窗口有“软件更新”按钮时**，将官方新版 `WuwaMatrixPlanner-v版本号-win-x64.zip` 下载到软件目录外，直接拖进窗口，或点击“软件更新”选择 ZIP。核对版本后点“更新并重启”。程序先按文件名拦截旧版和同版包，再校验新版文件，备份已保存的排布并在原端口重启。新版启动失败时会恢复旧版。
+
+**从没有“软件更新”按钮的旧版升级**，请先逐套导出需要保留的排布 JSON，从系统托盘退出旧版，再把新版完整解压到单独的可写文件夹运行。如果旧排布没有显示，可以逐套导入备份。
 
 ## 分数和推算范围
 
@@ -188,7 +190,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_release.ps1 -Nod
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/test_release.ps1
 ```
 
-Windows 启动器用 C# 编写，通过系统的 .NET Framework 4 编译器构建。打包脚本会生成便携目录、ZIP 和 SHA-256 校验文件；V0.5.2 附带的 Node.js 版本是 24.22.1。
+Windows 启动器用 C# 编写，通过系统的 .NET Framework 4 编译器构建。打包脚本会生成便携目录、ZIP 和 SHA-256 校验文件；V0.5.5 附带的 Node.js 版本是 24.22.1。
 
 ## 素材与说明
 

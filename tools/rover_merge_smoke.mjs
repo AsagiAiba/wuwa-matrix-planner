@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -9,7 +10,7 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
 const errors = []; page.on('pageerror', error => errors.push(error.message));
 const source = JSON.parse(await readFile('data/characters.json', 'utf8')).entries;
 const rovers = source.filter(character => character.name.startsWith('漂泊者'));
-const template = JSON.parse(await readFile('config/demo.json', 'utf8'));
+const template = JSON.parse(await readFile('tests/fixtures/demo.json', 'utf8'));
 const icon = 'assets/characters/Rover_Combined_v1.png';
 const current = () => page.evaluate(() => {
   const library = JSON.parse(localStorage.getItem('wuwa-matrix-plan-library-v1'));
@@ -17,7 +18,7 @@ const current = () => page.evaluate(() => {
 });
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
+  await seedTestPlans(page);await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
   await page.locator('#quick-team').click();
   assert.equal(await page.locator('.character-choice').count(), source.filter(character => !character.download_failed).length - 4);
   await page.locator('#character-search').fill('pbz');

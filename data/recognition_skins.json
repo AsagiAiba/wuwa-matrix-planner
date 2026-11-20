@@ -1,0 +1,66 @@
+[
+  {
+    "id": "1102",
+    "name": "散华",
+    "skin": "叱妖诰",
+    "file": "assets/characters/T_IconRoleHead256_7_a_UI.webp",
+    "source": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_7_a_UI.webp",
+    "sha256": "d0d29093934d7b423b8ca0822a38bb3478a9f8668131c279a9a1d54566d612fc"
+  },
+  {
+    "id": "1107",
+    "name": "珂莱塔",
+    "skin": "夏日旖旎",
+    "file": "assets/characters/T_IconRoleHead256_32_a_UI.webp",
+    "source": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_32_a_UI.webp",
+    "sha256": "37e25064b75c19003b1cf429f6f97803f72902c7f3ecc463b9f1a8877b871dbb"
+  },
+  {
+    "id": "1108",
+    "name": "绯雪",
+    "skin": "月沉霜",
+    "file": "assets/characters/T_IconRoleHead256_67_Skin1_UI.webp",
+    "source": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_67_Skin1_UI.webp",
+    "sha256": "cfd1cd4db8cc5a2fb67aa2c805a5f87e2181b53728df7b014e33f161b88ba9b1"
+  },
+  {
+    "id": "1205",
+    "name": "长离",
+    "skin": "桂枝宁芙",
+    "file": "assets/characters/T_IconRoleHead256_26_a_UI.webp",
+    "source": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_26_a_UI.webp",
+    "sha256": "5d80020538d2f613064a6a1a5736aa9daa16032b11b2f6a1b7b0501d27a123e0"
+  },
+  {
+    "id": "1304",
+    "name": "今汐",
+    "skin": "桃夭灼灼",
+    "file": "assets/characters/T_IconRoleHead256_24_a_UI.webp",
+    "source": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_24_a_UI.webp",
+    "sha256": "b27b357dd2d6640e80d2d9cfbf6e08bc0751751d1d3c4fc2688538fc14dee45f"
+  },
+  {
+    "id": "1507",
+    "name": "赞妮",
+    "skin": "城市午茶",
+    "file": "assets/characters/T_IconRoleHead256_38_a_UI.webp",
+    "source": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_38_a_UI.webp",
+    "sha256": "479b6129f64f91b9ab1af7c0e64ef6ef95b920fd642f590b59bcb4ea579d14a0"
+  },
+  {
+    "id": "1508",
+    "name": "千咲",
+    "skin": "蜜桃冰",
+    "file": "assets/characters/T_IconRoleHead256_57_Skin1_UI.webp",
+    "source": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_57_Skin1_UI.webp",
+    "sha256": "3477ebceb022688dc1a010ff2cea970f8838897fd61de8e60ca97f38dcdb7e8a"
+  },
+  {
+    "id": "1509",
+    "name": "琳奈",
+    "skin": "薄荷糖",
+    "file": "assets/characters/T_IconRoleHead256_60_Skin1_UI.webp",
+    "source": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_60_Skin1_UI.webp",
+    "sha256": "cabcd34716af857deb24621627362d633c0be13ca504f355dbcfea9b12df362e"
+  }
+]

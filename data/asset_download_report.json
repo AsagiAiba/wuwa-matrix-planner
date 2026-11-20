@@ -6,8 +6,8 @@
     "characters": {
       "records": 65,
       "unique_files": 59,
-      "downloaded_unique_files": 58,
-      "missing_unique_files": 1
+      "downloaded_unique_files": 59,
+      "missing_unique_files": 0
     },
     "bosses": {
       "records": 8,
@@ -32,17 +32,9 @@
       "boss_count": 5
     }
   },
-  "downloaded_unique_files": 66,
-  "total_bytes": 2443176,
-  "failures": [
-    {
-      "file": "assets/characters/T_IconRoleHead256_77_UI.webp",
-      "url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconRoleHead256/T_IconRoleHead256_77_UI.webp",
-      "error": "HTTP Error 404: Not Found",
-      "id": "1512",
-      "name": "莉莉"
-    }
-  ],
+  "downloaded_unique_files": 67,
+  "total_bytes": 2479864,
+  "failures": [],
   "fallbacks": [
     {
       "id": "607750002",
@@ -57,5 +49,5 @@
       "used_url": "https://static.nanoka.cc/assets/ww/UIResources/Common/Image/IconMonsterHead/T_IconMonsterHead_34028_UI.webp"
     }
   ],
-  "local_integrity_checks_passed": 66
+  "local_integrity_checks_passed": 67
 }

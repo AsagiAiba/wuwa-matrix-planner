@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -30,7 +31,7 @@ async function checkFlight(target) {
 }
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
+  await seedTestPlans(page);await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
   await page.locator('#quick-team').click();
   assert.ok((await page.locator('#character-dialog').boundingBox()).width >= 1410);
   assert.ok((await page.locator('.character-avatar').first().boundingBox()).width < 80);

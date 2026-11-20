@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import os from 'node:os';import path from 'node:path';import {pathToFileURL} from 'node:url';
@@ -5,7 +6,7 @@ const {chromium}=await import(pathToFileURL(path.join(os.homedir(),'.cache/codex
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 try {
 const page=await browser.newPage({viewport:{width:1440,height:1050}});
-await page.goto((process.env.MATRIX_URL || 'http://127.0.0.1:4173'));
+await seedTestPlans(page);await page.goto((process.env.MATRIX_URL || 'http://127.0.0.1:4173'));
 await page.locator('.team-bar').first().waitFor();
 assert.ok(await page.evaluate(()=>CSS.supports('interpolate-size','allow-keywords') && CSS.supports('transition-behavior','allow-discrete')));
 for(const id of ['circuit-buffs','boss-properties-details','other-enhancements']) {

@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>终焉矩阵血线排布 V0.4.5</title>
+  <title>终焉矩阵血线排布 V0.5.2</title>
   <link rel="icon" type="image/png" sizes="256x256" href="assets/app/lily.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.4.5</span></span></a>
+    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.5.2</span></span></a>
     <div class="header-actions"><span class="stage-label">终焉矩阵S2-3（S2第三阶段） · 奇点扩张</span><button id="import-button" class="quiet">导入 JSON</button><button id="export-button">导出 JSON <span aria-hidden="true">↗</span></button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
   </header>
   <nav class="app-views" aria-label="功能页面" role="tablist">
@@ -27,14 +27,16 @@
       </div>
       <div id="team-list" class="team-list"></div>
       <button id="add-team" class="add-team">＋ 新建队伍</button>
-      <button id="quick-team" class="quick-team-button">快捷组队 · 连续选人</button>
+      <button id="quick-team" class="quick-team-button" disabled>快捷组队 · 连续选人</button>
       <button id="manage-disabled-characters" type="button" class="disabled-characters-button">自主禁用角色</button>
-      <button id="add-afyg" type="button">一键应用预设</button>
+      <button id="open-roster-scan" type="button" disabled>截图识别角色</button>
+      <button id="add-afyg" type="button">一键生成导入的轴的分数</button>
       <p id="disabled-removal-notice" class="disabled-removal-notice" role="status" hidden></p>
       <div class="editor-heading"><h3>队伍设置</h3><div class="team-delete-actions"><button id="undo-team-delete" type="button" class="text-button" aria-label="撤回队伍删除" disabled>撤回</button><button id="redo-team-delete" type="button" class="text-button" aria-label="恢复队伍删除" disabled>恢复</button><button id="delete-team" type="button" class="text-button">删除</button></div></div>
       <form id="team-form" class="team-form">
         <label>队伍名称<input id="team-name" maxlength="30" autocomplete="off" required></label>
         <div><span class="field-label">上阵角色 <span class="muted">点击更换</span></span><div id="selected-characters" class="selected-characters"></div></div>
+        <div class="resist-role-controls"><label>主C<select id="main-carry"></select></label><label>副C<select id="sub-carry"></select></label><button type="button" id="default-carries" class="text-button">按站位</button></div>
         <label>本队回路增益<select id="team-circuit" aria-describedby="team-circuit-note"></select></label>
         <small class="muted" id="team-circuit-note"></small>
         <label id="forget-mode-field" hidden>洛瑟菈的「遗忘」模态<select id="forget-mode"><option value="auto">按工程标注</option><option value="echo">声骸</option><option value="frost">霜渐</option></select><small class="muted">工程未标注时，可在这里指定模态。</small></label>
@@ -43,7 +45,7 @@
         <button type="submit" class="primary" id="apply-team">应用到血线轴</button>
       </form>
 
-      <div class="sidebar-footer"><span class="save-dot"></span><span id="save-state">配置自动保存在此浏览器</span><button id="load-example" class="text-button">恢复示例</button></div>
+      <div class="sidebar-footer"><span class="save-dot"></span><span id="save-state">配置自动保存在此浏览器</span></div>
     </aside>
     <section class="workspace">
       <div class="workspace-heading"><h1>血线排布</h1><p class="workspace-heading-hint">拖动队伍改变顺序</p></div>
@@ -119,6 +121,10 @@
     <div class="picker-layout">
       <aside id="quick-team-overview" class="quick-team-overview" hidden aria-label="组队一览">
         <h3>已组队伍</h3><div id="quick-team-overview-list" class="team-overview-list"></div>
+        <details id="pair-presets"><summary>预设二人组</summary>
+          <div class="pair-controls"><button type="button" id="new-pair">新建二人组</button><button type="button" id="apply-all-pairs" class="primary">应用所有二人组</button></div>
+          <div id="pair-list"></div>
+        </details><p id="pair-status" role="status"></p>
         <h3 class="quick-draft-heading">本次组队</h3><div id="quick-team-preview" class="quick-team-preview"></div>
       </aside>
       <div class="picker-main">
@@ -139,6 +145,25 @@
       </div>
     </div>
     <div class="dialog-footer"><div class="picker-selection-summary"><div id="picker-selected-roster" aria-label="本队已选角色"></div><span id="picked-names" class="muted"></span><span id="quick-shortcut-hint" class="muted"><span><kbd>Ctrl+Z</kbd> 撤回</span><span><kbd>Ctrl+Y</kbd> / <kbd>Ctrl+Shift+Z</kbd> 恢复</span></span></div><button id="confirm-characters" class="primary">确认选择</button></div>
+  </dialog>
+  <dialog id="pair-dialog" aria-labelledby="pair-dialog-title">
+    <div class="dialog-header"><h2 id="pair-dialog-title">新建二人组</h2><button id="close-pair" type="button" class="quiet" aria-label="关闭二人组选人">✕</button></div>
+    <p class="muted">按顺序点选，每两人一组，确认后一起加入预设。本次按基础体力选人，赛季临时加体不计入。</p>
+    <input type="search" id="pair-search" class="character-search" aria-label="搜索二人组角色" placeholder="搜索名称 / 拼音 / 首字母…">
+    <div id="pair-filters" class="element-filters" aria-label="二人组属性筛选"></div>
+    <div id="pair-grid"></div>
+    <div id="pair-selection" aria-live="polite"></div>
+    <div class="plan-dialog-actions"><button type="button" id="undo-pair-pick">撤回上一位</button><button type="button" id="save-pair" class="primary">保存二人组</button></div>
+    <p id="pair-feedback" role="status"></p>
+  </dialog>
+  <dialog id="roster-scan" aria-labelledby="scan-title">
+    <div class="dialog-header"><h2 id="scan-title">截图识别角色</h2><button type="button" id="close-roster-scan" aria-label="关闭截图识别">✕</button></div>
+    <p>在这里按 Ctrl+V 粘贴游戏「角色选择」截图。可连续粘贴多张，重叠角色会自动合并。</p>
+    <div class="scan-controls"><label>已存名单<select id="scan-profiles"></select></label><label>名单名称<input maxlength="40" id="scan-name" placeholder="例如：主账号"></label></div>
+    <p id="scan-status" role="status"></p><div id="scan-results"></div>
+    <button type="button" id="scan-add">手动补一位</button>
+    <p id="scan-impact"></p><p id="scan-validation" role="status"></p><button type="button" id="scan-locate" hidden>定位待确认角色</button>
+    <button type="button" class="primary" id="scan-save" aria-describedby="scan-validation">保存名单并同步禁用</button>
   </dialog>
   <dialog id="disabled-characters-dialog" aria-labelledby="disabled-characters-title">
     <div class="dialog-header"><h2 id="disabled-characters-title">自主禁用角色</h2><button id="close-disabled-characters" type="button" class="quiet" aria-label="关闭角色禁用设置">✕</button></div>
@@ -162,6 +187,12 @@
       <p id="plan-dialog-error" role="status"></p>
       <div class="plan-dialog-actions"><button id="close-plan-dialog" type="button" class="quiet">取消</button><button type="submit" id="confirm-plan" class="primary">确定</button></div>
     </form>
+  </dialog>
+  <dialog id="delete-team-dialog" class="delete-plan-dialog" aria-labelledby="delete-team-title" aria-describedby="delete-team-summary delete-team-history-note">
+    <h2 id="delete-team-title">删除队伍</h2>
+    <p id="delete-team-summary"></p>
+    <p id="delete-team-history-note" class="muted">队伍设置中可以撤回最近两次删除。</p>
+    <div class="plan-dialog-actions"><button id="cancel-delete-team" type="button" class="quiet" autofocus>取消</button><button id="confirm-delete-team" type="button" class="danger">确认删除</button></div>
   </dialog>
   <dialog id="delete-plan-dialog" class="delete-plan-dialog" aria-labelledby="delete-plan-title">
     <h2 id="delete-plan-title">永久删除排布方案</h2><p id="delete-plan-summary"></p><p class="delete-warning">此操作会永久删除该方案，无法在软件中撤回！</p><p id="delete-plan-backup-note" class="muted"></p><p id="delete-plan-error" role="alert"></p>

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { visibleWaves, bossScoreAtRemainingHp, locateScore, packTeams, layoutTeamPreviews, PENDING_TEAM_SCORE, createTeamDeletionHistory, deleteTeamWithHistory, undoTeamDeletion, redoTeamDeletion, reorderTeams, nearestTeamSlot, characterIdentity, validateConfig, staminaLimits, MIN_ZOOM, defaultTeamName, splitQuickTeams, axisTickStep } from '../score-axis.js';
 const scores = JSON.parse(readFileSync(new URL('../data/scores.json', import.meta.url))).records;
-const example = JSON.parse(readFileSync(new URL('../config/demo.json', import.meta.url)));
+const example = JSON.parse(readFileSync(new URL('../tests/fixtures/demo.json', import.meta.url)));
 const characters = new Set(JSON.parse(readFileSync(new URL('../data/characters.json', import.meta.url))).entries.filter(item => !item.download_failed).map(item => item.id));
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-7, `${a} != ${b}`);
 const stamina = JSON.parse(readFileSync(new URL('../config/stamina.json', import.meta.url)));

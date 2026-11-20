@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, readFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -76,7 +77,7 @@ async function checkSidebarSectionsDoNotOverlap() {
 
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor();
+  await seedTestPlans(page);await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor();
   const originalPlan = await page.locator('#plan-select').inputValue();
   const initial = await config();
   assert.equal(initial.teams.length, 3);

@@ -12,7 +12,8 @@
       "width": 76,
       "height": 76,
       "bytes": 3492,
-      "sha256": "dffc9e8611cceccb224a1e92a78648fe595872dfd13f63847203c259d361da97"
+      "sha256": "dffc9e8611cceccb224a1e92a78648fe595872dfd13f63847203c259d361da97",
+      "color": "#42aefb"
     },
     {
       "id": 2,
@@ -23,7 +24,8 @@
       "width": 76,
       "height": 76,
       "bytes": 2762,
-      "sha256": "9624c12c08278b5b350ec99a67f081eb0f33c44706924014b3a5949b8f284793"
+      "sha256": "9624c12c08278b5b350ec99a67f081eb0f33c44706924014b3a5949b8f284793",
+      "color": "#ed754f"
     },
     {
       "id": 3,
@@ -34,7 +36,8 @@
       "width": 76,
       "height": 76,
       "bytes": 2984,
-      "sha256": "96eb2d7e773225382b6679b7ce73d242ebbe192122cfc7529f4144d0c1a7a4c9"
+      "sha256": "96eb2d7e773225382b6679b7ce73d242ebbe192122cfc7529f4144d0c1a7a4c9",
+      "color": "#b46bfc"
     },
     {
       "id": 4,
@@ -45,7 +48,8 @@
       "width": 76,
       "height": 76,
       "bytes": 2778,
-      "sha256": "522e83e79d145120bd43f84a82b54a56cc1c2b4f1e579f7a764314b10b27052c"
+      "sha256": "522e83e79d145120bd43f84a82b54a56cc1c2b4f1e579f7a764314b10b27052c",
+      "color": "#55feb6"
     },
     {
       "id": 5,
@@ -56,7 +60,8 @@
       "width": 76,
       "height": 76,
       "bytes": 3250,
-      "sha256": "5476ee187b15bf231f389fcae085c470a7a73e336de12822925cd3898d972a48"
+      "sha256": "5476ee187b15bf231f389fcae085c470a7a73e336de12822925cd3898d972a48",
+      "color": "#f8e66c"
     },
     {
       "id": 6,
@@ -67,7 +72,8 @@
       "width": 76,
       "height": 76,
       "bytes": 3124,
-      "sha256": "73148bfcbfd8a265751b698e59a297c2038a627f1d62bc34a9332bb38da46658"
+      "sha256": "73148bfcbfd8a265751b698e59a297c2038a627f1d62bc34a9332bb38da46658",
+      "color": "#c78cb2"
     }
   ]
 }

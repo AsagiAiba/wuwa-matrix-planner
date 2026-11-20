@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {simulatePreset,circuitDamageRules,matrixFinalFactor} from '../score-axis.js';
 import {projectAxisRange} from '../afyg-preset.js';
-import heartPreset from '../data/xinsuosho_preset.json' with {type:'json'};
-import {getSeason} from '../season-config.js';
+
+import {getSeason,buildSeasonScores,enemyDefenseForLevel} from '../season-config.js';
 
 test('a 120-second timing takes precedence over inner loop markers and includes the final position',()=>{
  const timeline={refLines:[{id:'start',name:'+0s',pos:50},{id:'loop',time:'+25s 循环轴',pos:100},{id:'right',time:'结束',pos:700}]};
@@ -19,15 +19,74 @@ test('repeat the complete single axis four times or use its explicitly marked cy
 const season={bosses:[{resistances:{values:{1:20,2:20,3:20,4:20,5:20,6:20}}},{resistances:{values:{1:20,2:20,3:40,4:20,5:20,6:20}}}]};
 function wave(i,before,hp,bonus=0){return {round:1,name:'target'+i,boss_position:i,max_hp:hp,points_per_damage:.5,cumulative_points_before:before,damage_points_at_full_hp:Math.floor(hp*.5),cumulative_points_after:before+Math.floor(hp*.5)+bonus,kill_bonus:bonus};}
 function shot(base,high){return {source:'心',name:'测试',part:1,damage:{'20,20,20,20,20,20':base,'20,20,40,20,20,20':high}};}
+test('S2-4 anomaly circuit adds 25 and 80 in the final zone, refreshes, expires at 30s, and resets on retarget',()=>{
+ const key='20,20,20,20,20,20',rules=circuitDamageRules('39');
+ const s={id:'s2-phase4',bosses:[season.bosses[0],season.bosses[0]]};
+ const hit=(t,extra={})=>({name:'测试',source:'绯雪',part:1,roundSecond:t,finalZone:1.2,damage:{[key]:120},...extra});
+ const hits=[hit(0,{statusApplication:true}),hit(10,{glacioLayers:13}),hit(29,{statusApplication:true}),hit(31),hit(59,{glacioDamage:true}),hit(61,{abnormal:true})];
+ const run=(seq,waves=[wave(1,0,1e6)],extra={})=>simulatePreset({hits:seq,cycles:1,roundSeconds:[120],bossEventVersion:2,...extra},s,waves,0,
+   (h,b,i,active)=>matrixFinalFactor(h,b,i,rules,active),'auto',rules);
+ let total=0;
+ for(const [i,d] of [120,225,145,145,200,120].entries()){
+   total+=d;assert.ok(Math.abs(run(hits.slice(0,i+1)).applied-total)<1e-6);
+ }
+ assert.equal(run([hit(0,{statusApplication:true}),hit(1)], [wave(1,0,120),wave(2,60,1000)]).applied,240);
+ // Activation at t=29 persists through the loop boundary and expires at t=59.
+ assert.equal(run([hit(29,{statusApplication:true}),hit(0),hit(29)],undefined,
+   {cycles:2,roundSeconds:[30,30],roundOrders:[[0],[1,2]]}).applied,385);
+});
+test('Denia frostbind needs 13 layers then Hiyuki’s hit; subsequent team hits gain additive final damage only on that spawn',()=>{
+ const matrix=getSeason('s2-phase4'),denia=matrix.bosses[1];
+ const season={...matrix,bosses:[denia,denia]};
+ const key=[1,2,3,4,5,6].map(i=>denia.resistances.values[i]).join(',');
+ const hit=(name,source='绯雪',extra={})=>({source,name,part:1,damage:{[key]:120},finalZone:1.2,...extra});
+ const skill=hit('预求我身·见心(共鸣解放)');
+ const effect=hit('霜渐效应13层','霜渐效应',{abnormal:true});
+ const hits=[hit('霜渐效应12层','霜渐效应',{abnormal:true}),skill,effect,hit('普攻·居合','洛瑟菈'),hit('普通攻击'),skill,
+   hit('普通攻击','穗穗'),effect,hit('普攻·居合'),hit('普通攻击','穗穗')];
+ const run=(seq,roles=['1108'],waves=[wave(1,0,1e6)])=>simulatePreset({hits:seq,cycles:1,roles,bossEventVersion:2},season,waves,0,()=>1);
+ const expected=[145,120,145,120,120,120,150,175,150,150];
+ let total=0;
+ for(const [i,damage] of expected.entries()){
+   total+=damage;assert.ok(Math.abs(run(hits.slice(0,i+1)).applied-total)<1e-7);
+ }
+ assert.equal(run(hits).stages[0].frostbind.trigger.hit,6);
+ assert.equal(run(hits,['1109']).stages[0].frostbind,undefined);
+ const split=run([effect,hit('普攻·居合'),hit('普通攻击','穗穗'),skill],['1108'],[wave(1,0,415),wave(2,207,1e4)]);
+ assert.equal(split.stages[0].frostbind.trigger.hit,2);
+ assert.deepEqual(split.stages[1].frostbind,{readyAt:null,trigger:null});
+});
+test('both seasons use the verified enemy levels at every boss, including chests',()=>{
+  for(const id of ['s2-phase3','s2-phase4']){
+    const rows=buildSeasonScores(id).records;
+    assert.equal(rows.length,75);
+    for(const w of rows)assert.equal(w.enemy_level,w.round===1?100:w.round===2?110:120);
+  }
+  assert.deepEqual([100,110,120].map(enemyDefenseForLevel),[1592,1672,1752]);
+});
+test('the hit after a round boundary uses the new level and resistance, including when a team starts there',()=>{
+  const waves=[{...wave(1,0,100),enemy_level:100},{...wave(2,50,10000),enemy_level:110}];
+  const hit=shot(200,2000);
+  hit.damage['110|20,20,40,20,20,20']=800;
+  const p={matrixLevelVersion:1,cycles:1,hits:[hit,hit]};
+  const r=simulatePreset(p,season,waves,0);
+  assert.deepEqual(r.stages.map(s=>s.score),[50,400]);
+  assert.equal(simulatePreset({...p,hits:[hit]},season,waves,50).score,400);
+  assert.match(simulatePreset({...p,matrixLevelVersion:undefined},season,waves,50).reason,/重新应用/);
+});
+// Synthetic hits isolate stack timing without bundling an old player's rotation.
+const testDamage=Object.fromEntries(getSeason('s2-phase4').bosses.map(b=>[[1,2,3,4,5,6].map(i=>b.resistances.values[i]).join(','),100]));
+const heartPreset={cycles:4,bossEventVersion:2,roles:['1311','1312','1505'],hits:
+ ['守岸人','锁暝','心','心'].map((source,i)=>({name:i===3?'谐度破坏':'测试',source,part:1,damage:testDamage,tuneBreak:i===3}))};
 test('four heart rotations honor their individual execution slots and retain stacks across a skipped round',()=>{
   const season=getSeason('s2-phase4'),hits=heartPreset.hits;
   const normal=hits.map((_,i)=>i).filter(i=>!hits[i].tuneBreak);
   const execution=hits.findIndex(h=>h.tuneBreak);
-  const orders=[[execution,...normal],normal,[...normal.slice(0,9),execution,...normal.slice(9)],[...normal,execution]];
+  const orders=[[execution,...normal],normal,[...normal.slice(0,1),execution,...normal.slice(1)],[...normal,execution]];
   const report=simulatePreset({...heartPreset,roundOrders:orders},season,[wave(1,0,1e10)],0,
     (hit,boss,round)=>matrixFinalFactor(hit,boss,round,circuitDamageRules('40')));
-  assert.equal(report.count,687);
-  assert.deepEqual(report.stages[0].stackEvents.map(e=>[e.round,e.hit,e.stacks]),[[1,1,1],[3,353,2],[4,687,3]]);
+  assert.equal(report.count,15);
+  assert.deepEqual(report.stages[0].stackEvents.map(e=>[e.round,e.hit,e.stacks]),[[1,1,1],[3,9,2],[4,15,3]]);
 });
 test('heart preset counts four executions and three on-field first outputs on a surviving S2-4 target',()=>{
  const season=getSeason('s2-phase4');
@@ -37,8 +96,8 @@ test('heart preset counts four executions and three on-field first outputs on a 
    return report.stages[0];
  };
  const ape=run(1),cingulum=run(4);
- assert.deepEqual(ape.stackEvents.map(e=>e.hit),[172,344,516,688]);
- assert.deepEqual(cingulum.stackEvents.map(e=>[e.hit,e.trigger]),[[1,'守岸人首次输出'],[11,'锁暝首次输出'],[78,'心首次输出']]);
+ assert.deepEqual(ape.stackEvents.map(e=>e.hit),[4,8,12,16]);
+ assert.deepEqual(cingulum.stackEvents.map(e=>[e.hit,e.trigger]),[[1,'守岸人首次输出'],[2,'锁暝首次输出'],[3,'心首次输出']]);
  assert.equal(ape.stacks,4);
  assert.equal(cingulum.stacks,3);
 });

@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import {readFile, mkdir} from 'node:fs/promises';
 import os from 'node:os';import path from 'node:path';import {pathToFileURL} from 'node:url';
@@ -6,7 +7,7 @@ import {locateScore,packTeams} from '../score-axis.js';
 const {chromium}=await import(pathToFileURL(path.join(os.homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs')).href);
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 const page=await browser.newPage({viewport:{width:1920,height:1080}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
-const example=JSON.parse(await readFile('config/demo.json','utf8'));
+const example=JSON.parse(await readFile('tests/fixtures/demo.json','utf8'));
 const url=process.env.MATRIX_URL||'http://127.0.0.1:4173';
 const numeric=text=>Number(text.replace(/[^\d.-]/g,''));
 async function check(amount,season='s2-phase3') {
@@ -27,7 +28,7 @@ async function fixture(config) {
   await page.reload(); await page.locator('#current-total-position strong').waitFor();
 }
 try {
- await mkdir('outputs',{recursive:true});await page.goto(url);await page.locator('.team-bar').first().waitFor();
+ await mkdir('outputs',{recursive:true});await seedTestPlans(page);await page.goto(url);await page.locator('.team-bar').first().waitFor();
  await check(24000);
  assert.equal(await page.locator('.legend').count(),0);
  const heading=await page.locator('.current-total-heading').boundingBox();
@@ -39,7 +40,7 @@ try {
  assert.ok(controls.y>=summary.y+summary.height && Math.abs(controlLabel.x-summary.x)<2);
  await page.locator('.timeline-toolbar').screenshot({path:'outputs/current-total-toolbar.png'});
  await page.locator('#team-score').fill('1w');await page.locator('#apply-team').click();await check(26000);
- page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click();await check(16000);
+ await page.locator('#delete-team').click(); await page.locator('#confirm-delete-team').click();await check(16000);
  await page.reload();await page.locator('.team-bar').first().waitFor();await check(16000);
  const pending=structuredClone(example);pending.teams[0].score=0;pending.teams[0].needsScore=true;pending.teams=packTeams(pending.teams);
  await fixture(pending);await check(16000);assert.match(await page.locator('#current-total-pending').innerText(),/1 队待填/);

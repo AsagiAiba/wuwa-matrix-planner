@@ -1,3 +1,4 @@
+import {seedTestPlans,resetTestPlan} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -9,7 +10,7 @@ const baseUrl = 'http://127.0.0.1:4173';
 const context = await browser.newContext({ viewport: { width: 1440, height: 1050 }, permissions: ['clipboard-read', 'clipboard-write'] });
 const page = await context.newPage();
 const errors = []; page.on('pageerror', error => errors.push(error.message));
-const legacy = JSON.parse(await readFile('config/demo.json', 'utf8'));
+const legacy = JSON.parse(await readFile('tests/fixtures/demo.json', 'utf8'));
 legacy.teams[0].name = '我已有的队伍'; legacy.teams[0].nameMode = 'custom'; legacy.teams[0].score = 8765;
 legacy.teams[1].startScore = 8765; legacy.teams[2].startScore = 18265; legacy.scoreMarker = 19000;
 await context.addInitScript(value => {
@@ -20,7 +21,7 @@ const activeConfig = () => page.evaluate(() => JSON.parse(localStorage.getItem('
 async function setPlan(id) { await page.locator('#plan-select').selectOption(id); }
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor();
+  await seedTestPlans(page);await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor();
   assert.equal(await page.locator('#plan-select option').count(), 2);
   assert.deepEqual((await activeConfig()).teams, legacy.teams);
   assert.equal((await library()).activePlanId, 'plan-main');
@@ -60,7 +61,7 @@ try {
   const newId = await page.locator('#plan-select').inputValue();
   assert.equal(await page.locator('.team-card').count(), 0);
   assert.equal(await page.locator('.team-bar').count(), 0);
-  await page.locator('#load-example').click(); assert.equal(await page.locator('.team-bar').count(), 3);
+  await resetTestPlan(page); assert.equal(await page.locator('.team-bar').count(), 3);
   await page.locator('#rename-plan').click(); await page.locator('#plan-name').fill('备用方案D'); await page.locator('#confirm-plan').click();
   assert.equal((await library()).plans.find(plan => plan.id === newId).name, '备用方案D');
   await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { throw new Error('test denied'); } } }));

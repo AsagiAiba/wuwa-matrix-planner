@@ -47,6 +47,9 @@ def make_season(tower_id, reference, stamina):
         'towerId': tower_id,
         'modeName': '奇点扩张',
         'maxRound': 15,
+        'enemyLevels': [100, 110, 120],
+        'enemyLevelBasis': 'R1—R3 逐波核对，两期宝箱等级均与同轮一致。R4—R15 按玩家确认沿用 R3 等级。',
+        'enemyLevelSource': 'https://github.com/Arikatsu/WutheringWaves_Data/blob/a96f6c6e87717d528a340de37374d9fc5a5ba563/BinData/NewTower/newtowerwave.json',
         'source': f'https://ww.nanoka.cc/newtower/{tower_id}',
         'bosses': [
             {key: item[key] for key in ('order', 'id', 'name', 'alias', 'icon_file')}
@@ -90,6 +93,9 @@ def main():
         if args.force and path.exists():
             existing = json.loads(path.read_text(encoding='utf-8'))
             # These details are maintained in the season file, not in the source Boss catalog.
+            for field in ('enemyLevels', 'enemyLevelBasis', 'enemyLevelSource'):
+                if field in existing:
+                    season[field] = copy.deepcopy(existing[field])
             existing_bosses = {boss['id']: boss for boss in existing.get('bosses', [])}
             for boss in season['bosses']:
                 previous = existing_bosses.get(boss['id'], {})

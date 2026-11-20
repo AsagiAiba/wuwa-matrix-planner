@@ -1,6 +1,7 @@
 {
   "circuits": {
     "35": { "unison": 55, "echo": 40 },
+    "39": { "afterApplication": 25, "applicationSeconds": 30, "glacioDamage": 80 },
     "40": { "unison": 55, "echo": 65 },
     "37": { "all": 20, "basic": 20 },
     "42": { "all": 20, "liberation": 20 }
@@ -10,7 +11,7 @@
   },
   "s2Phase4Bosses": {
     "607750002": { "vulnerability": -20, "tuneBreak": 12.5, "maxStacks": 4 },
-    "665700003": { "abnormal": 25 },
+    "665700003": { "abnormal": 25, "frostbindLayers": 13, "frostbindFinal": 30 },
     "676750008": { "vulnerability": -25, "echo": 10, "maxStacks": 5, "fullStacks": 30 }
   }
 }

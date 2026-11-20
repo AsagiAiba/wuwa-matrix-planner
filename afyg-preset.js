@@ -1,9 +1,10 @@
 import {inspectProjectAxis,projectAxisRange,repositionExecutions,verifyEngineDamage} from './afyg-replay/site/execution-position.js';
 import {specialEchoCast} from './cingulum.js';
+import {enemyDefenseForLevel,damageProfileKey} from './season-config.js';
 export {projectAxisRange};
 const elements = ['冷凝','热熔','导电','气动','衍射','湮灭'];
 
-async function resistanceTable(project, values) {
+async function resistanceTable(project, values,level) {
   const copy = structuredClone(project);
   const patches = Object.fromEntries(elements.map((name,i)=>[name,values[i]]));
   for(const stages of [copy.phases,copy.encounter]){
@@ -11,7 +12,7 @@ async function resistanceTable(project, values) {
     stages.config ??= {};
     stages.config.data ??= {};
     const cfg=stages.config.data;
-    cfg.enemy={type:'BOSS',level:100,defense:1592,dmgReduction:0,...cfg.enemy,
+    cfg.enemy={type:'BOSS',dmgReduction:0,...cfg.enemy,level,defense:enemyDefenseForLevel(level),defenseLocked:false,
       resistances:{...cfg.enemy?.resistances,...patches}};
   }
   const frame=document.createElement('iframe');
@@ -61,7 +62,12 @@ function axisClock(project,timeline,axis){
   }
   const begin=secondsAt(Number.isFinite(axis.start)?axis.start:points[0]?.pos);
   const finish=secondsAt(Number.isFinite(axis.end)?axis.end:points.at(-1)?.pos);
-  return {secondsAt,duration:begin!==null && finish!==null?finish-begin:0};
+  return {secondsAt,begin,duration:begin!==null && finish>begin?finish-begin:0};
+}
+function appliesGlacio(character,name){
+  if(character==='穗穗')return /^(?:醒春潮|普攻·濯雨时第四段|变奏技能|翾舞)伤害$/.test(name);
+  if(character==='洛瑟菈')return /^(?:剪辑(?:·硬切)?|变奏技能)伤害$/.test(name);
+  return character==='绯雪' && /^(?:普攻·常世身第三段|普攻·预求身第[三四五]段|空中攻击·预求身第[二三]段|重击·寒簇·常世身|重击·枯霜·预求身|预求我身·见心|变奏技能)伤害$/.test(name);
 }
 export function responseWindows(project,timeline,axis,pos,clock=axisClock(project,timeline,axis)){
   const {secondsAt,duration}=clock;
@@ -96,21 +102,21 @@ export function responseWindows(project,timeline,axis,pos,clock=axisClock(projec
 export async function compileProjectPreset(project, roles, seasons){
   const timeline=(project.phases??project.encounter)?.timeline?.data;
   if(!timeline?.refLines)throw Error('工程缺少轴参考线');
-  const {kind,range,split}=inspectProjectAxis(project,timeline);
+  const {kind,range,split,repeats}=inspectProjectAxis(project,timeline);
   const rounds=range.cycles>1?project.executionRounds:undefined;
-  if(kind!=='opening' && rounds===undefined)return compileRotation(project,roles,seasons);
+  if(!repeats && rounds===undefined)return compileRotation(project,roles,seasons);
   if(rounds!==undefined && (!Array.isArray(rounds)||rounds.length!==range.cycles))throw Error('处决设置的轮数与所选轴类型不一致');
-  if(kind==='opening' && (!split||split.pos>range.end))throw Error('请在导入时确认首轮与循环段的分界');
-  const variants=new Map(),hits=[],pool=new Map(),roundOrders=[];
+  if(repeats && (!split||split.pos>range.end))throw Error('请在导入时确认首轮与循环段的分界');
+  const variants=new Map(),hits=[],pool=new Map(),roundOrders=[],roundSeconds=[];
   for(let i=0;i<range.cycles;i++){
     const moves=rounds?.[i]??{};
     if(!moves||typeof moves!=='object'||Array.isArray(moves))throw Error('分轮处决设置无效');
-    const first=kind==='opening' && i===0;
+    const first=Boolean(repeats) && i===0;
     const key=JSON.stringify([first,moves]);
     if(!variants.has(key)){
       const rotation=repositionExecutions(project,project,moves);
       delete rotation.executionRounds;
-      const segment=kind!=='opening'?range:first?{...range,end:split.pos,inclusiveEnd:false}:
+      const segment=!repeats?range:first?{...range,end:split.pos,inclusiveEnd:false}:
         {...range,start:split.pos,loopAfterOpening:true};
       const variant=await compileRotation(rotation,roles,seasons,true,segment);
       const order=variant.hits.map(hit=>{
@@ -118,17 +124,19 @@ export async function compileProjectPreset(project, roles, seasons){
         if(!pool.has(signature)){pool.set(signature,hits.length);hits.push(hit);}
         return pool.get(signature);
       });
-      variants.set(key,order);
+      variants.set(key,{order,duration:variant.roundSeconds?.[0]??0});
     }
-    roundOrders.push(variants.get(key));
+    const {order,duration}=variants.get(key);
+    roundOrders.push(order);
+    roundSeconds.push(duration);
   }
-  return {id:'afyg-project-v1',name:project.name||'椰果工程',roles,axisKind:kind,cycles:range.cycles,hits,roundOrders,matrixBuffVersion:1,bossEventVersion:2,mistVersion:1};
+  return {id:'afyg-project-v1',name:project.name||'椰果工程',roles,axisKind:kind,cycles:range.cycles,hits,roundOrders,roundSeconds,matrixBuffVersion:1,bossEventVersion:2,mistVersion:1,matrixLevelVersion:1};
 }
 
 async function compileRotation(project, roles, seasons, allowEmpty=false, segment){
   const phase=project.phases??project.encounter;
   const timeline=phase?.timeline?.data;
-  if(allowEmpty && timeline?.damageBlocks?.length===0)return {hits:[]};
+  if(allowEmpty && timeline?.damageBlocks?.length===0)return {hits:[],roundSeconds:[axisClock(project,timeline,segment).duration]};
   if(!timeline?.damageBlocks?.length)throw Error('工程中没有可推演的伤害块');
   const assets=project.team.flatMap(slot=>[['v3/character',slot.character],['v1/weapon',slot.weapon],...(slot.echoes??[]).filter(e=>e?.name).map(e=>['v1/echo',e.name])]);
   await Promise.all(assets.filter(([,name])=>name).map(async ([route,name])=>{
@@ -139,18 +147,26 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
   const keys=new Map();
   for(const season of seasons)for(const boss of season.bosses){
     const values=elements.map((_,i)=>boss.resistances.values[i+1]);
-    keys.set(values.join(','),values);
+    for(const level of season.enemyLevels)keys.set(damageProfileKey(level,values.join(',')),{values,level});
   }
   const tables=new Map();
-  for(const [key,values] of keys){
-    const entries=await resistanceTable(project,values);
-    tables.set(key,new Map(entries.map(entry=>[entry.id,entry])));
+  const profiles=[...keys];
+  for(let i=0;i<profiles.length;i+=3){
+    const batch=await Promise.all(profiles.slice(i,i+3).map(async ([key,{values,level}])=>{
+      const entries=await resistanceTable(project,values,level);
+      return [key,new Map(entries.map(entry=>[entry.id,entry]))];
+    }));
+    for(const [key,table] of batch)tables.set(key,table);
   }
   const base=tables.values().next().value;
   const pos=new Map([...timeline.opBlocks,...timeline.refLines].map(anchor=>[anchor.id,anchor.pos]));
   const {range,kind}=inspectProjectAxis(project,timeline);
   const axis=segment??range;
   const clock=axisClock(project,timeline,axis);
+  const relativeSecond=pos=>{
+    const t=clock.secondsAt(pos);
+    return t!==null && clock.begin!==null && t>=clock.begin?t-clock.begin:null;
+  };
   const responseAt=responseWindows(project,timeline,axis,pos,clock);
   const hits=[];
   const opById=new Map(timeline.opBlocks.map(op=>[op.id,op]));
@@ -194,6 +210,8 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
       const coverage=responseAt(entry.character,anchor);
       const types=entry.damageTypes??[];
       const metadata={};
+      const second=relativeSecond(anchor);
+      if(Number.isFinite(second))metadata.roundSecond=second;
       const op=opById.get(block.sourceId)??ops.findLast(x=>x.pos<=anchor);
       const actor=project.team[op?.trackIndex]?.character;
       if(actor && actor!==entry.character)metadata.offField=true;
@@ -210,12 +228,17 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
       if(vulnerability!==1)metadata.vulnerabilityZone=vulnerability;
       const indirectName=entry.id.slice((block.id+'-nd|').length).split('#')[0];
       const indirect=!raw && block.nonDirectEntries?.find(nd=>entry.id.startsWith(block.id+'-nd|')&&nd.name===indirectName);
+      if(indirect?.category==='效应' && indirect.name==='霜渐效应' && Number.isInteger(indirect.layers)){
+        metadata.glacioLayers=indirect.layers;
+      }
+      if(raw?.character==='绯雪' && ['预求我身·见心伤害','普攻·居合伤害'].includes(raw.hitName))metadata.frostbindStrike=true;
       if(indirect?.category==='处决' && indirect.name==='谐度破坏')metadata.tuneBreak=true;
       if(indirect?.category==='效应'||types.some(t=>t==='效应伤害'||t==='异常效应伤害'))metadata.abnormal=true;
       if(raw?.skillType==='声骸技能'){
         const echo=project.team.find(slot=>slot.character===raw.character)?.echoes?.[0]?.name;
         if(echo)metadata.echoName=echo;
       }
+      if(raw && (types.includes('霜渐效应伤害')||types.includes('霜冻效应伤害')||/^(?:霜渐|霜冻)效应伤害$/.test(raw.hitName)))metadata.glacioDamage=true;
       if(coverage)metadata.unisonRounds=coverage;
       if(raw?.skillType==='声骸技能'||types.includes('声骸技能伤害'))metadata.echo=true;
       if(types.includes('普攻伤害'))metadata.basic=true;
@@ -223,6 +246,11 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
       if(!Number.isFinite(entry.finalZone)||entry.finalZone<0)throw Error('伤害条目缺少终伤区数据，请刷新测试版后重新应用');
       if(entry.finalZone!==1)metadata.finalZone=entry.finalZone;
       const parts=weights.map((_,i)=>({name:entry.name,source:entry.character??indirect?.name??'',part:i+1,damage:{},...metadata}));
+      // In Hiyuki's party the converted Glacio damage settles on application.
+      if(indirect?.name==='霜渐效应' && project.team.some(slot=>slot.character==='绯雪')){
+        for(const h of parts)h.statusApplication=true;
+      }
+      if(raw && appliesGlacio(raw.character,raw.hitName))parts.at(-1).statusApplication=true;
       if(cast)for(let i=0;i<parts.length;i+=(cast==='遗忘'?factors.length:parts.length))parts[i].specialEcho=cast;
       for(const [key,table] of tables){
         const full=table.get(entry.id)?.damage;if(!Number.isFinite(full)||full<0)throw Error('不同抗性下伤害条目无法匹配');
@@ -247,6 +275,19 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
     hits.splice(index,0,{name:cast,source:project.team[op.trackIndex]?.character??'',part:1,castOnly:true,specialEcho:cast,
       ...(mode?{forgetMode:mode}:{}),damage:{}});
   }
+  // Damage ticks need not be applications. An explicit action/reference can
+  // describe an application even when the project binds no damage to it.
+  for(const a of [...ops,...timeline.refLines]){
+    const label=(a.desc||a.name||a.time||'').trim();
+    if(!/^(?:附加|施加)(?:(?:\d+层)?[【「]?(?:异常|霜渐|霜冻|电磁|光噪|虚湮|风蚀|聚爆)效应[】」]?)$/.test(label))continue;
+    if(a.pos<axis.start||a.pos>axis.end||(!axis.inclusiveEnd&&a.pos===axis.end))continue;
+    let i=positions.findIndex(x=>x>a.pos);
+    if(i<0)i=hits.length;
+    const second=relativeSecond(a.pos);
+    positions.splice(i,0,a.pos);
+    hits.splice(i,0,{name:label,source:project.team[a.trackIndex]?.character??'',part:1,castOnly:true,statusApplication:true,
+      ...(Number.isFinite(second)?{roundSecond:second}:{}),damage:{}});
+  }
   for(const [key,table] of tables){
     let expected=0;
     for(const row of table.values()){
@@ -258,5 +299,5 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
     if(actual!==expected)throw Error('导入核对失败：计分区间的逐击伤害与椰果条目不一致');
   }
   if(!allowEmpty && !hits.some(h=>Object.values(h.damage).some(n=>n>0)))throw Error('工程没有可计分的循环伤害');
-  return {id:'afyg-project-v1',name:project.name||'椰果工程',roles,axisKind:kind,cycles:axis.cycles,hits,matrixBuffVersion:1,bossEventVersion:2,mistVersion:1};
+  return {id:'afyg-project-v1',name:project.name||'椰果工程',roles,axisKind:kind,cycles:axis.cycles,hits,roundSeconds:Array(axis.cycles).fill(clock.duration),matrixBuffVersion:1,bossEventVersion:2,mistVersion:1,matrixLevelVersion:1};
 }

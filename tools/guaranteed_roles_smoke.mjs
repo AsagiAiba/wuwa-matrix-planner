@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,7 +15,7 @@ try {
       localStorage.setItem('guaranteed-roles-fixture', '1');
     }
   });
-  await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
+  await seedTestPlans(page);await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
   await page.locator('.team-card').first().waitFor();
   const before = await library();
   assert.equal(await page.locator('#target-score').getAttribute('placeholder'), null);

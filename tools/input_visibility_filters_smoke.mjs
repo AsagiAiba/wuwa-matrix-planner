@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -13,7 +14,7 @@ const keyword = word => page.locator('#boss-keyword-filters').getByRole('button'
 const season = name => page.locator('#boss-season-filters').getByRole('button', { name, exact: true }).click();
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
+  await seedTestPlans(page);await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
   await page.locator('.team-bar').first().waitFor();
   await page.locator('#target-score').fill('1.1m');
   assert.match(await page.locator('#target-score-gap').innerText(), /1,076,000/);

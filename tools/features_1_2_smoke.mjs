@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -12,7 +13,7 @@ const pages = [];
 async function freshPage() {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
   page.on('pageerror', error => errors.push(error.message)); pages.push(page);
-  await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor(); return page;
+  await seedTestPlans(page);await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor(); return page;
 }
 const state = page => page.evaluate(() => {
   const library = JSON.parse(localStorage.getItem('wuwa-matrix-plan-library-v1'));
@@ -62,7 +63,7 @@ try {
   await page.locator(`.team-bar[data-id="${pending.id}"]`).dblclick();
   await page.locator('#dialog-team-score').fill('4000'); await page.locator('#confirm-characters').click();
   await gap(page, 'shortfall', 22000);
-  page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click(); await gap(page, 'shortfall', 26000);
+  await page.locator('#delete-team').click(); await page.locator('#confirm-delete-team').click(); await gap(page, 'shortfall', 26000);
   await page.locator('#undo-team-delete').click(); await gap(page, 'shortfall', 22000);
   await page.locator('#redo-team-delete').click(); await gap(page, 'shortfall', 26000);
   await page.locator('.team-card[data-id="team-1"]').click();

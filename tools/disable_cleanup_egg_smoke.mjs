@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -10,7 +11,7 @@ const errors = []; page.on('pageerror', error => errors.push(error.message));
 const library = () => page.evaluate(() => JSON.parse(localStorage.getItem('wuwa-matrix-plan-library-v1')));
 const egg = '这个目标分数你确定？哪怕开隧者进矩阵都拿不到！';
 try {
-  await mkdir('outputs', { recursive: true }); await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
+  await mkdir('outputs', { recursive: true }); await seedTestPlans(page);await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
   await page.locator('.team-bar').first().waitFor();
   await page.locator('#target-score').fill('3w'); await page.locator('#locate-score').click();
   const before = await library();

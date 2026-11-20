@@ -11,13 +11,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
     '.gitignore', '启动Demo.cmd', 'app.js', 'CHANGELOG.md', 'index.html',
-    'afyg-preset.js', 'cingulum.js', 'package.json', 'plan-library.js', 'README.md', 'score_core.py',
+    'afyg-preset.js', 'cingulum.js', 'roster-recognition.js', 'package.json', 'plan-library.js', 'README.md', 'score_core.py',
     'score-axis.js', 'season-config.js', 'server.mjs', 'styles.css',
     'LICENSE', 'THIRD_PARTY_NOTICES.md',
 )
 DESKTOP_FILES = ('Launcher.cs', '使用说明.txt', 'LICENSE.node.txt')
 TREE_TYPES = {
-    'config': {'.json'}, 'docs': {'.md'}, 'tests': {'.mjs', '.py'},
+    'config': {'.json'}, 'docs': {'.md'}, 'tests': {'.mjs', '.py', '.json'},
     'tools': {'.mjs', '.py', '.ps1'},
 }
 ASSET_DIRECTORIES = ('app', 'bosses', 'characters', 'circuits', 'elements')
@@ -34,7 +34,7 @@ REQUIRED_FILES = {
     'config/boss_properties.json', 'data/boss_property_sources.json',
     'tools/sync_boss_properties.py', 'tests/boss-catalog.test.mjs',
     'assets/app/lily.png', 'assets/app/lily.ico',
-    'assets/characters/Lily_UserPortrait_v1.png', 'tests/score-input.test.mjs',
+    'assets/characters/T_IconRoleHead256_77_UI.webp', 'tests/score-input.test.mjs',
     'tests/server.test.mjs', 'tests/test_season_generation.py', 'tools/lily_smoke.mjs',
     'tools/input_visibility_filters_smoke.mjs', 'tools/disable_cleanup_egg_smoke.mjs',
     'tools/guaranteed_roles_smoke.mjs', 'tools/disabled_plan_scope_smoke.mjs',
@@ -44,7 +44,7 @@ REQUIRED_FILES = {
     'tools/boss_details_smoke.mjs', 'tools/matrix_plans_smoke.mjs',
     'tools/boss_properties_smoke.mjs', 'tools/pending_delete_smoke.mjs',
     'tools/picker_overview_smoke.mjs',
-    'config/character_order.json', 'data/character_search.json', 'data/s2_4_score_source.json',
+    'config/default_pairs.json', 'config/character_order.json', 'data/character_search.json', 'data/s2_4_score_source.json',
     'assets/characters/Rover_Combined_v1.png', 'tools/update_s2_4_scores.py',
     'tools/features_1_2_smoke.mjs', 'tools/picker_animation_smoke.mjs',
     'tools/drag_preview_smoke.mjs', 'tools/pinyin_search_smoke.mjs',
@@ -89,7 +89,7 @@ def source_files():
             raise ValueError(f'Unexpected output or private path: {name}')
         if file.stat().st_size > BROWSER_FILE_LIMIT:
             raise ValueError(f'File exceeds GitHub browser upload limit of 25 MiB: {name}')
-        if file.suffix.lower() == '.json' and name not in {'config/demo.json', 'config/alternate-demo.json'}:
+        if file.suffix.lower() == '.json' and name not in {'tests/fixtures/demo.json', 'tests/fixtures/alternate-demo.json'}:
             data = json.loads(file.read_text(encoding='utf-8-sig'))
             if isinstance(data, dict) and (isinstance(data.get('teams'), list) or isinstance(data.get('plans'), list)):
                 raise ValueError(f'Unexpected saved team-plan JSON in source selection: {name}')

@@ -268,7 +268,7 @@ export function validateConfig(value, characterIds, records, identityById = new 
 export const MIN_ZOOM = 0.000001;
 export const MAX_ZOOM = 0.24;
 
-import { getSeason } from './season-config.js';
+import { getSeason,damageProfileKey } from './season-config.js';
 import matrixDamageRules from './config/matrix_damage_rules.json' with {type:'json'};
 import characters from './data/characters.json' with {type:'json'};
 import {specialEchoCast} from './cingulum.js';
@@ -278,13 +278,15 @@ export function circuitDamageRules(id){
   return matrixDamageRules.circuits[id]??null;
 }
 
-export function matrixFinalFactor(hit,boss,round,circuit){
+export function matrixFinalFactor(hit,boss,round,circuit,applicationActive=false){
   const responding=Boolean((hit.unisonRounds??0)&(1<<round));
   let extra=circuit?.all??0;
   if(responding)extra+=(circuit?.unison??0)+(matrixDamageRules.bosses[boss.id]?.unison??0);
   if(hit.echo)extra+=circuit?.echo??0;
   if(hit.basic)extra+=circuit?.basic??0;
   if(hit.liberation)extra+=circuit?.liberation??0;
+  if(applicationActive)extra+=circuit?.afterApplication??0;
+  if(hit.glacioLayers>0 || hit.glacioDamage)extra+=circuit?.glacioDamage??0;
   const existing=hit.finalZone??1;
   return existing>0?1+extra/(100*existing):1;
 }
@@ -309,10 +311,11 @@ function recordStack(hit,stage,rule,round,roster,mode){
 
 // A cycle is ordered by the project's operation/reference positions. Each row
 // below is one independent hit, including repeats inside a single action.
-export function simulatePreset(preset, season, waves, start, damageFactor, forgetMode='auto') {
+export function simulatePreset(preset, season, waves, start, damageFactor, forgetMode='auto', circuit=null) {
   let index = waves.findIndex(wave => start < wave.cumulative_points_after - 1e-7);
   if (index < 0) return { reason: '起点已到血线末端' };
   const opening = waves[index];
+  if(opening.enemy_level && preset.matrixLevelVersion!==1)return {reason:'此旧预设缺少按轮次计算的等级与防御，请在椰果工程中选中原工程并重新应用。'};
   const offset = Math.max(0, start - opening.cumulative_points_before);
   if (opening.kill_bonus && offset >= opening.damage_points_at_full_hp)
     return { reason: '起点位于宝箱击杀奖励区，请调整前队分数' };
@@ -322,6 +325,10 @@ export function simulatePreset(preset, season, waves, start, damageFactor, forge
   let end = start, applied = 0, lost = 0, bonuses = 0, kills = 0, count = 0;
   const stages = [];
   const roster=new Set((preset.roles??[]).map(id=>roleNames.get(id)));
+  const timedCircuit=season.id==='s2-phase4' && circuit?.applicationSeconds;
+  if(timedCircuit && (!Array.isArray(preset.roundSeconds)||preset.roundSeconds.length!==preset.cycles))
+    return {reason:'请重新应用椰果工程以载入异常附加事件和计时。'};
+  let roundStart=0;
   for (let round = 0; round < preset.cycles; round++) {
     const hits=preset.roundOrders ? preset.roundOrders[round].map(i=>preset.hits[i]) : preset.hits;
     for (const hit of hits) {
@@ -329,23 +336,32 @@ export function simulatePreset(preset, season, waves, start, damageFactor, forge
       const wave = waves[index];
       const boss=season.bosses[wave.boss_position-1];
       const rule=damageFactor && preset.bossEventVersion===2 && season.id==='s2-phase4'?matrixDamageRules.s2Phase4Bosses[boss.id]:null;
-      if(hit.castOnly && !rule?.echo)continue;
-      const baseDamage = hit.castOnly?0:hit.damage[keys[wave.boss_position - 1]];
-      if (!Number.isFinite(baseDamage)) return { reason: '此预设尚未计算该 Boss 的抗性组合' };
+      const statusOnly=hit.castOnly && hit.statusApplication;
+      if(hit.castOnly && !rule?.echo && !(timedCircuit&&statusOnly))continue;
+      const profile=damageProfileKey(wave.enemy_level??100,keys[wave.boss_position-1]);
+      const baseDamage = hit.castOnly?0:hit.damage[profile];
+      if (!Number.isFinite(baseDamage)) return { reason: '此预设缺少当前 Boss 的等级和抗性组合，请重新应用椰果工程。' };
       if (stages.at(-1)?.index !== index){
         const next={index, name: 'R'+wave.round+' '+wave.name, score:0, lost:0, hits:0};
         if(rule?.maxStacks)Object.assign(next,{stacks:0,stackLabel:rule.echo?'迷航':'谐度破坏',stackEvents:[]});
+        if(rule?.frostbindFinal && roster.has('绯雪'))next.frostbind={readyAt:null,trigger:null};
         stages.push(next);
       }
       const stage = stages.at(-1);
-      if(hit.castOnly){recordStack(hit,stage,rule,round,roster,forgetMode);continue;}
-      let factor=damageFactor?damageFactor(hit,boss,round):1;
+      const time=Number.isFinite(hit.roundSecond)?roundStart+hit.roundSecond:null;
+      if(timedCircuit && (time===null || !(preset.roundSeconds[round]>0)) && (!hit.castOnly||statusOnly))
+        return {reason:'异常效应强化需要伤害区间的参考线计时，请补齐工程计时后重新应用。'};
+      const applicationActive=!!timedCircuit && time!==null && time<(stage.applicationUntil??-Infinity);
+      if(timedCircuit && hit.statusApplication)stage.applicationUntil=time+timedCircuit;
+      if(hit.castOnly){if(rule?.echo)recordStack(hit,stage,rule,round,roster,forgetMode);continue;}
+      let factor=damageFactor?damageFactor(hit,boss,round,applicationActive):1;
       if(rule){
         const equippedEcho=hit.echoName || (hit.echo && /\(声骸技能\)$/.test(hit.name));
         const damageStacks=rule.echo && equippedEcho ? 2 : (stage.stacks??0);
         let extra=damageStacks*(rule.tuneBreak??rule.echo??0);
         if(rule.fullStacks && damageStacks===rule.maxStacks)extra+=rule.fullStacks;
         if(hit.abnormal)extra+=rule.abnormal??0;
+        if(stage.frostbind?.trigger)extra+=rule.frostbindFinal;
         if((hit.finalZone??1)>0)factor+=extra/(100*(hit.finalZone??1));
         const vulnerability=hit.vulnerabilityZone??1;
         if(rule.vulnerability && vulnerability>0)factor*=Math.max(0,1+rule.vulnerability/(100*vulnerability));
@@ -356,6 +372,14 @@ export function simulatePreset(preset, season, waves, start, damageFactor, forge
       const effective = Math.min(hp, damage);
       applied += effective; lost += damage - effective;
       stage.lost += damage - effective; stage.hits++; count++;
+      const frost=stage.frostbind;
+      if(frost && !frost.trigger){
+        // Previous snapshots retained the native effect/skill labels before structured tags existed.
+        const layers=hit.glacioLayers??(hit.abnormal?Number(/^霜渐效应(\d+)层$/.exec(hit.name)?.[1]):0);
+        const strike=hit.source==='绯雪' && (hit.frostbindStrike || /^(?:预求我身·见心|普攻·居合)(?:伤害)?(?:\(|$)/.test(hit.name));
+        if(frost.readyAt && strike)frost.trigger={round:round+1,hit:stage.hits,name:hit.name};
+        if(!frost.readyAt && layers>=rule.frostbindLayers)frost.readyAt=stage.hits;
+      }
       hp -= effective;
       const before = end;
       if (hp <= 0) {
@@ -370,6 +394,7 @@ export function simulatePreset(preset, season, waves, start, damageFactor, forge
       }
       stage.score += end-before;
     }
+    roundStart+=preset.roundSeconds?.[round]??0;
   }
   const last = stages.at(-1);
   if (stages.length > 1 && !last.finisher && last.score < 300) {

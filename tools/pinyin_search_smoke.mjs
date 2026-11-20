@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -12,7 +13,7 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
 const errors = []; page.on('pageerror', error => errors.push(error.message));
 const names = () => page.locator('.character-choice').evaluateAll(nodes => nodes.map(node => node.getAttribute('aria-label')));
 try {
-  await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
+  await seedTestPlans(page);await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
   await page.locator('#quick-team').click();
   for (const [query, expected] of [['jinxi', '今汐'], ['JX', '今汐'], ['jīn xī', '今汐'], ['shou an ren', '守岸人'], ['sar', '守岸人'], ['kelaita', '珂莱塔'], ['klt', '珂莱塔'], ['xiangliyao', '相里要'], ['xly', '相里要'], ['changli', '长离'], ['qiu yuan', '仇远'], ['luhesi', '陆·赫斯'], ['qianxiao', '千咲'], ['Shorekeeper', '守岸人'], ['今汐', '今汐']]) {
     await page.locator('#character-search').fill(query);

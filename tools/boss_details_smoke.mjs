@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -20,7 +21,7 @@ async function checkPoints(wave, percent) {
 }
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(baseUrl);
+  await seedTestPlans(page);await page.goto(baseUrl);
   await page.locator('.boss-segment').first().click();
   assert.equal(await page.locator('#boss-dialog-title').innerText(), 'R1 燎照之骑');
   assert.equal(await number('boss-total-hp'), 5612519);
@@ -68,6 +69,8 @@ try {
   await checkPoints(tableWave(5612519, .000834), 50);
   await page.locator('#boss-dialog').screenshot({ path: 'outputs/boss-details-s2-4.png' });
   await page.locator('#close-boss-dialog').click(); assert.equal(await page.locator('#boss-dialog').isVisible(), false);
+  await page.locator('#max-round').selectOption('3');
+  assert.equal(await page.locator('.boss-segment').nth(13).getAttribute('title'), 'R3 辛吉勒姆：伤害积分 20,222');
   for (const [index, name, expected] of [[1, '达妮娅', ['20%', '40%', '20%', '20%', '20%', '20%']], [3, '辛吉勒姆', ['20%', '20%', '20%', '20%', '40%', '20%']]]) {
     await page.locator('.boss-segment').nth(index).click();
     assert.equal(await page.locator('#boss-dialog-title').innerText(), `R1 ${name}`);

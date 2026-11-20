@@ -67,6 +67,7 @@ export function repositionExecutions(current, original, moves){
 export const axisLabels={
   full:'120 秒全局轴',
   opening:'首轮特化 × 1＋循环模板 × 4',
+  startup:'启动轴 × 1＋循环轴 × 3',
   single:'单轮轴 × 4（约 100 秒）'
 };
 
@@ -75,7 +76,7 @@ export function inspectProjectAxis(project,timeline){
   const label=ref=>String(ref.name||ref.time||'').trim();
   const timings=new Map((project.analysis?.timings??[]).map(t=>[t.refLineId,Number(t.seconds)]));
   const excluded=refs.find(r=>/首轮.*(?:不计|不算|排除)/.test(label(r)));
-  const opening=refs.find(r=>/(?:首轮|首轮特化|首轮轴|第一轮|首轮起手)/.test(label(r)) && r!==excluded);
+  const opening=refs.find(r=>/(?:首轮|第一轮|启动轴)/.test(label(r)) && r!==excluded);
   const loops=refs.filter(r=>/(?:循环|次轮|第二轮)/.test(label(r)));
   const title=String(project.name??'');
   const openingAndLoop=Boolean(opening && loops.some(r=>r.pos>opening.pos)) || /(?:首轮|起手)特化.*循环/.test(title);
@@ -96,20 +97,30 @@ export function inspectProjectAxis(project,timeline){
   }
   const namedFull=/120\s*(?:s|秒)|全局轴/i.test(title);
   const override=Object.hasOwn(axisLabels,project.matrixAxisType)?project.matrixAxisType:null;
-  const kind=override??(finish||(!excluded && (namedFull || (openingAndLoop && loops.length>1)))?'full':openingAndLoop?'opening':'single');
+  const firstLoop=loops.find(r=>opening&&r.pos>opening.pos);
+  const openingSeconds=timings.get(opening?.id),loopSeconds=timings.get(firstLoop?.id)-openingSeconds;
+  const threeFit=openingSeconds>0 && loopSeconds>0 && openingSeconds+3*loopSeconds<=120 && openingSeconds+4*loopSeconds>120;
+  const startupMarked=/启动轴/.test(label(opening??{})+' '+title);
+  const suggestedTemplate=startupMarked && (threeFit || /4\s*[r轮]/i.test(title))?'startup':'opening';
+  const kind=override??(finish||(!excluded && (namedFull || (openingAndLoop && loops.length>1)))?'full':openingAndLoop?suggestedTemplate:'single');
   const start=refs.find(r=>/^\+?0\s*(?:s\b|秒)/i.test(label(r)));
   const end=start && loops.find(r=>r.pos>start.pos);
   const anchors=[...refs,...(timeline.opBlocks??[])];
   const split=anchors.find(a=>a.id===project.matrixLoopStart)??opening;
   const loopEnd=project.matrixLoopEnd==='last'?null:(anchors.find(a=>a.id===project.matrixLoopEnd)??loops.find(r=>split&&r.pos>split.pos));
+  const repeats=kind==='opening'?4:kind==='startup'?3:0;
   const range=kind==='single'?{cycles:4,start:start?.pos??-Infinity,end:end?.pos??Infinity,inclusiveEnd:false}:
-    {cycles:kind==='opening'?5:1,start:-Infinity,end:kind==='opening'?(loopEnd?.pos??Infinity):(finish?.pos??Infinity),inclusiveEnd:kind!=='opening'||!loopEnd};
+    {cycles:repeats+1,start:-Infinity,end:repeats?(loopEnd?.pos??Infinity):(finish?.pos??Infinity),inclusiveEnd:!repeats||!loopEnd};
   if(override)reason='按导入时选择的类型结算';
   else if(kind==='single')reason=excluded?'工程注明首轮不计，取标记内的循环段':end?'已找到单轮循环边界':'未找到完整的 120 秒计时，建议核对是否为单轮';
-  else if(kind==='opening')reason='参考线同时标出了首轮和循环模板';
+  else if(kind==='startup'&&threeFit)reason='启动 '+openingSeconds+' 秒，循环 '+loopSeconds+' 秒，120 秒内可打三次完整循环';
+  else if(repeats)reason='参考线同时标出了首轮和循环模板';
   else if(!reason)reason=namedFull?'名称含全局轴或 120 秒，请核对结束位置':'工程已列出首轮和多段后续循环';
   if(kind==='full' && openingAndLoop)reason+='；原轴含首轮和后续循环';
-  return {kind,reason,range,split,loopEnd};
+  const elapsedStart=timings.get(split?.id);
+  const elapsedEnd=timings.get(loopEnd?.id??'right');
+  const templateSeconds=elapsedStart>0 && elapsedEnd>elapsedStart?elapsedStart+repeats*(elapsedEnd-elapsedStart):null;
+  return {kind,reason,range,split,loopEnd,repeats,templateSeconds};
 }
 
 export function projectAxisRange(project,timeline){
@@ -149,15 +160,16 @@ export function confirmImportAxis(project){
   });
   start.value=audit.split?.id??'';end.value=audit.loopEnd?.id??'last';
   const feedback=dialog.querySelector('.axis-feedback');
-  const update=()=>{dialog.querySelector('.loop-bounds').hidden=kind.value!=='opening';feedback.textContent={
+  const update=()=>{dialog.querySelector('.loop-bounds').hidden=!['opening','startup'].includes(kind.value);feedback.textContent={
     full:'从开场到结束顺序结算一次，保留已经写好的尾轮。',
     opening:'分界前只打一次，选中的循环段打四次，共五轮。',
+    startup:'分界前的启动段打一次，选中的循环段打三次，共四轮。',
     single:'按单轮约 25 秒重复四次，预计覆盖 100 秒。'
   }[kind.value];};
   kind.onchange=update;update();
   form.querySelector('[value=cancel]').onclick=()=>dialog.close('cancel');
   form.onsubmit=e=>{
-    if(kind.value!=='opening')return;
+    if(!['opening','startup'].includes(kind.value))return;
     const boundary=anchors.find(a=>a.id===start.value)?.pos;
     const last=anchors.find(a=>a.id===end.value)?.pos??Infinity;
     const positions=new Map(anchors.map(a=>[a.id,a.pos]));
@@ -169,11 +181,47 @@ export function confirmImportAxis(project){
   document.body.append(dialog);dialog.showModal();
   return new Promise(resolve=>dialog.addEventListener('close',()=>{
     if(dialog.returnValue==='ok'){
-      if(project.matrixAxisType!==kind.value && project.executionRounds?.length!==({full:1,opening:5,single:4})[kind.value])delete project.executionRounds;
+      if(audit.kind!==kind.value)delete project.executionRounds;
       project.matrixAxisType=kind.value;
-      if(kind.value==='opening'){project.matrixLoopStart=start.value;project.matrixLoopEnd=end.value;}
+      if(['opening','startup'].includes(kind.value)){project.matrixLoopStart=start.value;project.matrixLoopEnd=end.value;}
       else {delete project.matrixLoopStart;delete project.matrixLoopEnd;}
     }
     dialog.remove();resolve(dialog.returnValue==='ok');
   },{once:true}));
+}
+function stableValue(value){
+  return Array.isArray(value)?value.map(stableValue):value && typeof value==='object'?
+    Object.fromEntries(Object.keys(value).sort().map(key=>[key,stableValue(value[key])])):value;
+}
+
+// The ID "sample" belonged to the built-in slot; explicitly imported projects have independent IDs.
+export async function refreshBundledProject(){
+  const key='afyg-project-library-v1',text=localStorage.getItem(key);
+  if(!text)return null;
+  const saved=JSON.parse(text);
+  if(!Array.isArray(saved?.items))throw Error('椰果工程库格式无效');
+  const old=saved.items.find(item=>item.id==='sample');
+  const stale=item=>item?.id==='sample' && (item.raw?.project??item.raw)?.id==='03e22bfc-fb56-4088-b1f3-f01691c01ccb';
+  if(!stale(old) && !stale(saved.lastDeletion?.item))return saved;
+  const response=await fetch('/sample.json',{cache:'no-store'});
+  if(!response.ok)throw Error('无法读取新版内置椰果工程');
+  const raw=await response.json();
+  if(localStorage.getItem(key)!==text)return refreshBundledProject();
+  if(stale(old)){
+    const idx=saved.items.indexOf(old);
+    // Keep a separately editable copy whenever the saved version differs from the original.
+    if(old.edited && JSON.stringify(stableValue(old.raw))!==JSON.stringify(stableValue(old.edited))){
+      saved.items.splice(idx+1,0,{...old,id:crypto.randomUUID()});
+    }
+    saved.items[idx]={id:'sample',raw};
+  }
+  if(stale(saved.lastDeletion?.item)){
+    saved.lastDeletion.item.id=crypto.randomUUID();
+    if(!saved.items.some(item=>item.id==='sample')){
+      saved.items.push({id:'sample',raw});
+      saved.activeId??='sample';
+    }
+  }
+  localStorage.setItem(key,JSON.stringify(saved));
+  return saved;
 }

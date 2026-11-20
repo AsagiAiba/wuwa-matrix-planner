@@ -1,4 +1,4 @@
-import {isExecution,projectStages,repositionExecutions,inspectProjectAxis,axisLabels,confirmImportAxis,verifyEngineDamage} from './execution-position.js';
+import {refreshBundledProject,isExecution,projectStages,repositionExecutions,inspectProjectAxis,axisLabels,confirmImportAxis,verifyEngineDamage} from './execution-position.js';
 const $=id=>document.getElementById(id);
 function elem(tag,text){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;}
 const fmt=n=>new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2}).format(n);
@@ -65,7 +65,7 @@ function showEquipment(team, config, profile){
 const libraryKey='afyg-project-library-v1';
 let library=[],activeId=null,lastDeletion=null,hasSavedLibrary=false;
 try{
-  const saved=JSON.parse(localStorage.getItem(libraryKey));
+  const saved=await refreshBundledProject();
   if(Array.isArray(saved?.items)){
     hasSavedLibrary=true;
     library=saved.items.filter(item=>item?.id&&item.raw);
@@ -200,15 +200,15 @@ function drawExecutionEditor(){
   $('recalculate-execution').disabled=false;
   $('recalculate-execution').textContent=parent===window?'重新计算':'重新计算并应用到血线';
   const anchors=[...t.opBlocks,...t.refLines].sort((a,b)=>a.pos-b.pos);
-  const {range,split,kind}=inspectProjectAxis(project,t),{cycles}=range;
+  const {range,split,kind,repeats}=inspectProjectAxis(project,t),{cycles}=range;
   $('execution-hint').textContent=cycles>1?'每轮分别设置。选择「本轮不放」会跳过该次处决伤害和叠层。下方操作轴为单轮模板。':'放在计分区间外的处决不会计入血线。';
   breaks.sort((a,b)=>lookup.get(a.sourceId).pos-lookup.get(b.sourceId).pos);
   for(let round=0;round<cycles;round++){
    const group=elem('div');group.className='execution-round';
-   if(cycles>1)group.append(elem('strong',cycles===5 && round===0?'第 1 轮 · 首轮特化':'第 '+(round+1)+' 轮'));
+   if(cycles>1)group.append(elem('strong',repeats && round===0?(kind==='startup'?'第 1 轮 · 启动':'第 1 轮 · 首轮特化'):'第 '+(round+1)+' 轮'));
    list.append(group);
    breaks.forEach((block,i)=>{
-    const inSegment=pos=>kind!=='opening'||!split||(round===0?pos<split.pos:
+    const inSegment=pos=>!repeats||!split||(round===0?pos<split.pos:
       pos>=split.pos && (pos<range.end||range.inclusiveEnd&&pos===range.end));
     if(!inSegment(lookup.get(block.sourceId).pos))return;
     const who=block.nonDirectEntries.find(isExecution).responders?.[0];
@@ -226,7 +226,7 @@ function drawExecutionEditor(){
     side.onchange=()=>{$('execution-status').textContent='已选新顺序，重新计算后生效。';};
     const row=elem('div');row.className='execution-row';label.append(target);row.append(label,side);group.append(row);
    });
-   if(cycles===5 && !group.querySelector('select'))group.append(elem('small','该段没有绑定处决'));
+   if(repeats && !group.querySelector('select'))group.append(elem('small','该段没有绑定处决'));
   }
 }
 $('recalculate-execution').onclick=async()=>{
@@ -263,7 +263,7 @@ function drawAxis(){
     project.executionRounds.forEach((moves,i)=>{
       for(const block of executions){
         const pos=lookup.get(block.sourceId)?.pos;
-        if(spec.kind==='opening' && spec.split && (i===0?pos>=spec.split.pos:
+        if(spec.repeats && spec.split && (i===0?pos>=spec.split.pos:
           pos<spec.split.pos||pos>spec.range.end||!spec.range.inclusiveEnd&&pos===spec.range.end))continue;
         const move=moves[block.id];if(move?.skip)continue;
         const id=move?.anchorId??block.sourceId;
@@ -333,7 +333,7 @@ window.addEventListener('message',e=>{
     if(!e.data.ok){$('status').textContent='获取当前配装失败，请重试。';return;}
     const file=editedFile(e.data);
     const blob=new Blob([JSON.stringify({engine:'wuwa-afyg-tool@441852a',dataVersion:'3.8',project:file,result},null,2)],{type:'application/json'});
-    const link=elem('a');link.href=URL.createObjectURL(blob);link.download=(project.name||'心锁守')+'-复算.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);return;
+    const link=elem('a');link.href=URL.createObjectURL(blob);link.download=(project.name||'椰果工程')+'-复算.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);return;
   }
   if(e.data?.type==='fast-calc:project-updated'){
     const updated=e.data.project;
@@ -355,15 +355,16 @@ window.addEventListener('message',e=>{
   for(const row of r.entries){
     const pos=lookup.get(row.blockId).pos;
     if(pos<range.start||pos>range.end||(!range.inclusiveEnd&&pos===range.end))continue;
-    if(audit.kind==='opening'&&pos<audit.split?.pos)openingDamage+=row.damage;
+    if(audit.repeats&&pos<audit.split?.pos)openingDamage+=row.damage;
     else cycleDamage+=row.damage;
   }
-  const reference=audit.kind==='full'?cycleDamage:openingDamage+4*cycleDamage;
-  const bounds=audit.kind==='opening'&&audit.split?'。循环从「'+anchorLabel(audit.split)+'」开始，'+
+  const reference=audit.kind==='full'?cycleDamage:openingDamage+(audit.repeats||4)*cycleDamage;
+  const bounds=audit.repeats&&audit.split?'。循环从「'+anchorLabel(audit.split)+'」开始，'+
     (audit.loopEnd?'到「'+anchorLabel(audit.loopEnd)+'」之前':'一直到工程末尾'):'';
+  const seconds=audit.kind==='startup'?audit.templateSeconds:audit.kind==='single'?100:120;
   $('axis-audit').textContent=axisLabels[audit.kind]+' · '+audit.reason+bounds+'。原工程敌人面板下，'+
-    (audit.kind==='opening'?'首轮 '+fmt(openingDamage)+' ＋ 循环 '+fmt(cycleDamage)+' × 4':audit.kind==='single'?'单轮 '+fmt(cycleDamage)+' × 4':'全轴 '+fmt(cycleDamage)+' × 1')+
-    '。模板参考总伤 '+fmt(reference)+'，按 '+(audit.kind==='single'?100:120)+' 秒折算 '+fmt(reference/(audit.kind==='single'?100:120))+' DPS。';
+    (audit.repeats?(audit.kind==='startup'?'启动 ':'首轮 ')+fmt(openingDamage)+' ＋ 循环 '+fmt(cycleDamage)+' × '+audit.repeats:audit.kind==='single'?'单轮 '+fmt(cycleDamage)+' × 4':'全轴 '+fmt(cycleDamage)+' × 1')+
+    '。模板参考总伤 '+fmt(reference)+(seconds?'，按 '+seconds+' 秒折算 '+fmt(reference/seconds)+' DPS。':'。所选分界缺少计时，仅显示总伤。');
   clearTimeout(engineTimer);result=r;$('status').textContent='';$('totals').replaceChildren();
   function metric(label,value){const tile=elem('div');tile.append(elem('small',label),elem('strong',value));$('totals').append(tile);}
   metric('全工程期望伤害',fmt(r.total));

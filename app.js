@@ -1,12 +1,15 @@
 import {axisLabels,confirmImportAxis} from './afyg-replay/site/execution-position.js';
+import {setupRosterScan} from './roster-recognition.js';
 import { compileProjectPreset } from './afyg-preset.js';
 import { visibleWaves, locateScore, packTeams, reorderTeams, nearestTeamSlot, characterIdentity, validateConfig, staminaLimits, staminaConflicts, defaultTeamName, splitQuickTeams, axisTickStep, matrixInfo, bossScoreAtRemainingHp, layoutTeamPreviews, PENDING_TEAM_SCORE, createTeamDeletionHistory, deleteTeamWithHistory, undoTeamDeletion, redoTeamDeletion, MIN_ZOOM, MAX_ZOOM } from './score-axis.js';
 import { normalizePlanLibrary, createPlanLibrary, addPlan, copyPlan, renamePlan, updatePlan, activatePlan, deletePlan } from './plan-library.js';
 import { parseScoreInput } from './score-axis.js';
 import { simulatePreset, circuitDamageRules, matrixFinalFactor } from './score-axis.js';
 import simulationNotes from './config/simulation_notes.json' with {type:'json'};
-import heartPreset from './data/xinsuosho_preset.json' with { type: 'json' };
-import { seasonDefinitions, getSeason, seasonStaminaRules, buildSeasonScores } from './season-config.js';
+import defaultPairs from './config/default_pairs.json' with {type:'json'};
+import {refreshBundledProject} from './afyg-replay/site/execution-position.js';
+import { seasonDefinitions, enemyDefenseForLevel, getSeason, seasonStaminaRules, buildSeasonScores } from './season-config.js';
+const emptyLayout={version:1,towerId:18,matrixSeason:'s2-phase4',staminaSeason:'s2-phase4',matrixVersion:getSeason('s2-phase4').name,maxRound:2,pixelsPerPoint:.04,scoreMarker:null,teams:[]};
 
 const $ = id => document.getElementById(id);
 for(const [title,body] of simulationNotes){
@@ -26,7 +29,7 @@ const element = (tag, className, text) => {
   if (text !== undefined) node.textContent = text;
   return node;
 };
-const [characterData, example, elementData, alternateExample, characterSearchData, characterOrder, bossPropertyData, matrixReferences] = await Promise.all(['data/characters.json', 'config/demo.json', 'data/elements.json', 'config/alternate-demo.json', 'data/character_search.json', 'config/character_order.json', 'config/boss_properties.json', 'config/matrix_references.json'].map(async url => {
+const [characterData, elementData, characterSearchData, characterOrder, bossPropertyData, matrixReferences] = await Promise.all(['data/characters.json', 'data/elements.json', 'data/character_search.json', 'config/character_order.json', 'config/boss_properties.json', 'config/matrix_references.json'].map(async url => {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`无法加载 ${url}`);
   return response.json();
@@ -53,7 +56,7 @@ try {
 } catch { disabledCharactersLoadError = '原禁用设置未能读取，保存后将以本次选择为准。'; }
 const orderedNames = [...characterOrder.front, ...characterOrder.groups.flat()];
 const pickerNameRank = new Map(orderedNames.map((name, index) => [name, index]));
-const quickPickerCharacters = pickerCharacters.map((entry, index) => ({ entry, rank: characterIdentity(entry) === '漂泊者' ? 2000 + characterOrder.roverElements.indexOf(entry.element) : pickerNameRank.get(entry.name) ?? 1000 + index }))
+const orderedPickerCharacters = pickerCharacters.map((entry, index) => ({ entry, rank: characterIdentity(entry) === '漂泊者' ? 2000 + characterOrder.roverElements.indexOf(entry.element) : pickerNameRank.get(entry.name) ?? 1000 + index }))
   .sort((a, b) => a.rank - b.rank).map(item => item.entry);
 function normalizeCharacterSearch(text) {
   return String(text).replace(/ü/gi, 'v').normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[\s·:：'’_-]+/g, '');
@@ -67,36 +70,28 @@ const characterIds = new Set(characterMap.keys());
 const identityById = new Map(characters.map(entry => [entry.id, characterIdentity(entry)]));
 const staminaRules = seasonStaminaRules();
 const scoreTables = new Map(seasonDefinitions.map(season => [season.id, buildSeasonScores(season.id)]));
-let scores = scoreTables.get(example.matrixSeason);
+let scores = scoreTables.get(emptyLayout.matrixSeason);
 let bossMap = new Map();
 const checkedProjectPresets=new WeakSet();
 function teamPreset(team){
-  if(team?.presetId===heartPreset.id)return heartPreset;
   if(team?.presetId==='afyg-project-v1'){
     const data=team.projectPreset;
     if(!checkedProjectPresets.has(data)){
-      if(data?.id!==team.presetId||![1,4,5].includes(data.cycles)||(data.cycles===5&&!Array.isArray(data.roundOrders))||typeof data.name!=='string'||
+      if(data?.id!==team.presetId||![1,4,5].includes(data.cycles)||((data.cycles===5||data.axisKind==='startup')&&!Array.isArray(data.roundOrders))||typeof data.name!=='string'||
          !Array.isArray(data.roles)||data.roles.length!==3||!data.roles.every(id=>characterIds.has(id))||
          !Array.isArray(data.hits)||(data.roundOrders===undefined?(!data.hits.length||data.hits.length>2000):
            (![4,5].includes(data.cycles)||data.hits.length>2000*data.cycles||!Array.isArray(data.roundOrders)||data.roundOrders.length!==data.cycles||
             !data.roundOrders.every(order=>Array.isArray(order)&&order.length<=2000&&order.every(i=>Number.isInteger(i)&&i>=0&&i<data.hits.length))))||
          !data.hits.every(h=>h&&typeof h.name==='string'&&typeof h.source==='string'&&Number.isInteger(h.part)&&h.part>0&&h.damage&&Object.values(h.damage).every(v=>Number.isFinite(v)&&v>=0)))
         throw Error('工程预设数据无效，请重新应用');
-      if((data.bossEventVersion!==2 || data.mistVersion!==1) && data.roundOrders===undefined && data.cycles===heartPreset.cycles && matchesPreset(team,heartPreset) &&
-         data.hits.length===heartPreset.hits.length && data.hits.every((h,i)=>{
-           const ref=heartPreset.hits[i];
-           return h.name===ref.name && h.source===ref.source && h.part===ref.part &&
-             Object.entries(ref.damage).every(([key,value])=>h.damage[key]===value);
-         })){
-        data.hits=structuredClone(heartPreset.hits);
-        data.matrixBuffVersion=heartPreset.matrixBuffVersion;
-        data.bossEventVersion=heartPreset.bossEventVersion;data.mistVersion=heartPreset.mistVersion;
-      }
-      if(data.matrixBuffVersion===1 && !data.hits.every(h=>(h.finalZone===undefined||(Number.isFinite(h.finalZone)&&h.finalZone>=0)) &&
+      if(data.roundSeconds!==undefined && (!Array.isArray(data.roundSeconds)||data.roundSeconds.length!==data.cycles||!data.roundSeconds.every(t=>Number.isFinite(t)&&t>=0)))throw Error('工程的轮次用时无效，请重新应用');
+      if(data.matrixBuffVersion===1 && !data.hits.every(h=>(h.roundSecond===undefined||(Number.isFinite(h.roundSecond)&&h.roundSecond>=0)) &&
+         (h.finalZone===undefined||(Number.isFinite(h.finalZone)&&h.finalZone>=0)) &&
          (h.unisonRounds===undefined||(Number.isInteger(h.unisonRounds)&&h.unisonRounds>=0&&h.unisonRounds<(1<<data.cycles))) &&
          (h.vulnerabilityZone===undefined||(Number.isFinite(h.vulnerabilityZone)&&h.vulnerabilityZone>=0)) &&
          (h.echoName===undefined||(typeof h.echoName==='string'&&h.echoName.length>0)) &&
-         [h.echo,h.basic,h.liberation,h.tuneBreak,h.abnormal].every(flag=>flag===undefined||typeof flag==='boolean')))throw Error('工程的回路计算数据无效，请重新应用');
+         (h.glacioLayers===undefined||(Number.isInteger(h.glacioLayers)&&h.glacioLayers>=0)) &&
+         [h.echo,h.basic,h.liberation,h.tuneBreak,h.abnormal,h.frostbindStrike,h.statusApplication,h.glacioDamage].every(flag=>flag===undefined||typeof flag==='boolean')))throw Error('工程的回路计算数据无效，请重新应用');
       checkedProjectPresets.add(data);
     }
     return data;
@@ -107,7 +102,7 @@ function matchesPreset(team,preset){return team.characterIds?.length===3&&preset
 function selectedCircuit(team,season){
   if(!team)return null;
   if(team.circuitId!==undefined)return season.circuits.find(c=>c.id===team.circuitId)??null;
-  if(team.presetId && matchesPreset(team,heartPreset))return season.circuits.find(c=>c.name==='基础伤害强化')??null;
+  if(team.presetId && matchesPreset(team,{roles:['1311','1312','1505']}))return season.circuits.find(c=>c.name==='基础伤害强化')??null;
   return null;
 }
 function updatePresetScores(plan) {
@@ -124,8 +119,8 @@ function updatePresetScores(plan) {
       if(!matchesPreset(team,preset)){delete team.projectPreset;delete team.presetId;team.score=0;team.needsScore=true;}
       else {
         const circuit=selectedCircuit(team,season), rules=circuitDamageRules(circuit?.id);
-        const factor=preset.matrixBuffVersion===1?(hit,boss,round)=>matrixFinalFactor(hit,boss,round,rules):undefined;
-        let report=waiting?{reason:'请先填写前序队伍的分数'}:simulatePreset(preset,season,records,start,factor,team.forgetMode??'auto');
+        const factor=preset.matrixBuffVersion===1?(hit,boss,round,active)=>matrixFinalFactor(hit,boss,round,rules,active):undefined;
+        let report=waiting?{reason:'请先填写前序队伍的分数'}:simulatePreset(preset,season,records,start,factor,team.forgetMode??'auto',rules);
         if(report.end+manualLeft>records.at(-1).cumulative_points_after+1e-7)report={reason:'预设与后续队伍总分超出 R15'};
         team.score=report.score || 0;
         if(team.score>0)delete team.needsScore;else team.needsScore=true;
@@ -162,7 +157,7 @@ function syncSeasonRuntime() {
   scores = scoreTables.get(season.id);
   bossMap = new Map(season.bosses.map(boss => [boss.name, boss]));
 }
-let state = structuredClone(example);
+let state = structuredClone(emptyLayout);
 let referencePreviewId = null;
 let repairedRosters = false;
 let removedOutOfRangeMarker = false;
@@ -192,7 +187,6 @@ try {
 } catch (error) { restoreError = error.message; }
 state.teams = packTeams(state.teams);
 let planLibrary = createPlanLibrary(state, '我的排布', 'plan-main');
-let existingLibraryLoaded = false;
 let libraryRecoveryLocked = false;
 let recoveryBackupExported = false;
 try {
@@ -206,7 +200,6 @@ try {
         libraryMarkerRemoved ||= restored.markerRemoved;
         return restored.config;
       });
-      existingLibraryLoaded = true;
       state = structuredClone(planLibrary.plans.find(plan => plan.id === planLibrary.activePlanId).config);
       restoreError = null; repairedRosters = false; removedOutOfRangeMarker = libraryMarkerRemoved;
     } catch (error) {
@@ -219,10 +212,37 @@ try {
     }
   }
 } catch (error) { restoreError = error.message; }
-if (!existingLibraryLoaded && !planLibrary.plans.some(plan => plan.id === 'plan-demo-b') && planLibrary.plans.length < 100) {
-  const previousActive = planLibrary.activePlanId;
-  planLibrary = addPlan(planLibrary, '示例B · 椿丹白先手', validatePlan(alternateExample), 'plan-demo-b');
-  planLibrary = activatePlan(planLibrary, previousActive);
+// Fingerprint only the pristine V0.4.5/V0.5.1 seed layouts. Even a rename or a
+// score/roster/marker change keeps the user's plan.
+if(!restoreError && !libraryRecoveryLocked && !localStorage.getItem(LIBRARY_STORAGE+'-unseeded-052')){
+  const defaults={
+    'plan-main':['我的排布','4e8b977d991c980f335cecfab630adaeedb2a600cc19467df7039bd63e8f37c2','af81e895210e6b97cfeb8bf8c507314b4f1002fc92cf8840c9b33256a8b3da3b'],
+    'plan-demo-b':['示例B · 椿丹白先手','ef79c468c306cfcae12fbbd8eee32eb799958e080b578f4945720e291ac1038e','7a392f480bb00b08b4a002b053a0222df9a45fbe54cd0c03fdcd1ed1e485f2ad']
+  };
+  const keep=[];
+  for(const plan of planLibrary.plans){
+    const seed=defaults[plan.id];
+    if(seed && plan.name===seed[0] && plan.config.teams.length===3){
+      const copy=structuredClone(plan.config);
+      if(copy.disabledCharacterIds?.length===0)delete copy.disabledCharacterIds;
+      const sort=value=>Array.isArray(value)?value.map(sort):value && typeof value==='object'?
+        Object.fromEntries(Object.keys(value).sort().map(k=>[k,sort(value[k])])):value;
+      const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(sort(copy))));
+      const hash=Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
+      if(seed.slice(1).includes(hash))continue;
+    }
+    keep.push(plan);
+  }
+  if(keep.length!==planLibrary.plans.length){
+    const old=planLibrary;
+    const next=keep.length?{...old,plans:keep,activePlanId:keep.some(p=>p.id===old.activePlanId)?old.activePlanId:keep[0].id}:createPlanLibrary(emptyLayout,'我的排布','plan-main');
+    try{
+      localStorage.setItem(LIBRARY_STORAGE+'-before-unseeded-052',JSON.stringify(old));
+      localStorage.setItem(LIBRARY_STORAGE,JSON.stringify(next));
+      planLibrary=next;state=structuredClone(next.plans.find(p=>p.id===next.activePlanId).config);
+    }catch{/* Keep the original library if it cannot be backed up. */}
+  }
+  try{localStorage.setItem(LIBRARY_STORAGE+'-unseeded-052','1');}catch{}
 }
 let disabledIsolationNotice = '';
 if (!restoreError && !libraryRecoveryLocked && !planLibrary.plans.some(plan => Object.hasOwn(plan.config, 'disabledCharacterIds'))) {
@@ -274,7 +294,8 @@ let deletingPlanId = null;
 let lastMatrixContent = null;
 const teamDeletionHistories = new Map();
 syncSeasonRuntime();
-const quickSequence = () => quickSession.history[quickSession.cursor];
+const quickDraft = () => quickSession.history[quickSession.cursor];
+const quickSequence = () => quickDraft().sequence;
 const current = () => state.teams.find(team => team.id === selectedId);
 const hasBloodline = () => matrixInfo(state).scoreReady;
 const waves = () => hasBloodline() ? visibleWaves(scores.records, state.maxRound) : [];
@@ -400,7 +421,7 @@ function openPlanDialog(action) {
   $('plan-dialog-title').textContent = action === 'new' ? '新建排布' : action === 'copy' ? '复制排布' : '重命名排布';
   $('plan-name').value = action === 'new' ? uniquePlanName(`排布 ${planLibrary.plans.length + 1}`) : action === 'copy' ? uniquePlanName(`${activePlan().name} 副本`) : activePlan().name;
   $('plan-season-field').hidden = action !== 'new';
-  $('plan-season').value = matrixInfo(state).id; renderNewPlanSeasonNote();
+  $('plan-season').value = action==='new'?'s2-phase4':matrixInfo(state).id; renderNewPlanSeasonNote();
   $('plan-dialog-error').textContent = '';
   $('plan-dialog').showModal(); $('plan-name').select();
 }
@@ -627,7 +648,7 @@ function openBossDetails(wave) {
   inspectedBossWave = wave;
   const season = getSeason(state), boss = bossMap.get(wave.name);
   $('boss-dialog-title').textContent = `R${wave.round} ${wave.name}`;
-  $('boss-dialog-season').textContent = season.name;
+  $('boss-dialog-season').textContent = season.name+' · Lv.'+wave.enemy_level+' · 基础防御 '+fmt(enemyDefenseForLevel(wave.enemy_level));
   $('boss-dialog-portrait').src = boss.icon_file;
   $('boss-total-points').textContent = `${fmt(wave.full_kill_points)} 分`;
   $('boss-total-points-label').textContent = `总分数${wave.provisional ? '（暂定）' : wave.estimated ? '（推算）' : ''}`;
@@ -852,6 +873,7 @@ function startSidebarDrag(event, team, card) {
     for (const item of order) { item.node.style.transform = `translateY(${top - item.top}px)`; top += item.height + gap; }
     const display = axisTeams().map(item => ({ ...item, score: item.axisScore }));
     const preview = reorderTeams(display, team.id, target);
+    drawResistanceLane(preview,true);
     const lane = document.querySelector('.team-lane'); lane.classList.add('drag-preview-active');
     for (const item of preview) {
       const bar = [...lane.querySelectorAll('.team-bar')].find(node => node.dataset.id === item.id);
@@ -896,8 +918,35 @@ function startSidebarDrag(event, team, card) {
   document.addEventListener('keydown', escape, true); window.addEventListener('resize', cancel);
 }
 
+function teamCarries(team){
+  const ids=team?.characterIds??[],custom=team?.resistanceRoles;
+  const main=ids.includes(custom?.main)?custom.main:ids[0];
+  const sub=custom?.sub===null?null:ids.includes(custom?.sub)&&custom.sub!==main?custom.sub:ids.find(id=>id!==main);
+  return {main,sub};
+}
+function changeCarry(which,id){
+  const team=current();if(!team)return;
+  const roles=teamCarries(team);
+  const other=which==='main'?'sub':'main';
+  if(id && roles[other]===id)roles[other]=roles[which]??team.characterIds.find(member=>member!==id);
+  roles[which]=id||null;
+  team.resistanceRoles=roles;persist();renderEditor();renderTimeline();
+}
+$('main-carry').onchange=e=>changeCarry('main',e.target.value);
+$('sub-carry').onchange=e=>changeCarry('sub',e.target.value);
+$('default-carries').onclick=()=>{const team=current();if(team){delete team.resistanceRoles;persist();renderEditor();renderTimeline();}};
 function renderEditor() {
   const team = current();
+  const roles=teamCarries(team);
+  for(const [key,id] of [['main','main-carry'],['sub','sub-carry']]){
+    const selector=$(id);
+    selector.replaceChildren();
+    if(key==='sub')selector.add(new Option('无副C',''));
+    for(const member of team?.characterIds??[])selector.add(new Option(characterMap.get(member).name,member));
+    selector.value=roles[key]??'';
+    selector.disabled=!team || (key==='sub' && team.characterIds.length<2);
+  }
+  $('default-carries').disabled=!team?.resistanceRoles;
   const season=getSeason(state),circuit=selectedCircuit(team,season);
   const selector=$('team-circuit');
   selector.replaceChildren(new Option('不使用回路增益',''));
@@ -908,6 +957,7 @@ function renderEditor() {
   if(circuit && !preset)status='已记录本队回路，手填分数按原值使用。';
   else if(preset && preset.matrixBuffVersion!==1)status='此旧预设缺少逐击标签，请在椰果工程中选中原工程并重新应用。';
   else if(circuit && !circuitDamageRules(circuit.id))status='本回路已记录，触发效果尚未参与推演。';
+  else if(circuitDamageRules(circuit?.id)?.afterApplication)status='异常附加后刷新 30 秒，当前目标终伤 +25%；霜渐伤害另加 80%。可在工程动作备注中标注「附加异常效应」。';
   else if(circuitDamageRules(circuit?.id)?.unison)status='按响应同奏和声骸命中结算；护盾触发暂未建模。';
   $('team-circuit-note').textContent=[circuit?.description,status].filter(Boolean).join('\n');
   $('forget-mode-field').hidden=!(preset && season.id==='s2-phase4' && team.characterIds.includes('1109'));
@@ -1044,6 +1094,7 @@ function positionTeamTooltip(x, y) {
 function showTeamTooltip(team, x, y) {
   if (dragging) return;
   const tooltip = $('team-tooltip');
+  tooltip.classList.remove('resist-tip');
   tooltip.replaceChildren();
   tooltip.style.setProperty('--team-color', team.color);
   const title = element('div', 'tooltip-title', team.name);
@@ -1101,6 +1152,13 @@ function renderInspector() {
           if(stage.stackEvents.length){
             line.append(element('small','muted',stage.stackEvents.map(e=>(e.trigger==='谐度破坏' && teamPreset(team).cycles>1?'第 '+e.round+' 轮 · ':'')+(e.castOnly?(e.hit?'第 '+e.hit+' 击后':'首击前'):'第 '+e.hit+' 击')+' '+e.trigger).join(' → ')));
           }
+        }
+        if(stage.frostbind){
+          const {readyAt,trigger}=stage.frostbind;
+          const threshold=readyAt?`第 ${readyAt} 击达到 13 层霜渐`:'未达到 13 层霜渐';
+          const detail=trigger?`第 ${trigger.hit} 击「${trigger.name}」触发霜结，后续终伤 +30%`:
+            readyAt?'尚未命中见心或居合':'霜结未触发';
+          line.append(element('small','muted',threshold+' · '+detail));
         }
         box.append(line);
       }
@@ -1189,6 +1247,7 @@ function startDrag(event, team, bar) {
   const lane = bar.closest('.team-lane');
   function previewOrder(index) {
     const proposed = reorderTeams(displayTeams, team.id, index);
+    drawResistanceLane(proposed,true);
     lane.classList.add('drag-preview-active');
     bar.classList.add('is-reordering');
     for (const item of proposed) {
@@ -1252,11 +1311,60 @@ function startDrag(event, team, bar) {
   document.addEventListener('keydown', escapeDrag, true);
 }
 
+const elementsById=new Map(elementData.entries.map(e=>[e.id,e]));
+function drawResistanceLane(layout,dragPreview=false){
+  const lane=$('resistance-lane');
+  if(!lane)return;
+  if(dragPreview){
+    const order=layout.map(t=>t.id).join('|');
+    if(lane.dataset.order===order)return;
+    lane.dataset.order=order;
+  }
+  const marks=document.createDocumentFragment();
+  marks.append(element('div','axis-label'));
+  const visibleWaves=waves();
+  for(const team of layout){
+    const start=dragPreview?team.startScore:team.axisStartScore,end=start+team.axisScore;
+    const {main,sub}=teamCarries(team);
+    for(const wave of visibleWaves){
+      if(wave.cumulative_points_before>=end)break;
+      const left=Math.max(start,wave.cumulative_points_before);
+      const right=Math.min(end,wave.cumulative_points_before+wave.damage_points_at_full_hp);
+      if(right<=left)continue;
+      const attr=elementsById.get(bossMap.get(wave.name)?.resistances?.highElement);
+      if(!attr)continue;
+      const members=[main,sub].filter(id=>characterMap.get(id)?.element===attr.id);
+      if(!members.length)continue;
+      const primary=members.includes(main);
+      const segment=element('button','resist-mark '+(primary?'resist-solid':'resist-striped'));
+      segment.type='button';segment.dataset.team=team.id;segment.dataset.wave=wave.wave_index;
+      const message='顶'+attr.name+'抗性';
+      segment.setAttribute('aria-label',members.map(id=>characterMap.get(id).name).join('、')+' · '+message);
+      segment.style.setProperty('--resist-color',attr.color);
+      segment.style.left=(LABEL+left*state.pixelsPerPoint)+'px';
+      segment.style.width=(right-left)*state.pixelsPerPoint+'px';
+      const show=(x,y)=>{
+        if(dragging)return;
+        const tip=$('team-tooltip');tip.classList.add('resist-tip');
+        tip.replaceChildren(...members.map(id=>portrait(id)),element('strong','',message));
+        tip.hidden=false;positionTeamTooltip(x,y);
+      };
+      segment.onpointerenter=e=>show(e.clientX,e.clientY);
+      segment.onpointermove=e=>{if(!dragging)positionTeamTooltip(e.clientX,e.clientY);};
+      segment.onfocus=()=>{const bounds=segment.getBoundingClientRect();show(bounds.left+bounds.width/2,bounds.top);};
+      segment.onpointerleave=segment.onblur=hideTeamTooltip;
+      segment.onkeydown=e=>{if(e.key==='Escape')hideTeamTooltip();};
+      marks.append(segment);
+    }
+  }
+  lane.replaceChildren(marks);
+}
+
 function renderTimeline() {
   hideTeamTooltip();
   const sheet = $('axis-sheet');
   sheet.replaceChildren();
-  sheet.style.width = `${LABEL + axisExtent() * state.pixelsPerPoint + 24}px`;
+  sheet.style.width = `${LABEL + axisExtent() * state.pixelsPerPoint}px`;
   const ruler = element('div', 'score-ruler');
   ruler.append(element('div', 'axis-label', '累计积分'));
   sheet.append(ruler);
@@ -1335,16 +1443,25 @@ function renderTimeline() {
     const width = records.reduce((sum, wave) => sum + wave.full_kill_points, 0) * state.pixelsPerPoint;
     bracket.style.width = `${width}px`;
     bracket.classList.toggle('compact', width < 100);
-    bracket.append(element('small', '', `${records.length} 个 Boss`)); roundRow.append(bracket);
+    bracket.style.setProperty('--round-tint',['#76a8ce','#ac94ce','#74b8ac','#c19d75'][(round-1)%4]);
+    roundRow.append(bracket);
   }
   sheet.append(roundRow);
   const bossRow = element('div', 'boss-row');
   const bossLabel = element('div', 'axis-label', 'BOSS 血线');
-  bossLabel.append(element('small', '', '100% → 0%')); bossRow.append(bossLabel);
+  bossLabel.append(element('small', '', '100% → 0%'));
+  for(const [text,style] of [['主C顶抗','resist-solid'],['仅副C顶抗','resist-striped']]){
+    const legend=element('span','resist-legend',text);
+    legend.append(element('i',style));bossLabel.append(legend);
+  }
+  bossRow.append(bossLabel);
   for (const wave of waves()) {
     const width = wave.damage_points_at_full_hp * state.pixelsPerPoint;
     const segment = element('button', `boss-segment tone-${wave.boss_position}`);
     segment.type = 'button';
+    const resistColor=elementsById.get(bossMap.get(wave.name)?.resistances?.highElement)?.color;
+    if(resistColor)segment.style.setProperty('--boss-tint',resistColor);
+    else if(wave.kill_bonus)segment.style.setProperty('--boss-tint','#d4a652');
     segment.setAttribute('aria-label', `R${wave.round} ${wave.name}，查看 Boss 详情`);
     segment.addEventListener('click', () => openBossDetails(wave));
     segment.dataset.wave = wave.wave_index;
@@ -1356,7 +1473,10 @@ function renderTimeline() {
     segment.dataset.estimated = Boolean(wave.estimated);
     segment.dataset.provisional = Boolean(wave.provisional);
     const reference = getSeason(wave.score_reference_season);
-    segment.title = `R${wave.round} ${wave.name}${wave.provisional ? `（暂按${reference.season}-${reference.stage}相同出场位次计分）` : wave.estimated ? `（按${wave.source_label === '原表' ? '原表' : '最新表'}规律推算）` : `（${wave.source_label}）`}：伤害积分 ${fmt(wave.damage_points_at_full_hp)}${wave.kill_bonus ? '，击杀额外 1000 分' : ''}`;
+    const sourceNote = wave.provisional ? `（暂按${reference.season}-${reference.stage}相同出场位次计分）`
+      : wave.estimated ? `（按${wave.source_label === '原表' ? '原表' : '最新表'}规律推算）`
+      : wave.source_label === '用户提供' ? '' : `（${wave.source_label}）`;
+    segment.title = `R${wave.round} ${wave.name}${sourceNote}：伤害积分 ${fmt(wave.damage_points_at_full_hp)}${wave.kill_bonus ? '，击杀额外 1000 分' : ''}`;
     const art = element('img', 'boss-art'); art.src = bossMap.get(wave.name).icon_file; art.alt = ''; art.loading = 'lazy';
     const name = element('div', 'boss-name', `R${wave.round} ${wave.name}${wave.provisional ? '（暂定）' : wave.estimated ? '（推算）' : ''}`);
     name.append(element('span', '', `${fmt(wave.damage_points_at_full_hp)} 分`));
@@ -1380,7 +1500,9 @@ function renderTimeline() {
     }
   }
   if (!hasBloodline()) bossRow.append(element('p', 'bloodline-unavailable', `${matrixInfo(state).name} 的 Boss 血量分数表待配置。`));
-  sheet.append(bossRow, element('div', 'axis-guide start'), element('div', 'axis-guide end'));
+  const resistLane=element('div','resistance-lane');resistLane.id='resistance-lane';
+  sheet.append(bossRow,resistLane,element('div', 'axis-guide start'),element('div', 'axis-guide end'));
+  drawResistanceLane(axisTeams());
   const projected = waves().filter(wave => wave.estimated).length;
   const season = getSeason(state);
   const reference = getSeason(season.scoring.basedOnSeason);
@@ -1573,14 +1695,18 @@ function disabledCharacterImpact(disabled) {
   return { library: next, removed, count: removed.reduce((sum, item) => sum + item.teams.length, 0) };
 }
 
-function saveDisabledCharacterSettings() {
-  if (libraryRecoveryLocked) { $('disabled-character-feedback').textContent = '请先完成原排布库的恢复处理，再保存禁用设置。'; return; }
+function saveDisabledCharacterSettings(profile=null) {
+  const feedback=$(profile?'scan-status':'disabled-character-feedback');
+  if (libraryRecoveryLocked) { feedback.textContent = '请先完成原排布库的恢复处理，再保存禁用设置。'; return false; }
   disabledCharacterDraft = new Set([...disabledCharacterDraft].filter(id => !alwaysAvailableChoices.has(id)));
   const changes = [];
   try {
     const impact = disabledCharacterImpact(disabledCharacterDraft);
-    const nextState = structuredClone(impact.library.plans.find(plan => plan.id === impact.library.activePlanId).config);
+    const config=impact.library.plans.find(plan => plan.id===impact.library.activePlanId).config;
+    if(profile){config.rosterProfileName=profile.name;config.rosterLevels=profile.roster;}
+    const nextState = structuredClone(config);
     const updates = [];
+    if(profile)updates.push(profile.storage);
     if (impact.count) updates.push([`${LIBRARY_STORAGE}-before-character-disable`, JSON.stringify(updatePlan(planLibrary, planLibrary.activePlanId, state))]);
     updates.push([LIBRARY_STORAGE, JSON.stringify(impact.library)], [STORAGE, JSON.stringify(nextState)]);
     for (const [key, value] of updates) {
@@ -1599,19 +1725,21 @@ function saveDisabledCharacterSettings() {
     $('disabled-removal-notice').textContent = impact.count ? message : '';
     $('disabled-removal-notice').hidden = !impact.count;
     $('disabled-characters-dialog').close(); renderAll(); toast(message);
+    return true;
   } catch {
     let restored = true;
     for (const [key, previous] of changes.reverse()) {
       try { if (previous === null) localStorage.removeItem(key); else localStorage.setItem(key, previous); } catch { restored = false; }
     }
-    $('disabled-character-feedback').textContent = restored ? '设置未能保存，队伍和禁用设置未更改，请重试。' : '设置未能完整保存，请保留当前页面并导出排布备份后重试。';
+    feedback.textContent = restored ? '设置未能保存，队伍和禁用设置未更改，请重试。' : '设置未能完整保存，请保留当前页面并导出排布备份后重试。';
+    return false;
   }
 }
 
 function renderDisabledCharacterSettings() {
   const query = normalizeCharacterSearch($('disabled-character-search').value);
   $('disabled-character-grid').replaceChildren();
-  for (const choice of quickPickerCharacters.filter(item => !alwaysAvailableChoices.has(item.id) && item.memberIds.some(id => characterSearchKeys.get(id).some(key => key.includes(query))))) {
+  for (const choice of orderedPickerCharacters.filter(item => !alwaysAvailableChoices.has(item.id) && item.memberIds.some(id => characterSearchKeys.get(id).some(key => key.includes(query))))) {
     const disabled = disabledCharacterDraft.has(choice.id);
     const button = element('button', `availability-choice${disabled ? ' is-disabled' : ''}`); button.type = 'button';
     button.setAttribute('aria-label', `禁用${choice.name}`); button.setAttribute('aria-pressed', String(disabled));
@@ -1634,17 +1762,155 @@ function configurePickerMode(quick) {
   if (quick) renderTeamOverview($('quick-team-overview-list'));
 }
 
-function updateQuickSequence(sequence) {
+function nextQuickSlot(sequence,start){
+  const ahead=sequence.indexOf(null,start);
+  if(ahead>=0)return ahead;
+  if(sequence.length%3 && start<=sequence.length)return sequence.length;
+  const earlier=sequence.indexOf(null);
+  return earlier>=0?earlier:sequence.length;
+}
+
+function updateQuickSequence(sequence,start=0) {
   quickSession.history = quickSession.history.slice(0, quickSession.cursor + 1);
-  quickSession.history.push([...sequence]); quickSession.cursor++;
+  quickSession.history.push({sequence:[...sequence],slot:nextQuickSlot(sequence,start)}); quickSession.cursor++;
   $('character-feedback').textContent = '';
   renderCharacters();
-  $('quick-team-preview').lastElementChild?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  const preview=$('quick-team-preview');
+  (preview.querySelector('.is-fill-target')??preview.lastElementChild)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   syncPickerFlights();
 }
 
+const pairKey='wuwa-quick-pairs-v1';
+let pairs=[];
+try{
+  const previous=localStorage.getItem(pairKey);
+  const saved=previous===null?[]:JSON.parse(previous);
+  if(Array.isArray(saved) && !saved.length && !localStorage.getItem(pairKey+'-initialized')){
+    saved.push(...defaultPairs.map(pair=>[...pair]));localStorage.setItem(pairKey,JSON.stringify(saved));
+  }
+  if(Array.isArray(saved))localStorage.setItem(pairKey+'-initialized','1');
+  if(Array.isArray(saved))pairs=saved.filter(p=>Array.isArray(p)&&p.length===2&&p.every(id=>characterMap.has(id))&&identityById.get(p[0])!==identityById.get(p[1]));
+}catch{}
+function storePairs(next){
+  try{localStorage.setItem(pairKey,JSON.stringify(next));pairs=next;return true;}
+  catch{$('pair-status').textContent='二人组未能保存，请检查浏览器存储。';return false;}
+}
+const pairName=pair=>pair.map(id=>characterMap.get(id).name).join(' · ');
+
+function applyPairs(requested){
+  if(!quickSession||!requested.length)return;
+  const next=[...quickSequence()];
+  const used=new Map([...characterUsage()].map(([identity,owners])=>[identity,owners.length]));
+  for(const id of next.filter(Boolean)){
+    const identity=identityById.get(id);
+    used.set(identity,(used.get(identity)??0)+1);
+  }
+  const limits=staminaLimits(staminaRules,state.staminaSeason,identityById);
+  let added=0;
+  const skipped=[];
+  for(const pair of requested){
+    let reason='';
+    if(state.teams.length+Math.ceil(next.length/3)>=40)reason='已达到 40 队上限';
+    else for(const id of pair){
+      const identity=identityById.get(id),name=characterMap.get(id).name;
+      if(disabledCharacters.has(pickerChoiceIdByMember.get(id))){reason=name+'已禁用';break;}
+      if((used.get(identity)??0)>=(limits.get(identity)??1)){reason=name+'体力不足';break;}
+    }
+    if(reason){skipped.push(pairName(pair)+'（'+reason+'）');continue;}
+    next.splice(next.length-next.length%3,0,...pair,null);
+    for(const id of pair){
+      const identity=identityById.get(id);
+      used.set(identity,(used.get(identity)??0)+1);
+    }
+    added++;
+  }
+  if(added)updateQuickSequence(next);
+  $('pair-status').textContent=[added?'已加入 '+added+' 支队伍，三号位待补。':'',skipped.length?'已跳过：'+skipped.join('、')+'。':''].join('');
+}
+function drawPairs(){
+  const list=$('pair-list');list.replaceChildren();
+  $('apply-all-pairs').disabled=!pairs.length;
+  for(const pair of pairs){
+    const row=element('div','pair-controls');
+    const name=pairName(pair);
+    const use=element('button','pair-use'),remove=element('button','quiet','移除');
+    use.type=remove.type='button';use.title='应用二人组，预留三号位';use.setAttribute('aria-label',name);
+    use.append(...pair.map(id=>portrait(id)),element('span','',name));
+    remove.setAttribute('aria-label','移除二人组 '+name);
+    use.onclick=()=>applyPairs([pair]);
+    remove.onclick=()=>{if(storePairs(pairs.filter(p=>p!==pair))){drawPairs();$('pair-status').textContent='已移除二人组。';}};
+    row.append(use,remove);list.append(row);
+  }
+}
+$('apply-all-pairs').onclick=()=>{
+  applyPairs(pairs);
+  $('pair-presets').open=false;
+};
+let pairDraft=[],pairElement=0;
+function drawPairPicker(){
+  const query=normalizeCharacterSearch($('pair-search').value);
+  const first=pairDraft.length%2?pairDraft.at(-1):null;
+  const groups=[];
+  for(let i=0;i<pairDraft.length;i+=2)groups.push(pairDraft.slice(i,i+2));
+  const usage=new Map(),positions=new Map();
+  pairDraft.forEach((id,i)=>{
+    const identity=identityById.get(id);
+    usage.set(identity,(usage.get(identity)??0)+1);
+    if(!positions.has(id))positions.set(id,[]);
+    positions.get(id).push(i+1);
+  });
+  const grid=$('pair-grid');grid.replaceChildren();
+  for(const choice of orderedPickerCharacters){
+    if((pairElement && choice.element!==pairElement)||!choice.memberIds.some(id=>characterSearchKeys.get(id).some(key=>key.includes(query))))continue;
+    const button=element('button','pair-choice');button.type='button';
+    const identity=identityById.get(choice.id);
+    const limit=staminaRules.baseStamina[identity]??staminaRules.defaultStamina;
+    const numbers=positions.get(choice.id)??[];
+    button.setAttribute('aria-label',choice.name);button.setAttribute('aria-pressed',String(numbers.length>0));
+    button.disabled=(usage.get(identity)??0)>=limit || (!!first && identityById.get(first)===identity);
+    button.append(portrait(choice.id,''),element('span','',choice.name));
+    if(numbers.length)button.append(element('b','pair-slot',numbers.join('、')));
+    button.onclick=()=>{
+      pairDraft.push(choice.id);
+      $('pair-feedback').textContent='';drawPairPicker();
+    };
+    grid.append(button);
+  }
+  if(!grid.childElementCount)grid.append(element('p','muted','没有匹配的角色。'));
+  const preview=$('pair-selection');preview.replaceChildren();
+  groups.forEach((group,i)=>preview.append(element('span','pair-draft-item','第 '+(i+1)+' 组　'+pairName(group)+(group.length===1?' · 待选二号位':''))));
+  $('undo-pair-pick').disabled=!pairDraft.length;
+  $('save-pair').disabled=!groups.length||!!first;
+  $('save-pair').textContent='确认加入'+(groups.length?'（'+Math.floor(pairDraft.length/2)+' 组）':'');
+  for(const button of $('pair-filters').children){
+    const active=Number(button.dataset.element)===pairElement;
+    button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
+  }
+}
+$('new-pair').onclick=()=>{
+  pairDraft=[];pairElement=0;$('pair-search').value='';$('pair-feedback').textContent='';
+  drawPairPicker();$('pair-dialog').showModal();
+};
+$('close-pair').onclick=()=>$('pair-dialog').close();
+$('undo-pair-pick').onclick=()=>{pairDraft.pop();$('pair-feedback').textContent='';drawPairPicker();};
+$('pair-search').oninput=drawPairPicker;
+$('save-pair').onclick=()=>{
+  if(!pairDraft.length||pairDraft.length%2)return;
+  const additions=[];
+  const known=new Set(pairs.map(pair=>pair.join('/')));
+  for(let i=0;i<pairDraft.length;i+=2){
+    const pair=pairDraft.slice(i,i+2),key=pair.join('/');
+    if(!known.has(key)){additions.push(pair);known.add(key);}
+  }
+  if(!additions.length){$('pair-feedback').textContent='所选二人组均已保存。';return;}
+  if(!storePairs([...pairs,...additions])){$('pair-feedback').textContent='二人组保存失败，请检查浏览器存储。';return;}
+  const skipped=pairDraft.length/2-additions.length;
+  $('pair-dialog').close();drawPairs();$('pair-status').textContent='已保存 '+additions.length+' 个二人组。'+(skipped?'已跳过 '+skipped+' 个重复组合。':'');
+};
+
 function renderQuickPreview() {
   const sequence = quickSequence();
+  const target=quickDraft().slot;
   const groups = splitQuickTeams(sequence);
   $('quick-undo').disabled = quickSession.cursor === 0;
   $('quick-redo').disabled = quickSession.cursor === quickSession.history.length - 1;
@@ -1652,13 +1918,26 @@ function renderQuickPreview() {
   $('quick-team-preview').replaceChildren();
   for (let index = 0; index < groups.length; index++) {
     const group = groups[index];
-    const card = element('div', 'quick-preview-team');
+    const card = element('button', 'quick-preview-team');
+    const number=state.teams.length+index+1;
+    card.type='button';
+    const active=Math.floor(target/3)===index;
+    card.classList.toggle('is-fill-target',active);
+    card.setAttribute('aria-pressed',String(active));
+    card.setAttribute('aria-label',group[2]===null?`补选第 ${number} 队三号位`:`从第 ${number} 队开始补位`);
+    card.onclick=()=>{
+      quickDraft().slot=nextQuickSlot(sequence,index*3);
+      $('character-feedback').textContent='';
+      renderCharacters();
+      $('quick-team-preview').children[index]?.focus({preventScroll:true});
+    };
     card.append(element('strong', '', `第 ${state.teams.length + index + 1} 队 · ${defaultTeamName(group, characterMap)}`));
     const roster = element('div', 'quick-preview-roster');
     for (let slot = 0; slot < 3; slot++) {
       const member = element('div', 'quick-preview-member');
       member.append(element('small', '', `${index * 3 + slot + 1}`));
       const slotPortrait = group[slot] ? portrait(group[slot]) : element('span', 'quick-empty-slot', '＋');
+      if(index*3+slot===target)slotPortrait.classList.add('next-quick-slot');
       if (group[slot]) slotPortrait.dataset.pickerSlot = index * 3 + slot;
       member.append(slotPortrait);
       member.append(element('span', 'quick-preview-character-name', group[slot] ? characterMap.get(group[slot]).name : '待选择'));
@@ -1667,18 +1946,19 @@ function renderQuickPreview() {
     card.append(roster); $('quick-team-preview').append(card);
   }
   if (!groups.length) $('quick-team-preview').append(element('p', 'muted', '点击角色，按顺序填入第 1、2、3 位……'));
-  $('picked-count').textContent = `${sequence.length} 人 / ${Math.floor(sequence.length / 3)} 队`;
-  $('picked-names').textContent = '自动生成队名，分数稍后填写。重置仅清空本次选择，可撤回。';
+  $('picked-count').textContent = `${sequence.filter(Boolean).length} 人 / ${Math.floor(sequence.length / 3)} 队`;
+  $('picked-names').textContent = '本次队伍倒序放到轴首，最后选的队伍最先上场。重置可撤回。';
   $('confirm-characters').textContent = `加入 ${Math.floor(sequence.length / 3)} 支队伍`;
   $('confirm-characters').disabled = sequence.length === 0 || sequence.length % 3 !== 0;
-  if (sequence.length % 3) $('character-feedback').textContent = `当前队伍还差 ${3 - sequence.length % 3} 位角色。`;
+  if (sequence[target]===null || sequence.length%3) $('character-feedback').textContent = `下一位将加入第 ${state.teams.length+Math.floor(target/3)+1} 队的${['一','二','三'][target%3]}号位。`;
   syncPickerFlights();
 }
 
 function openQuickTeams() {
   if (state.teams.length >= 40) { toast('最多支持 40 支队伍'); return; }
   pendingTeam = null; hideTeamTooltip();
-  quickSession = { history: [[]], cursor: 0 };
+  quickSession = { history: [{sequence:[],slot:0}], cursor: 0 };
+  $('pair-status').textContent='';drawPairs();
   activeElement = 0; $('character-search').value = ''; $('character-feedback').textContent = '';
   configurePickerMode(true); $('dialog-title').textContent = '快捷组队';
   renderCharacters(); $('character-dialog').showModal();
@@ -1705,8 +1985,8 @@ function openCharacters() {
   if (pendingTeam) $('dialog-team-name').select();
 }
 
-function renderElementFilters() {
-  $('element-filters').replaceChildren();
+function renderElementFilters(container,onSelect) {
+  container.replaceChildren();
   for (const attribute of [{ id: 0, name: '全部' }, ...elementData.entries]) {
     const button = element('button', 'element-filter');
     button.type = 'button';
@@ -1720,8 +2000,8 @@ function renderElementFilters() {
       button.append(icon);
     }
     button.append(element('span', '', attribute.name));
-    button.addEventListener('click', () => { activeElement = attribute.id; renderCharacters(); });
-    $('element-filters').append(button);
+    button.addEventListener('click', () => onSelect(attribute.id));
+    container.append(button);
   }
 }
 
@@ -1731,10 +2011,14 @@ function renderCharacters() {
   $('character-grid').replaceChildren();
   const team = quickSession ? null : pendingTeam || current();
   const sequence = quickSession ? quickSequence() : [];
-  const currentPicked = quickSession ? sequence.slice(Math.floor(sequence.length / 3) * 3) : picked;
+  const fillSlot=quickSession?quickDraft().slot:0;
+  const filling=fillSlot<sequence.length;
+  const groupStart=Math.floor(fillSlot/3)*3;
+  const currentPicked = quickSession ? sequence.slice(groupStart,groupStart+3).filter(Boolean) : picked;
   const owners = characterUsage(team?.id);
   if (quickSession) {
-    for (let index = 0; index < Math.floor(sequence.length / 3) * 3; index++) {
+    for (let index = 0; index < sequence.length; index++) {
+      if(!sequence[index]||(index>=groupStart && index<groupStart+3))continue;
       const identity = identityById.get(sequence[index]);
       if (!owners.has(identity)) owners.set(identity, []);
       owners.get(identity).push(`快捷第 ${state.teams.length + Math.floor(index / 3) + 1} 队`);
@@ -1749,8 +2033,8 @@ function renderCharacters() {
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', active);
   }
-  const candidates = quickSession && activeElement === 0 ? quickPickerCharacters : pickerCharacters;
-  const matches = candidates.filter(item => (!disabledCharacters.has(item.id) || (!quickSession && item.memberIds.some(id => currentPicked.includes(id)))) &&
+  const editingExistingTeam = !pendingTeam && !quickSession;
+  const matches = orderedPickerCharacters.filter(item => (!disabledCharacters.has(item.id) || (editingExistingTeam && item.memberIds.some(id => currentPicked.includes(id)))) &&
     (activeElement === 0 || item.element === activeElement) && item.memberIds.some(id => characterSearchKeys.get(id).some(key => key.includes(search))));
   $('character-result-count').textContent = `${matches.length} 位角色`;
   for (const choice of matches) {
@@ -1772,6 +2056,9 @@ function renderCharacters() {
     const image = portrait(entry.id, ''); image.loading = 'lazy';
     const avatar = element('div', 'character-avatar');
     avatar.append(image);
+    const levels=state.rosterLevels??{};
+    const level=levels[choice.id]??(characterIdentity(choice)==='漂泊者'?pickerCharacters.filter(c=>characterIdentity(c)==='漂泊者').map(c=>levels[c.id]).find(Number.isInteger):null);
+    if(Number.isInteger(level))avatar.append(element('small','roster-level','Lv. '+level));
     const remaining = Math.max(0, limit - owner.length - (selected ? 1 : 0));
     avatar.append(element('small', 'availability', disabledCharacters.has(choice.id) ? '本队已有·已禁用' : sameFamily ? '同一角色已选' : `剩余 ${remaining}/${limit} 体`));
     if (limit > 1) avatar.append(element('small', `stamina-badge${season.bonusCharacterIds.includes(entry.id) ? ' temporary' : ''}`, `${limit}体`));
@@ -1779,9 +2066,10 @@ function renderCharacters() {
     button.addEventListener('click', () => {
       const from = image.getBoundingClientRect();
       if (quickSession) {
-        if (sequence.length >= (40 - state.teams.length) * 3) { $('character-feedback').textContent = '已达到 40 支队伍上限。'; return; }
-        updateQuickSequence([...sequence, entry.id]);
-        animatePickedCharacter(entry.id, from, $('quick-team-preview').querySelectorAll('.quick-preview-member img')[sequence.length]);
+        if (!filling && sequence.length >= (40 - state.teams.length) * 3) { $('character-feedback').textContent = '已达到 40 支队伍上限。'; return; }
+        const next=[...sequence],slot=filling?fillSlot:sequence.length;
+        next[slot]=entry.id;updateQuickSequence(next,slot+1);
+        animatePickedCharacter(entry.id, from, $('quick-team-preview').querySelector(`[data-picker-slot="${slot}"]`));
         return;
       }
       const removing = picked.includes(entry.id);
@@ -1816,6 +2104,10 @@ $('forget-mode').addEventListener('change',event=>{
 $('team-circuit').addEventListener('change',event=>{
   const team=current();
   if(!team)return;
+  if(circuitDamageRules(event.target.value)?.afterApplication && teamPreset(team) && !teamPreset(team).roundSeconds){
+    event.target.value=selectedCircuit(team,getSeason(state))?.id??'';
+    toast('请先在椰果工程选中原队伍并重新应用，以补齐异常附加事件和计时。');return;
+  }
   team.circuitId=event.target.value;
   persist();renderAll();
 });
@@ -1852,7 +2144,7 @@ function applyPreset(preset, name){
     candidate.teams.push(team);
   }
   team.presetId=preset.id;
-  if(preset.id===heartPreset.id)delete team.projectPreset;else team.projectPreset=preset;
+  team.projectPreset=preset;
   const report=updatePresetScores(candidate).get(team.id);
   state=validatePlan(candidate);selectedId=team.id;persist();renderAll();
   $('afyg-details').open=true;
@@ -1860,8 +2152,13 @@ function applyPreset(preset, name){
   return report;
 }
 async function applySelectedProject(){
-  const stored=JSON.parse(localStorage.getItem('afyg-project-library-v1')||'null');
-  if(!stored){applyPreset(heartPreset,heartPreset.name);return;}
+  const stored=await refreshBundledProject();
+  if(!stored){
+    const response=await fetch('/sample.json');
+    if(!response.ok)throw Error('无法读取内置工程，请到椰果工程页导入队伍的轴');
+    const file=await response.json();
+    return applyProject(file.project??file);
+  }
   const item=stored.items?.find(entry=>entry.id===stored.activeId);
   if(!item)throw Error('请先在椰果工程页选择队伍');
   const raw=item.edited??item.raw;
@@ -1894,14 +2191,27 @@ window.addEventListener('message',async event=>{
 $('add-afyg').onclick=async()=>{
   const button=$('add-afyg');button.disabled=true;button.textContent='正在计算预设…';
   try{await applySelectedProject();}catch(error){toast(error.message);}
-  finally{button.disabled=false;button.textContent='一键应用预设';}
+  finally{button.disabled=false;button.textContent='一键生成导入的轴的分数';}
 };
 $('afyg-manual').onclick=()=>{const team=current();if(!team)return;delete team.projectPreset;delete team.presetId;persist();renderAll();$('team-score').focus();};
+let teamDeletionTarget=null;
 function confirmTeamDeletion(id){
   const team=current();
   if(!team||team.id!==id||dragging||document.querySelector('dialog[open]'))return;
-  if(confirm('删除队伍「'+team.name+'」？'))changeTeamDeletion('delete');
+  teamDeletionTarget={planId:planLibrary.activePlanId,id};
+  hideTeamTooltip();
+  $('delete-team-summary').textContent=`确定从「${activePlan().name}」中删除队伍「${team.name}」吗？`;
+  $('delete-team-dialog').showModal();
+  $('cancel-delete-team').focus();
 }
+$('cancel-delete-team').onclick=()=>$('delete-team-dialog').close();
+$('delete-team-dialog').addEventListener('close',()=>{if(!$('delete-team-dialog').open)teamDeletionTarget=null;});
+$('confirm-delete-team').onclick=()=>{
+  const target=teamDeletionTarget;
+  teamDeletionTarget=null;
+  $('delete-team-dialog').close();
+  if(target?.planId===planLibrary.activePlanId && target.id===current()?.id)changeTeamDeletion('delete');
+};
 $('delete-team').addEventListener('click',()=>confirmTeamDeletion(selectedId));
 $('undo-team-delete').addEventListener('click', () => changeTeamDeletion('undo'));
 $('redo-team-delete').addEventListener('click', () => changeTeamDeletion('redo'));
@@ -1911,12 +2221,13 @@ $('confirm-characters').addEventListener('click', () => {
     if (!sequence.length || sequence.length % 3) return;
     const groups = splitQuickTeams(sequence);
     if (state.teams.length + groups.length > 40) { $('character-feedback').textContent = '最多支持 40 支队伍。'; return; }
-    const added = groups.map((group, index) => ({ id: crypto.randomUUID(), name: defaultTeamName(group, characterMap), nameMode: 'auto', characterIds: group, score: 0, needsScore: true, startScore: 0, color: COLORS[(state.teams.length + index) % COLORS.length] }));
-    const next = { ...state, teams: packTeams([...state.teams, ...added]) };
+    const added = groups.map((group, index) => ({ id: crypto.randomUUID(), name: defaultTeamName(group, characterMap), nameMode: 'auto', characterIds: group.filter(Boolean), ...(group.includes(null)?{needsCharacters:true}:{}), score: 0, needsScore: true, startScore: 0, color: COLORS[(state.teams.length + index) % COLORS.length] }));
+    added.reverse();
+    const next = { ...state, teams: packTeams([...added, ...state.teams]) };
     try { state = validatePlan(next); }
     catch (error) { $('character-feedback').textContent = error.message; return; }
     selectedId = added[0].id; quickSession = null;
-    persist(); renderAll(); $('character-dialog').close(); toast(`已追加 ${added.length} 支队伍，分数待填。`);
+    persist(); renderAll(); $('character-dialog').close(); toast(`已将 ${added.length} 支队伍倒序加入轴首，分数待填。`);
     return;
   }
   if (picked.length !== 3) return;
@@ -1953,14 +2264,24 @@ $('manage-disabled-characters').addEventListener('click', () => {
 $('disabled-character-search').addEventListener('input', renderDisabledCharacterSettings);
 $('close-disabled-characters').addEventListener('click', () => $('disabled-characters-dialog').close());
 $('enable-all-characters').addEventListener('click', () => { disabledCharacterDraft.clear(); renderDisabledCharacterSettings(); });
-$('save-disabled-characters').addEventListener('click', saveDisabledCharacterSettings);
+$('save-disabled-characters').addEventListener('click', ()=>saveDisabledCharacterSettings());
+const absentChoices=roster=>new Set(disableableCharacters.filter(c=>!Object.hasOwn(roster,c.id)).map(c=>c.id));
+setupRosterScan({
+  characters:characterData.entries.filter(c=>!c.download_failed),choices:orderedPickerCharacters,
+  toChoice:id=>pickerChoiceIdByMember.get(id),currentName:()=>state.rosterProfileName,
+  preview:roster=>{
+    const disabled=absentChoices(roster);
+    return {disabled:disabled.size,names:state.teams.filter(t=>teamUsesDisabledCharacter(t,disabled)).map(t=>t.name)};
+  },
+  save:profile=>{disabledCharacterDraft=absentChoices(profile.roster);return saveDisabledCharacterSettings(profile);}
+});
 $('team-overview').addEventListener('click', openTeamOverview);
 $('close-team-overview').addEventListener('click', () => $('team-overview-dialog').close());
 $('quick-undo').addEventListener('click', () => { clearPickerFlights(); if (quickSession?.cursor > 0) { quickSession.cursor--; $('character-feedback').textContent = ''; renderCharacters(); } });
 $('quick-redo').addEventListener('click', () => { clearPickerFlights(); if (quickSession && quickSession.cursor < quickSession.history.length - 1) { quickSession.cursor++; $('character-feedback').textContent = ''; renderCharacters(); } });
 $('quick-reset').addEventListener('click', () => { clearPickerFlights(); if (quickSession && quickSequence().length) updateQuickSequence([]); });
 document.addEventListener('keydown', event => {
-  if (!quickSession || !$('character-dialog').open || !(event.ctrlKey || event.metaKey) || event.target.matches('input,textarea,[contenteditable=true]')) return;
+  if (!quickSession || !$('character-dialog').open || $('pair-dialog').open || !(event.ctrlKey || event.metaKey) || event.target.matches('input,textarea,[contenteditable=true]')) return;
   const key = event.key.toLowerCase();
   if (key === 'z' || key === 'y') { event.preventDefault(); $(key === 'y' || event.shiftKey ? 'quick-redo' : 'quick-undo').click(); }
 });
@@ -2016,7 +2337,7 @@ function updateZoomControls() {
 }
 function fitAxis(entireBloodline) {
   const points = entireBloodline ? total() : axisTeamPoints() || waves()[0]?.full_kill_points || 10000;
-  const available = Math.max(30, $('timeline-viewport').clientWidth - LABEL - 28);
+  const available = Math.max(30, $('timeline-viewport').clientWidth - LABEL - (entireBloodline?0:28));
   state.pixelsPerPoint = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, available / points));
   renderAll(); $('timeline-viewport').scrollLeft = 0; persist();
 }
@@ -2038,7 +2359,6 @@ $('score-locator').addEventListener('submit', event => {
 });
 $('target-score').addEventListener('input', renderTargetScoreGap);
 $('clear-score-marker').addEventListener('click', () => { state.scoreMarker = null; persist(); renderScoreMarker(); });
-$('load-example').addEventListener('click', () => { teamDeletionHistories.delete(planLibrary.activePlanId); state = structuredClone(example); pendingStaminaSeason = null; if (!libraryRecoveryLocked) restoreError = null; renderRestoreWarning(); selectedId = state.teams[0].id; persist(); renderAll(); $('timeline-viewport').scrollLeft = 0; toast('已恢复示例排布'); });
 $('export-button').addEventListener('click', () => {
   downloadPlanConfig(state, activePlan().name);
 });
@@ -2123,7 +2443,7 @@ $('plan-form').addEventListener('submit', event => {
     else if (planAction === 'copy') planLibrary = copyPlan(planLibrary, planLibrary.activePlanId, name);
     else {
       const season = staminaRules.seasons.find(item => item.id === $('plan-season').value);
-      const config = validatePlan({ ...structuredClone(example), teams: [], towerId: season.towerId, matrixSeason: season.id, matrixVersion: season.name, staminaSeason: season.id, pixelsPerPoint: state.pixelsPerPoint });
+      const config = validatePlan({ ...structuredClone(emptyLayout), teams: [], towerId: season.towerId, matrixSeason: season.id, matrixVersion: season.name, staminaSeason: season.id, pixelsPerPoint: state.pixelsPerPoint });
       planLibrary = addPlan(planLibrary, name, config);
     }
     $('plan-dialog').close(); enterActivePlan();
@@ -2158,10 +2478,13 @@ $('stamina-season').addEventListener('change', () => {
 });
 $('zoom').min = MIN_ZOOM;
 $('zoom').max = MAX_ZOOM;
-renderElementFilters();
+renderElementFilters($('element-filters'),id=>{activeElement=id;renderCharacters();});
+renderElementFilters($('pair-filters'),id=>{pairElement=id;drawPairPicker();});
 renderBossPropertyFilters();
 renderBossPropertiesCatalog();
 renderAll();
+$('quick-team').disabled=false;
+$('open-roster-scan').disabled=false;
 renderRestoreWarning();
 if (!restoreError) persist();
 if (repairedRosters && !restoreError) toast('已保留队伍与分数，无法识别或同队重复的角色已标为待补选；原始配置备份已保留。');

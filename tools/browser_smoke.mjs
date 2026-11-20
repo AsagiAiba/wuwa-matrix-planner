@@ -1,3 +1,4 @@
+import {seedTestPlans,resetTestPlan} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
@@ -37,7 +38,7 @@ async function drag(id, dx, dy = 0) {
 }
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(baseUrl);
+  await seedTestPlans(page);await page.goto(baseUrl);
   await page.locator('.team-bar').first().waitFor();
   assert.deepEqual(await page.locator('#stamina-season > option').allTextContents(), ['终焉矩阵S2-3（S2第三阶段）', '终焉矩阵S2-4（S2第四阶段）']);
   assert.equal(await page.locator('#stamina-season optgroup option').count(), 7);
@@ -52,7 +53,7 @@ try {
   await page.locator('#dialog-team-score').fill('9600');
   await page.locator('#confirm-characters').click();
   assert.equal((await exported()).teams[1].score, 9600);
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   assert.match(await page.locator('#start-location').innerText(), /R1 燎照之骑.*100.0%/);
   assert.ok(await page.locator('#team-start').evaluate(node => node.readOnly));
   assert.equal(await page.locator('.team-lane').count(), 1);
@@ -107,7 +108,7 @@ try {
   assert.ok(await page.getByRole('button', { name: '吟霖', exact: true }).isDisabled());
   await page.locator('#character-search').fill('');
   await page.getByRole('button', { name: '全部', exact: true }).click();
-  const filterIconsLoaded = await page.locator('.element-filter img').evaluateAll(images => images.length === 6 && images.every(image => image.complete && image.naturalWidth > 0));
+  const filterIconsLoaded = await page.locator('#element-filters .element-filter img').evaluateAll(images => images.length === 6 && images.every(image => image.complete && image.naturalWidth > 0));
   assert.ok(filterIconsLoaded);
   assert.ok(await page.getByRole('button', { name: '相里要', exact: true }).isDisabled());
   await page.getByRole('button', { name: '炽霞', exact: true }).click();
@@ -157,11 +158,11 @@ try {
   assert.equal(config.teams[3].name, '气动混合队');
   assert.equal(config.teams[3].score, 100000.5);
   assert.equal(new Set(config.teams.flatMap(team => team.characterIds)).size, 12);
-  page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click(); connected(await exported());
+  await page.locator('#delete-team').click(); await page.locator('#confirm-delete-team').click(); connected(await exported());
   await page.locator('#add-team').click(); await page.locator('#close-dialog').click();
   assert.equal(await page.locator('.team-bar').count(), 3);
   config = await exported();
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   await page.locator('#import-file').setInputFiles({ name: 'plan.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(config)) });
   await page.waitForFunction(() => document.getElementById('team-score').value === '5000');
   connected(await exported());
@@ -180,7 +181,7 @@ try {
   assert.deepEqual(repaired.teams[1].characterIds, legacy.teams[1].characterIds);
   assert.ok(await page.locator('#stamina-conflict-panel').isVisible());
   assert.equal(await page.locator('.conflict-row').count(), 2);
-  const base = JSON.parse(await readFile('config/demo.json', 'utf8'));
+  const base = JSON.parse(await readFile('tests/fixtures/demo.json', 'utf8'));
   async function loadPlan(plan) {
     await page.locator('#import-file').setInputFiles({ name: 'stamina.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(plan)) });
     await page.waitForFunction(({ rosters, season }) => {
@@ -214,7 +215,7 @@ try {
   assert.equal((await exported()).teams.filter(team => team.characterIds.includes('1505')).length, 2);
   await page.reload(); await page.locator('.team-bar').first().waitFor();
   assert.equal((await exported()).teams.filter(team => team.characterIds.includes('1505')).length, 2);
-  await page.locator('.team-card[data-id="team-1"]').click(); page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click();
+  await page.locator('.team-card[data-id="team-1"]').click(); await page.locator('#delete-team').click(); await page.locator('#confirm-delete-team').click();
   await page.locator('#add-team').click();
   assert.ok(await page.getByRole('button', { name: '守岸人', exact: true }).isEnabled());
   await page.locator('#close-dialog').click();
@@ -282,7 +283,7 @@ try {
   const backup = await recoveryDownload; await backup.saveAs('outputs/restore-backup-test.json');
   assert.equal(await readFile('outputs/restore-backup-test.json', 'utf8'), invalidSavedRaw);
   await loadPlan(base); assert.ok(await page.locator('#restore-warning').isHidden());
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   assert.match(await page.locator('#start-location').innerText(), /剩余分数 4,680 分/);
   assert.ok(!(await page.locator('#start-location').innerText()).includes('血量'));
   await page.locator('#zoom-out').click();
@@ -311,7 +312,7 @@ try {
   await page.locator('#zoom').fill('0.24'); await page.locator('#zoom').dispatchEvent('input');
   assert.equal((await exported()).pixelsPerPoint, .24);
   assert.ok(await page.locator('.ruler-tick').count() < 50, 'R15 ticks must be virtualized at high zoom');
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   await page.locator('#target-score').fill('2000000'); await page.locator('#locate-score').click();
   await page.waitForFunction(() => document.getElementById('target-score-location').textContent.includes('推算'));
   assert.ok(Number(await page.locator('#max-round').inputValue()) > 9);
@@ -328,7 +329,7 @@ try {
   const legacyZoom = structuredClone(base); legacyZoom.pixelsPerPoint = .0000001; delete legacyZoom.staminaSeason;
   await loadPlan(legacyZoom);
   assert.equal((await exported()).pixelsPerPoint, .000001);
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   await page.locator('#target-score').fill('150000'); await page.locator('#locate-score').click();
   assert.equal(await page.locator('#max-round').inputValue(), '3');
   await page.waitForFunction(() => {
@@ -346,7 +347,7 @@ try {
   await page.locator('#target-score').fill('999999999'); await page.locator('#locate-score').click();
   assert.match(await page.locator('#toast').innerText(), /超出/);
   assert.equal(await page.locator('#score-marker').getAttribute('data-score'), '150000');
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   await page.locator('#import-file').setInputFiles({ name: 'marked.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(marked)) });
   await page.locator('#score-marker').waitFor(); assert.equal(await page.locator('#target-score').inputValue(), '150000');
   await page.locator('#target-score').fill('0'); await page.locator('#locate-score').click();
@@ -357,7 +358,7 @@ try {
   await page.screenshot({ path: 'outputs/demo-score-marker.png' });
   await page.locator('#clear-score-marker').click(); assert.equal(await page.locator('#score-marker').count(), 0);
   assert.equal((await exported()).scoreMarker, null);
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   const beforeQuick = await exported();
   await page.locator('#quick-team').click();
   assert.ok(await page.locator('.dialog-team-fields').isHidden());
@@ -402,14 +403,14 @@ try {
   await page.screenshot({ path: 'outputs/demo-quick-teams.png' });
   await page.locator('#confirm-characters').click();
   const quickAdded = await exported();
-  assert.deepEqual(quickAdded.teams.slice(0, 3), beforeQuick.teams);
-  assert.deepEqual(quickAdded.teams.slice(3).map(team => team.characterIds), [['1505', '1404', '1405'], ['1204', '1203', '1103']]);
-  assert.ok(quickAdded.teams.slice(3).every(team => team.score === 0 && team.needsScore));
+  assert.deepEqual(quickAdded.teams.slice(2), beforeQuick.teams);
+  assert.deepEqual(quickAdded.teams.slice(0, 2).map(team => team.characterIds), [['1204', '1203', '1103'], ['1505', '1404', '1405']]);
+  assert.ok(quickAdded.teams.slice(0, 2).every(team => team.score === 0 && team.needsScore));
   connected(quickAdded);
   assert.equal(await page.locator('.pending-team').count(), 2);
   assert.equal(await page.locator('.team-bar').count(), 5);
   assert.equal(await page.locator('.team-bar.pending-score-bar').count(), 2);
-  for (const team of quickAdded.teams.slice(3)) {
+  for (const team of quickAdded.teams.slice(0, 2)) {
     const preview = page.locator(`.team-bar[data-id="${team.id}"]`);
     assert.match(await preview.innerText(), /5,?000/);
     assert.match(await preview.innerText(), /待填/);
@@ -420,28 +421,28 @@ try {
   assert.equal(await page.locator('.team-bar').count(), 5);
   assert.equal(await page.locator('.team-bar.pending-score-bar').count(), 2);
   assert.deepEqual((await exported()).teams, quickAdded.teams);
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   await page.locator('#import-file').setInputFiles({ name: 'quick.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(quickAdded)) });
   await page.locator('.pending-team').first().waitFor();
   await page.locator('.pending-team').first().dblclick();
   assert.equal(await page.locator('#dialog-team-score').inputValue(), '');
-  assert.equal(await page.locator('#dialog-team-name').inputValue(), '守忌鉴');
+  assert.equal(await page.locator('#dialog-team-name').inputValue(), quickAdded.teams[0].name);
   await page.locator('#dialog-team-score').fill('5000'); await page.locator('#confirm-characters').click();
   assert.equal(await page.locator('.pending-team').count(), 1);
   assert.equal(await page.locator('.team-bar').count(), 5);
   assert.equal(await page.locator('.team-bar.pending-score-bar').count(), 1);
-  assert.equal(await page.locator(`.team-bar[data-id="${quickAdded.teams[3].id}"]`).evaluate(node => node.classList.contains('pending-score-bar')), false);
+  assert.equal(await page.locator(`.team-bar[data-id="${quickAdded.teams[0].id}"]`).evaluate(node => node.classList.contains('pending-score-bar')), false);
   const filledQuick = await exported();
-  assert.equal(filledQuick.teams[3].score, 5000); assert.ok(!filledQuick.teams[3].needsScore);
+  assert.equal(filledQuick.teams[0].score, 5000); assert.ok(!filledQuick.teams[0].needsScore);
   await page.locator('#quick-team').click();
   await page.getByRole('button', { name: '散华', exact: true }).click();
   await page.getByRole('button', { name: '炽霞', exact: true }).click();
   await page.getByRole('button', { name: '维里奈', exact: true }).click();
   await page.locator('#close-dialog').click();
   assert.deepEqual((await exported()).teams, filledQuick.teams);
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   await page.locator('#max-round').selectOption('9'); assert.equal(await page.locator('.boss-segment').count(), 45);
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   await page.locator('#toast').evaluate(node => node.classList.remove('visible'));
   await page.screenshot({ path: 'outputs/demo-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });

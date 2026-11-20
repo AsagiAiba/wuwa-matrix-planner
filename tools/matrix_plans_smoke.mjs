@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -17,7 +18,7 @@ async function exportConfig(filename = 'outputs/matrix-config-test.json') {
 async function removeCurrent() { await page.locator('#delete-plan').click(); await page.locator('#confirm-delete-plan').click(); }
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor();
+  await seedTestPlans(page);await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor();
   assert.match(await page.locator('#coverage-note').innerText(), /类比/);
   const content16 = JSON.parse(await readFile('data/matrix_content_16.json', 'utf8'));
   assert.equal(await page.locator('.matrix-circuit').count(), 4);

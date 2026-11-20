@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -10,14 +11,14 @@ const errors = []; page.on('pageerror', error => errors.push(error.message));
 async function choose(name) { await page.locator('#character-search').fill(name); await page.getByRole('button', { name, exact: true }).click(); }
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
+  await seedTestPlans(page);await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
   await page.locator('#quick-team').click();
   assert.deepEqual(await page.locator('.character-choice').evaluateAll(nodes => nodes.slice(0, 7).map(node => node.getAttribute('aria-label'))), ['守岸人','莫宁','穗穗','莉莉','维里奈','卜灵','白芷']);
   const lily = page.getByRole('button', { name: '莉莉', exact: true });
   await lily.locator('img').evaluate(image => image.decode());
   assert.equal(await lily.getAttribute('data-element'), '5');
   assert.match(await lily.locator('.availability').innerText(), /2\/2/);
-  assert.match(await lily.locator('img').getAttribute('src'), /Lily_UserPortrait_v1.png$/);
+  assert.match(await lily.locator('img').getAttribute('src'), /T_IconRoleHead256_77_UI.webp$/);
   await page.locator('#character-dialog').screenshot({ path: 'outputs/lily-picker.png' });
   for (const query of ['Lily','lili','li li']) {
     await page.locator('#character-search').fill(query);

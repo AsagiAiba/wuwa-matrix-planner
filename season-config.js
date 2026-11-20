@@ -20,6 +20,7 @@ function validateSeason(season, registryId) {
   requireValue(season.schemaVersion === 1 && season.id === registryId, `${registryId} 的 schemaVersion 或 id 不匹配`);
   requireValue(nonempty(season.name) && nonempty(season.modeName) && /^S\d+$/.test(season.season) && positiveInteger(season.stage), `${registryId} 的名称或阶段无效`);
   requireValue(positiveInteger(season.towerId) && positiveInteger(season.maxRound), `${registryId} 的关卡或轮次无效`);
+  requireValue(Array.isArray(season.enemyLevels) && season.enemyLevels.length>0 && season.enemyLevels.every(positiveInteger), `${registryId} 缺少有效的轮次怪物等级`);
   requireValue(nonempty(season.source) && season.source.startsWith('https://'), `${registryId} 缺少 HTTPS 来源`);
   requireValue(Array.isArray(season.bosses) && season.bosses.length > 0, `${registryId} 缺少 Boss`);
   const bossIds = new Set();
@@ -126,6 +127,11 @@ export function seasonStaminaRules() {
   };
 }
 
+export const enemyDefenseForLevel=level=>792+8*level;
+
+// The unprefixed key remains the Lv.100 reference for existing audit tools.
+export const damageProfileKey=(level,resistances)=>level===100?resistances:level+'|'+resistances;
+
 export function buildSeasonScores(seasonOrId = registry.defaultSeason) {
   const season = getSeason(typeof seasonOrId === 'object' && seasonOrId?.id ? seasonOrId.id : seasonOrId);
   let cumulative = 0;
@@ -135,6 +141,7 @@ export function buildSeasonScores(seasonOrId = registry.defaultSeason) {
     cumulative += wave.fullPoints;
     return {
       wave_index: index + 1, round: wave.round, boss_position: wave.position,
+      enemy_level: season.enemyLevels[Math.min(wave.round,season.enemyLevels.length)-1],
       name: boss.name, alias: boss.alias, icon_file: boss.icon_file,
       damage_points_at_full_hp: wave.fullPoints - wave.killBonus,
       full_kill_points: wave.fullPoints, kill_bonus: wave.killBonus,

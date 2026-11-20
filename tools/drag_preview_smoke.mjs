@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, readFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -21,7 +22,7 @@ async function startMove(id, dx) {
 }
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
+  await seedTestPlans(page);await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
   await page.locator('.team-bar').first().waitFor();
   const original = await config();
   await startMove(original.teams[0].id, 400);
@@ -40,7 +41,7 @@ try {
   assert.deepEqual((await config()).teams.map(team => team.id), visual.map(row => row.id));
   assert.equal(await page.locator('.is-reordering').count(), 0);
   // A canceled gesture also works for an unscored 5000-point preview.
-  const pending = JSON.parse(await readFile('config/demo.json', 'utf8'));
+  const pending = JSON.parse(await readFile('tests/fixtures/demo.json', 'utf8'));
   pending.teams[0].score = 0; pending.teams[0].needsScore = true;
   let cursor = 0; for (const team of pending.teams) { team.startScore = cursor; cursor += team.score; }
   await page.locator('#import-file').setInputFiles({ name: 'pending-drag.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pending)) });

@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -19,7 +20,7 @@ async function moveFirst() {
 }
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
+  await seedTestPlans(page);await page.goto(process.env.MATRIX_URL || 'http://127.0.0.1:4173');
   await page.locator('#quick-team').click();
   const ordered = await names();
   assert.deepEqual(ordered.slice(0, prefix.length), prefix);
@@ -31,6 +32,22 @@ try {
   await page.getByRole('button', { name: '热熔', exact: true }).click();
   assert.ok(await page.locator('.character-choice').evaluateAll(nodes => nodes.every(node => node.dataset.element === '2')));
   await page.getByRole('button', { name: '全部', exact: true }).click(); assert.deepEqual(await names(), ordered);
+  await page.keyboard.press('Escape');
+  await page.locator('#add-team').click();
+  assert.deepEqual(await names(), ordered);
+  await page.keyboard.press('Escape');
+  await page.locator('#manage-disabled-characters').click();
+  await page.getByRole('button', { name: '禁用莉莉', exact: true }).click();
+  await page.locator('#save-disabled-characters').click();
+  await page.locator('#add-team').click();
+  assert.deepEqual(await names(), ordered.filter(name => name !== '莉莉'));
+  await page.getByRole('button', { name: '衍射', exact: true }).click();
+  assert.ok(!(await names()).includes('莉莉'));
+  await page.getByRole('button', { name: '全部', exact: true }).click();
+  for (const query of ['莉莉', 'lili']) {
+    await page.locator('#character-search').fill(query);
+    assert.deepEqual(await names(), []);
+  }
   await page.keyboard.press('Escape');
   const original = await config();
   await moveFirst();
@@ -48,7 +65,7 @@ try {
   assert.deepEqual((await config()).teams.map(team => team.score).sort((a,b) => a-b), original.teams.map(team => team.score).sort((a,b) => a-b));
   await page.reload(); await page.locator('.team-card').first().waitFor();
   assert.deepEqual((await config()).teams.map(team => team.id), expected);
-  const pending = JSON.parse(await readFile('config/demo.json', 'utf8')); pending.teams[0].score = 0; pending.teams[0].needsScore = true;
+  const pending = JSON.parse(await readFile('tests/fixtures/demo.json', 'utf8')); pending.teams[0].score = 0; pending.teams[0].needsScore = true;
   let cursor = 0; for (const team of pending.teams) { team.startScore = cursor; cursor += team.score; }
   await page.locator('#import-file').setInputFiles({ name: 'sidebar-pending.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(pending)) });
   await page.locator('.pending-score-bar').waitFor();

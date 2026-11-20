@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -31,7 +32,7 @@ async function inspectBoss(season, index) {
 
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(baseUrl);
+  await seedTestPlans(page);await page.goto(baseUrl);
   await page.locator('.boss-property-card').first().waitFor({ state: 'attached' });
   assert.equal(await page.locator('#boss-properties-details').evaluate(node => node.open), false);
   assert.equal(await page.locator('#boss-properties-details + h3').innerText(), '角色强化');

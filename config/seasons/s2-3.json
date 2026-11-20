@@ -7,6 +7,9 @@
   "towerId": 16,
   "modeName": "奇点扩张",
   "maxRound": 15,
+  "enemyLevels": [100, 110, 120],
+  "enemyLevelBasis": "R1—R3 逐波核对，两期宝箱等级均与同轮一致。R4—R15 按玩家确认沿用 R3 等级。",
+  "enemyLevelSource": "https://github.com/Arikatsu/WutheringWaves_Data/blob/a96f6c6e87717d528a340de37374d9fc5a5ba563/BinData/NewTower/newtowerwave.json",
   "source": "https://ww.nanoka.cc/newtower/16",
   "bosses": [
     {

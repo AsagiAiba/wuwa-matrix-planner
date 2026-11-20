@@ -16,6 +16,18 @@ test('an inconsistent native damage result or duplicated entry cannot pass impor
   assert.throws(()=>verifyEngineDamage({total:20,entries:[{id:'A',damage:2}]}));
   assert.throws(()=>verifyEngineDamage({total:4,entries:[{id:'A',damage:2},{id:'A',damage:2}]}));
 });
+test('startup ends at 30s and its 28s loop plays three times, preserving other choices',()=>{
+  const t={refLines:[{id:'a',time:'启动轴',pos:2812},{id:'b',time:'循环轴',pos:5333},{id:'right',time:'结束',pos:10848}]};
+  const project={analysis:{timings:[{refLineId:'b',seconds:58},{refLineId:'a',seconds:30}]}};
+  const audit=inspectProjectAxis(project,t);
+  assert.equal(audit.kind,'startup');assert.equal(audit.repeats,3);assert.equal(audit.range.cycles,4);
+  assert.equal(audit.split.id,'a');assert.equal(audit.range.end,5333);
+  assert.equal(audit.range.inclusiveEnd,false);assert.equal(audit.templateSeconds,114);
+  assert.equal(inspectProjectAxis({...project,matrixAxisType:'opening'},t).range.cycles,5);
+  assert.equal(inspectProjectAxis({...project,matrixAxisType:'single'},t).repeats,0);
+  project.analysis.timings.push({refLineId:'right',seconds:120});
+  assert.equal(inspectProjectAxis(project,t).kind,'full');
+});
 
 test('move separate executions without moving co-bound skills, effects or losing row bindings',()=>{
   const execution={name:'谐度破坏',category:'处决',responders:['心']};

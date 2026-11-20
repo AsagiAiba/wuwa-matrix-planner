@@ -5,7 +5,7 @@ import { normalizePlanLibrary, createPlanLibrary, addPlan, copyPlan, renamePlan,
 import { characterIdentity, validateConfig } from '../score-axis.js';
 
 const readJson = file => JSON.parse(readFileSync(new URL(file, import.meta.url)));
-const example = readJson('../config/demo.json');
+const example = readJson('../tests/fixtures/demo.json');
 const records = readJson('../data/scores.json').records;
 const rules = readJson('../config/stamina.json');
 const characters = readJson('../data/characters.json').entries.filter(character => !character.download_failed);

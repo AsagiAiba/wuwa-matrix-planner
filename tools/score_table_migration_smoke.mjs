@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 const { chromium } = await import(pathToFileURL(path.join(os.homedir(), '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs')).href);
 const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
 const baseUrl = process.env.MATRIX_URL || 'http://127.0.0.1:4173';
-const example = JSON.parse(await readFile('config/demo.json', 'utf8'));
+const example = JSON.parse(await readFile('tests/fixtures/demo.json', 'utf8'));
 const phase4 = JSON.parse(await readFile('config/seasons/s2-4.json', 'utf8'));
 const storageKey = 'wuwa-matrix-plan-library-v1';
 const clone = value => structuredClone(value);

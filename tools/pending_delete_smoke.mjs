@@ -1,3 +1,4 @@
+import {seedTestPlans,resetTestPlan} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import os from 'node:os';
@@ -24,7 +25,7 @@ async function exported() {
   const file = await event; return JSON.parse(await readFile(await file.path(), 'utf8'));
 }
 async function selectTeam(id) { await page.locator(`.team-card[data-id="${id}"]`).click(); }
-async function deleteTeam(id) { await selectTeam(id); page.once('dialog', dialog => dialog.accept()); await page.locator('#delete-team').click(); }
+async function deleteTeam(id) { await selectTeam(id); await page.locator('#delete-team').click(); await page.locator('#confirm-delete-team').click(); }
 async function manualPending() {
   await page.locator('#add-team').click();
   for (const name of ['今汐', '长离', '守岸人']) await page.getByRole('button', { name, exact: true }).click();
@@ -64,7 +65,20 @@ async function dragToFront(id) {
 }
 try {
   await mkdir('outputs', { recursive: true });
-  await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor();
+  await seedTestPlans(page);await page.goto(baseUrl); await page.locator('.team-bar').first().waitFor();
+  const original=await config(), first=original.teams[0];
+  const nativePrompts=[];
+  page.on('dialog',async prompt=>{nativePrompts.push(prompt.message());await prompt.dismiss();});
+  await bar(first.id).press('Delete');
+  const confirmation=page.getByRole('dialog',{name:'删除队伍',exact:true});
+  await confirmation.waitFor();
+  assert.ok((await confirmation.innerText()).includes(first.name));
+  assert.equal(await page.locator('#cancel-delete-team').evaluate(button=>button===document.activeElement),true);
+  await page.keyboard.press('Escape');
+  await confirmation.waitFor({state:'hidden'});assert.deepEqual(await config(),original);
+  await bar(first.id).press('Delete');await confirmation.getByRole('button',{name:'确认删除'}).click();
+  assert.ok(!(await ids()).includes(first.id));await page.locator('#undo-team-delete').click();
+  assert.deepEqual((await config()).teams,original.teams);assert.deepEqual(nativePrompts,[]);
   const planA = await newPlan('待填预览与删除A');
   const manual = await manualPending();
   assert.equal(await page.locator('.pending-score-bar').count(), 1);
@@ -74,7 +88,7 @@ try {
   for (const name of ['相里要', '吟霖', '维里奈', '椿', '丹瑾', '白芷']) await page.getByRole('button', { name, exact: true }).click();
   await page.locator('#confirm-characters').click();
   assert.equal(await page.locator('.pending-score-bar').count(), 3);
-  const initial = await exported(), [quick1, quick2] = initial.teams.slice(1).map(team => team.id);
+  const initial = await exported(), [quick2, quick1] = initial.teams.slice(0, 2).map(team => team.id);
   for (const team of initial.teams) {
     assert.equal(team.score, 0); assert.equal(team.needsScore, true);
     for (const field of ['axisScore', 'axisStartScore', 'positionIsPreview']) assert.ok(!(field in team));
@@ -100,7 +114,7 @@ try {
   assert.equal(await bar(manual).evaluate(node => node.classList.contains('pending-score-bar')), false);
   assert.equal((await exported()).teams.find(team => team.id === manual).needsScore, undefined);
   await bar(quick1).focus(); await page.keyboard.press('ArrowLeft');
-  assert.deepEqual(await ids(), [quick1, manual, quick2]);
+  assert.deepEqual(await ids(), [quick1, quick2, manual]);
   await selectTeam(manual); assert.match(await page.locator('#start-location').innerText(), /预览/);
   await dragToFront(quick2);
   assert.deepEqual(await ids(), [quick2, quick1, manual]);
@@ -156,7 +170,7 @@ try {
   await page.locator('#plan-select').selectOption(planB);
   assert.deepEqual(await ids(), [memberB]);
   assert.equal(await page.locator('#redo-team-delete').isEnabled(), true);
-  await page.locator('#load-example').click();
+  await resetTestPlan(page);
   assert.equal(await page.locator('#undo-team-delete').isDisabled(), true);
   assert.equal(await page.locator('#redo-team-delete').isDisabled(), true);
   await page.setViewportSize({ width: 390, height: 844 });

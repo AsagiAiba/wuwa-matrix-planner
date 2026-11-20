@@ -1,8 +1,9 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';import os from 'node:os';import path from 'node:path';import {readFile} from 'node:fs/promises';import {pathToFileURL} from 'node:url';
 const {chromium}=await import(pathToFileURL(path.join(os.homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs')).href);
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 try{
-const page=await browser.newPage({viewport:{width:1440,height:1050}});await page.goto((process.env.MATRIX_URL || 'http://127.0.0.1:4173'));await page.locator('.team-bar').first().waitFor();await page.locator('#boss-properties-details > summary').click();await page.waitForTimeout(250);
+const page=await browser.newPage({viewport:{width:1440,height:1050}});await seedTestPlans(page);await page.goto((process.env.MATRIX_URL || 'http://127.0.0.1:4173'));await page.locator('.team-bar').first().waitFor();await page.locator('#boss-properties-details > summary').click();await page.waitForTimeout(250);
 for(const [season,file,expected] of [['S1-3','T_IconMonsterHead_215_UI.webp','无特殊增伤性质'],['S2-1','T_IconMonsterHead_195_UI.webp','敌方所受到的湮灭伤害最终提升10%，当受虚湮效应影响时，该效果提升至40%。']]){
 await page.locator('#boss-season-filters').getByRole('button',{name:season,exact:true}).click();const card=page.locator('.boss-property-card').filter({has:page.getByRole('heading',{name:'矩阵集群',exact:true})});assert.equal(await card.count(),1);assert.ok((await card.locator('img').getAttribute('src')).endsWith(file));await card.locator('img').evaluate(image=>image.decode());assert.equal(await card.locator('.boss-properties-copy').innerText(),expected);await card.screenshot({path:`outputs/cluster-${season}.png`});}
 await page.locator('#boss-season-filters').getByRole('button',{name:'全部',exact:true}).click();await page.locator('#boss-properties-search').fill('奏谕乐师');assert.equal(await page.locator('.boss-property-card').count(),1);assert.match(await page.locator('#boss-properties-list').innerText(),/当受虚湮效应影响时/);

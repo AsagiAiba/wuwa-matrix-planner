@@ -717,3 +717,58 @@ input[readonly] { color: #94a6b5; border-style: dashed; cursor: default; }
 .simulation-notes summary{cursor:pointer;color:#c9d7df}
 .simulation-notes dt{font-weight:600;color:#ebc68a;margin:14px 0 4px}
 .simulation-notes dd{margin:0;line-height:1.7;color:#b7c6d0}
+#open-roster-scan{margin:4px 0 14px}
+#roster-scan{width:min(800px,94vw);max-height:88vh}
+.scan-controls,.pair-controls{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin:10px 0}
+.scan-controls label{display:grid;gap:4px}
+#scan-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,255px),1fr));gap:6px;max-height:50vh;overflow:auto}
+.scan-member{display:grid;grid-template-columns:38px minmax(80px,1fr) 58px 30px;gap:4px;align-items:center;background:#1c2c36;padding:5px;border-radius:5px}
+.scan-member img{width:36px;height:36px;border-radius:5px}
+.scan-member input,.scan-member select,.scan-member button{padding:5px}
+#scan-status,#scan-impact,#pair-status{margin:10px 0;color:#dfc597}
+#pair-presets{margin:12px 0;padding:8px 0;border-top:1px solid #354751;border-bottom:1px solid #354751}
+#pair-presets summary{cursor:pointer;color:#edcc94}
+.character-avatar .roster-level{position:absolute;left:3px;bottom:3px;padding:2px 4px;background:#14202be8;color:#fff;border-radius:3px;font-size:10px}
+#pair-dialog{width:min(1000px,94vw)}
+#pair-dialog .character-search{margin-top:12px}
+#pair-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(78px,100%),1fr));gap:8px;max-height:45vh;overflow:auto;margin-top:12px}
+.pair-choice{position:relative;min-width:0;padding:4px;background:#1c2a35}
+.pair-choice img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px}
+.pair-choice span{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:12px;margin:4px 0}
+.pair-choice[aria-pressed=true]{border-color:var(--gold)}
+.pair-choice:disabled[aria-pressed=true]{opacity:1}
+.pair-choice:disabled img{opacity:.5}
+.pair-slot{position:absolute;top:5px;left:5px;background:var(--gold);color:#211b16;border-radius:3px;padding:0 4px}
+.pair-use{display:flex;align-items:center;gap:5px}
+.pair-use .portrait{width:28px;height:28px}
+#pair-feedback{color:#edcc94}
+#pair-selection{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;max-height:14vh;overflow:auto}
+.pair-draft-item{padding:3px 8px;background:#22323d;border-radius:4px}
+.scan-member.unconfirmed{outline:1px solid #d5a166;outline-offset:-1px}
+#scan-validation{color:#f1c180;margin:8px 0}
+.quick-preview-team{text-align:left}
+.quick-team-overview .quick-preview-team.is-fill-target{border-color:var(--gold);background:#302e28}
+.quick-empty-slot.next-quick-slot{border-color:var(--gold);color:var(--gold)}
+.resist-role-controls{display:flex;align-items:end;gap:7px}
+.resist-role-controls label{flex:1;min-width:0}
+.resist-role-controls select{display:block;width:100%;margin-top:5px;padding:6px}
+.resist-role-controls button{white-space:nowrap;margin-bottom:7px}
+.timeline-viewport,.axis-sheet{padding-bottom:0}
+.axis-sheet{min-height:0}
+.axis-guide,.score-marker{bottom:0}
+.round-bracket{height:100%;background:color-mix(in srgb,var(--round-tint) 17%,#111a21)}
+.boss-row{height:120px}
+.boss-row .boss-segment,.boss-row .bonus-segment{top:0;height:100%}
+.boss-row .boss-segment{background:color-mix(in srgb,var(--boss-tint,#8493a0) 22%,#121b24)}
+.boss-row .boss-art-shade{background:linear-gradient(90deg,#121a226b,#121a2208)}
+.boss-row .axis-label{gap:2px}
+.resist-legend{display:flex;align-items:center;gap:5px;color:#bdcbd2;font-size:10px}
+.resist-legend:first-of-type{margin-top:5px}
+.resist-legend i{display:inline-block;width:15px;height:8px;border-radius:3px;--resist-color:#a8bdd0}
+.resistance-lane{position:relative;height:18px;background:#121b22;border-top:1px solid #33424b}
+.resist-mark{position:absolute;top:3px;height:11px;padding:0;min-width:0;border:0;border-radius:4px;overflow:hidden}
+.resist-solid,.resist-mark.resist-solid:hover{background:var(--resist-color)}
+.resist-striped,.resist-mark.resist-striped:hover{background:repeating-linear-gradient(135deg,var(--resist-color) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--resist-color) 65%,transparent)}
+.resist-mark:hover,.resist-mark:focus-visible{filter:brightness(1.18)}
+.team-tooltip.resist-tip:not([hidden]){display:flex;align-items:center;gap:7px;width:auto;min-width:0}
+.resist-tip .portrait{width:29px;height:29px}

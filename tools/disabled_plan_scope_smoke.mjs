@@ -1,3 +1,4 @@
+import {seedTestPlans} from './seed_test_plans.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -10,7 +11,7 @@ const url = process.env.MATRIX_URL || 'http://127.0.0.1:4173';
 const library = () => page.evaluate(() => JSON.parse(localStorage.getItem('wuwa-matrix-plan-library-v1')));
 async function disable(name) { await page.locator('#manage-disabled-characters').click(); await page.getByRole('button',{name:`禁用${name}`,exact:true}).click(); await page.locator('#save-disabled-characters').click(); }
 try {
-  await page.goto(url); await page.locator('.team-card').first().waitFor();
+  await seedTestPlans(page);await page.goto(url); await page.locator('.team-card').first().waitFor();
   const before = await library(), a = before.activePlanId, b = before.plans.find(plan=>plan.id!==a).id;
   await disable('今汐'); const afterA = await library();
   assert.deepEqual(afterA.plans.find(plan=>plan.id===b),before.plans.find(plan=>plan.id===b));
@@ -34,7 +35,7 @@ try {
   await page.locator('#new-plan').click(); await page.locator('#plan-name').fill('空白独立设置'); await page.locator('#confirm-plan').click();
   await page.reload(); await page.locator('#quick-team').waitFor();
   await page.locator('#quick-team').click(); await page.locator('#character-search').fill('jinxi'); assert.equal(await page.locator('.character-choice').count(),1); await page.keyboard.press('Escape');
-  const template=JSON.parse(await readFile('config/demo.json','utf8'));
+  const template=JSON.parse(await readFile('tests/fixtures/demo.json','utf8'));
   const old={version:1,activePlanId:'A',plans:[{id:'A',name:'旧A',config:structuredClone(template)},{id:'B',name:'旧B',config:structuredClone(template)}]};
   const damaged=structuredClone(old);
   for(const plan of damaged.plans){plan.config.teams=plan.config.teams.filter(team=>!team.characterIds.includes('1304'));let offset=0;for(const team of plan.config.teams){team.startScore=offset;offset+=team.score;}}

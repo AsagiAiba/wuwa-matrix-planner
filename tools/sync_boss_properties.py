@@ -133,7 +133,8 @@ def main():
                     if text not in clean(detail['desc_open']): raise ValueError('Monster description changed: ' + boss['name'])
                 boss['monsterSources'] = [{'source': f'https://ww.nanoka.cc/monster/{detail_id}', 'monsterId': detail_id, 'descriptions': properties}]
                 if not boss['specialProperties']:
-                    boss.update(specialProperties=list(properties), status='confirmed', propertySource='monster-description')
+                    display = [text.replace('其处于震谐·偏移状态下', '其处于【震谐·偏移】状态下') for text in properties]
+                    boss.update(specialProperties=display, status='confirmed', propertySource='monster-description')
                 if boss['name'] == '辛吉勒姆':
                     boss.update(specialProperties=['辛吉勒姆受到伤害最终降低25%。', *properties], status='confirmed', propertySource='user-confirmed', mergeNote='用户确认：25%减伤为此前遗漏，与迷航共同保留，适用于其历期矩阵记录。')
                 boss.pop('note', None)

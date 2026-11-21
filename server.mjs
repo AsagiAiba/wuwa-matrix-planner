@@ -10,7 +10,7 @@ const port = Number(process.env.MATRIX_PORT || 4173);
 const update = process.env.MATRIX_LAUNCHER_PID && process.platform === 'win32'
   ? (await import('./portable-update.mjs')).createUpdateHandler(root, version, port) : null;
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml' };
-const allowed = new Set(['index.html', 'app.js', 'styles.css', 'score-axis.js', 'plan-library.js', 'season-config.js','afyg-preset.js','cingulum.js','roster-recognition.js','afyg-replay/site/execution-position.js']);
+const allowed = new Set(['index.html', 'app.js', 'styles.css', 'score-axis.js', 'plan-backup.js','plan-library.js', 'season-config.js','calculation-overlay.js','calculation-overlay.css','afyg-batch.js','afyg-preset.js','cingulum.js','roster-recognition.js','afyg-replay/site/execution-position.js']);
 const replayRoot = path.join(root, 'afyg-replay', 'site');
 const replayPages = new Map(['replay.html','replay.js','replay.css','execution-position.js','sample.json'].map(name=>['/'+name,name]));
 replayPages.set('/fast-calc','fast-calc.html');
@@ -58,4 +58,14 @@ const server = http.createServer(async (request, response) => {
   } catch { response.writeHead(404).end('Not found'); }
 });
 server.on('error', error => { console.error(error.code === 'EADDRINUSE' ? `端口 ${port} 已占用，请打开 http://127.0.0.1:${port}` : error.message); process.exitCode = 1; });
-server.listen(port, '127.0.0.1', () => console.log(`血线排布 Demo：http://127.0.0.1:${port}\n保持此窗口打开；按 Ctrl+C 停止。`));
+server.listen(port, '127.0.0.1', () => {
+  console.log(`血线排布 Demo：http://127.0.0.1:${port}\n保持此窗口打开；按 Ctrl+C 停止。`);
+  if(update){
+    // The old helper writes the success log only after our health endpoint responds.
+    const cleanup=async()=>{try{
+      const {cleanupSuccessfulUpdates}=await import('./portable-cleanup.mjs');
+      await cleanupSuccessfulUpdates(root,version,port);
+    }catch(error){console.warn('更新清理：',error.message);}};
+    setTimeout(async()=>{await cleanup();setTimeout(cleanup,20000).unref();},1500).unref();
+  }
+});

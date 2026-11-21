@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>终焉矩阵血线排布 V0.5.7</title>
+  <title>终焉矩阵血线排布 V0.5.17</title>
   <link rel="icon" type="image/png" sizes="256x256" href="assets/app/lily.png">
   <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="calculation-overlay.css">
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.5.7</span></span></a>
+    <a class="brand" href="./"><img class="brand-symbol" src="assets/app/lily.png" alt="莉莉" width="42" height="42"><span>终焉矩阵<span class="brand-sub">血线排布 / V0.5.17</span></span></a>
     <div class="header-actions"><span class="stage-label">终焉矩阵S2-3（S2第三阶段） · 奇点扩张</span><button id="import-button" class="quiet">导入 JSON</button><button id="export-button">导出 JSON <span aria-hidden="true">↗</span></button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
   </header>
   <nav class="app-views" aria-label="功能页面" role="tablist">
@@ -30,7 +31,7 @@
       <button id="quick-team" class="quick-team-button" disabled>快捷组队 · 连续选人</button>
       <button id="manage-disabled-characters" type="button" class="disabled-characters-button">自主禁用角色</button>
       <button id="open-roster-scan" type="button" disabled>截图识别角色</button>
-      <button id="add-afyg" type="button">一键生成导入的轴的分数</button>
+      <button id="batch-afyg" type="button">应用排轴计算</button>
       <p id="disabled-removal-notice" class="disabled-removal-notice" role="status" hidden></p>
       <div class="editor-heading"><h3>队伍设置</h3><div class="team-delete-actions"><button id="undo-team-delete" type="button" class="text-button" aria-label="撤回队伍删除" disabled>撤回</button><button id="redo-team-delete" type="button" class="text-button" aria-label="恢复队伍删除" disabled>恢复</button><button id="delete-team" type="button" class="text-button">删除</button></div></div>
       <form id="team-form" class="team-form">
@@ -40,7 +41,7 @@
         <label>本队回路增益<select id="team-circuit" aria-describedby="team-circuit-note"></select></label>
         <small class="muted" id="team-circuit-note"></small>
         <label id="forget-mode-field" hidden>洛瑟菈的「遗忘」模态<select id="forget-mode"><option value="auto">按工程标注</option><option value="echo">声骸</option><option value="frost">霜渐</option></select><small class="muted">工程未标注时，可在这里指定模态。</small></label>
-        <label>本队分数<div class="input-unit"><input id="team-score" type="text" placeholder="如 5k、1.2w、1e4" autocomplete="off" spellcheck="false" maxlength="100" required><span>分</span></div></label>
+        <label>本队分数<div class="input-unit"><input id="team-score" type="text" title="支持1k/1w/1.1m等缩写，以及科学计数法1e2；可输入加减式，如10000+500或1w-500" placeholder="如 5k、1.2w、1e4" autocomplete="off" spellcheck="false" maxlength="100" required><span>分</span></div></label>
         <label>起点累计积分 <span class="muted" id="team-start-mode">自动衔接</span><div class="input-unit"><input id="team-start" type="number" readonly aria-readonly="true"><span>分</span></div></label>
         <button type="submit" class="primary" id="apply-team">应用到血线轴</button>
       </form>
@@ -60,7 +61,7 @@
       <div class="timeline-card">
         <div class="timeline-toolbar"><div class="current-total-summary" aria-live="polite"><div class="current-total-heading"><span>当前总分：</span><strong id="current-total-value">0</strong><span>分</span><small id="current-total-pending" class="muted"></small></div><div class="current-total-details"><div id="current-total-position" class="current-total-position"></div><div id="current-total-progress" class="current-total-progress" title="百分比按该 Boss 总分计算，包含击杀奖励"></div></div></div><div class="view-controls"><label for="max-round">显示至</label><select id="max-round"></select><span class="control-divider"></span><button id="zoom-out" title="缩小" aria-label="缩小">−</button><input id="zoom" aria-label="时间轴缩放" type="range" min="0.000001" max="0.24" step="0.000001"><span id="zoom-level" class="zoom-level">100%</span><button id="zoom-in" title="放大" aria-label="放大">＋</button><button id="fit-teams" class="quiet">全部队伍</button><button id="fit-bloodline" class="quiet">全部血线</button><button id="jump-selected" class="quiet">定位选中队伍</button></div></div>
         <form id="score-locator" class="score-locator">
-          <label for="target-score">目标总分</label><div class="input-unit"><input id="target-score" aria-label="目标总分" type="text" title="支持1k/1w/1.1m等缩写，以及科学计数法1e2" autocomplete="off" spellcheck="false" maxlength="100" required><span>分</span></div>
+          <label for="target-score">目标总分</label><div class="input-unit"><input id="target-score" aria-label="目标总分" type="text" title="支持1k/1w/1.1m等缩写，以及科学计数法1e2；可输入加减式，如10000+500或1w-500" autocomplete="off" spellcheck="false" maxlength="100" required><span>分</span></div>
           <button type="submit" id="locate-score">定位并标记</button><button type="button" id="clear-score-marker" class="quiet">清除标记</button>
           <span id="target-score-location" role="status" class="muted"></span>
           <span id="target-score-gap" role="status" aria-live="polite" hidden></span>
@@ -130,7 +131,7 @@
       <div class="picker-main">
         <div class="dialog-team-fields">
       <label>队伍名称<input id="dialog-team-name" maxlength="30" autocomplete="off" placeholder="按角色首字生成，可手动修改"></label>
-      <label>本队分数<div class="input-unit"><input id="dialog-team-score" type="text" placeholder="如 5k、1.2w、1e4" autocomplete="off" spellcheck="false" maxlength="100"><span>分</span></div></label>
+      <label>本队分数<div class="input-unit"><input id="dialog-team-score" type="text" title="支持1k/1w/1.1m等缩写，以及科学计数法1e2；可输入加减式，如10000+500或1w-500" placeholder="如 5k、1.2w、1e4" autocomplete="off" spellcheck="false" maxlength="100"><span>分</span></div></label>
       <label>本队回路增益<select id="dialog-team-circuit"></select></label>
         </div>
         <div class="picker-meta-row">
@@ -180,6 +181,17 @@
     <p id="team-overview-summary" class="muted"></p>
     <div id="team-overview-list" class="team-overview-list"></div>
   </dialog>
+  <dialog id="batch-afyg-dialog" aria-labelledby="batch-afyg-title">
+    <h2 id="batch-afyg-title">选择要应用的队伍</h2>
+    <p id="batch-afyg-plan" class="muted"></p>
+    <div id="batch-afyg-list"></div>
+    <p id="batch-afyg-status" role="status"></p>
+    <div class="plan-dialog-actions">
+      <button type="button" id="batch-afyg-cancel">取消</button>
+      <button type="button" id="batch-afyg-back" hidden>返回选队</button>
+      <button type="button" id="batch-afyg-confirm" class="primary">应用</button>
+    </div>
+  </dialog>
   <dialog id="plan-dialog" class="plan-dialog">
     <form id="plan-form">
       <h2 id="plan-dialog-title">新建排布</h2>
@@ -197,6 +209,7 @@
   </dialog>
   <dialog id="delete-plan-dialog" class="delete-plan-dialog" aria-labelledby="delete-plan-title">
     <h2 id="delete-plan-title">永久删除排布方案</h2><p id="delete-plan-summary"></p><p class="delete-warning">此操作会永久删除该方案，无法在软件中撤回！</p><p id="delete-plan-backup-note" class="muted"></p><p id="delete-plan-error" role="alert"></p>
+    <label id="verify-delete-field" hidden>选择刚保存的排布 JSON 进行验证<input id="verify-delete-file" type="file" accept=".json,application/json"></label>
     <div class="plan-dialog-actions"><button id="cancel-delete-plan" type="button" class="quiet">取消</button><button id="export-delete-plan" type="button">导出后删除</button><button id="confirm-delete-plan" type="button" class="danger">永久删除</button></div>
   </dialog>
   <dialog id="copy-config-dialog" class="copy-config-dialog">

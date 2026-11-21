@@ -19,7 +19,7 @@ try {
   await page.locator('.team-card').first().waitFor();
   const before = await library();
   assert.equal(await page.locator('#target-score').getAttribute('placeholder'), null);
-  assert.equal(await page.locator('#target-score').getAttribute('title'), '支持1k/1w/1.1m等缩写，以及科学计数法1e2');
+  assert.equal(await page.locator('#target-score').getAttribute('title'), '支持1k/1w/1.1m等缩写，以及科学计数法1e2；可输入加减式，如10000+500或1w-500');
   await page.locator('#manage-disabled-characters').click();
   for (const name of ['漂泊者·导电','漂泊者·气动','漂泊者·衍射','漂泊者·湮灭','炽霞','秧秧','白芷']) {
     assert.equal(await page.getByRole('button', { name: `禁用${name}`, exact: true }).count(), 0, name);

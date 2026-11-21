@@ -1,14 +1,26 @@
 export function parseScoreInput(input) {
   const text = String(input ?? '').trim();
   if (!text || text.length > 100) return NaN;
-  const match = /^([+-]?)(\d+(?:\.\d*)?|\.\d+)(?:e([+-]?\d+))?\s*([kwm]?)$/i.exec(text);
-  if (!match) return NaN;
-  const [whole, fraction = ''] = match[2].split('.');
-  const digits = (whole || '0') + fraction;
-  const shift = Number(match[3] || 0) + ({ k: 3, w: 4, m: 6 }[match[4].toLowerCase()] || 0) - fraction.length;
-  if (!Number.isSafeInteger(shift) || Math.abs(shift) > 1000) return NaN;
-  const value = Number(`${match[1]}${digits}e${shift}`);
-  return Number.isFinite(value) && !(value === 0 && /[1-9]/.test(digits)) ? value : NaN;
+  const leadingSign = /^[+-]/.test(text) ? text[0] : '';
+  const parts = text.slice(leadingSign.length).split(/(?<![eE])([+-])/);
+  let total = 0n, scale = 0;
+  for (let i = 0; i < parts.length; i += 2) {
+    const match = /^(\d+(?:\.\d*)?|\.\d+)(?:e([+-]?\d+))?\s*([kwm]?)$/i.exec(parts[i].trim());
+    if (!match) return NaN;
+    const [whole, fraction = ''] = match[1].split('.');
+    const digits = BigInt((whole || '0') + fraction);
+    const shift = Number(match[2] || 0) + ({ k: 3, w: 4, m: 6 }[match[3].toLowerCase()] || 0) - fraction.length;
+    if (!Number.isSafeInteger(shift) || Math.abs(shift) > 1000) return NaN;
+    const value = Number(digits + 'e' + shift);
+    if (!Number.isFinite(value) || (value === 0 && digits !== 0n)) return NaN;
+    // Add on a common decimal scale to keep expressions such as 0.3-0.2 exact.
+    const nextScale = Math.min(scale, shift);
+    const signed = (i ? parts[i-1] : leadingSign) === '-' ? -digits : digits;
+    total = total * 10n ** BigInt(scale - nextScale) + signed * 10n ** BigInt(shift - nextScale);
+    scale = nextScale;
+  }
+  const result = Number(total + 'e' + scale);
+  return Number.isFinite(result) && (result !== 0 || total === 0n) ? result : NaN;
 }
 
 export function visibleWaves(records, maxRound) {
@@ -344,7 +356,7 @@ export function simulatePreset(preset, season, waves, start, damageFactor, forge
       if (stages.at(-1)?.index !== index){
         const next={index, name: 'R'+wave.round+' '+wave.name, score:0, lost:0, hits:0};
         if(rule?.maxStacks)Object.assign(next,{stacks:0,stackLabel:rule.echo?'迷航':'谐度破坏',stackEvents:[]});
-        if(rule?.frostbindFinal && roster.has('绯雪'))next.frostbind={readyAt:null,trigger:null};
+        if(rule?.hiyukiTeamFinal && roster.has('绯雪'))next.hiyukiTeamFinal=rule.hiyukiTeamFinal;
         stages.push(next);
       }
       const stage = stages.at(-1);
@@ -361,7 +373,7 @@ export function simulatePreset(preset, season, waves, start, damageFactor, forge
         let extra=damageStacks*(rule.tuneBreak??rule.echo??0);
         if(rule.fullStacks && damageStacks===rule.maxStacks)extra+=rule.fullStacks;
         if(hit.abnormal)extra+=rule.abnormal??0;
-        if(stage.frostbind?.trigger)extra+=rule.frostbindFinal;
+        extra+=stage.hiyukiTeamFinal??0;
         if((hit.finalZone??1)>0)factor+=extra/(100*(hit.finalZone??1));
         const vulnerability=hit.vulnerabilityZone??1;
         if(rule.vulnerability && vulnerability>0)factor*=Math.max(0,1+rule.vulnerability/(100*vulnerability));
@@ -372,14 +384,6 @@ export function simulatePreset(preset, season, waves, start, damageFactor, forge
       const effective = Math.min(hp, damage);
       applied += effective; lost += damage - effective;
       stage.lost += damage - effective; stage.hits++; count++;
-      const frost=stage.frostbind;
-      if(frost && !frost.trigger){
-        // Previous snapshots retained the native effect/skill labels before structured tags existed.
-        const layers=hit.glacioLayers??(hit.abnormal?Number(/^霜渐效应(\d+)层$/.exec(hit.name)?.[1]):0);
-        const strike=hit.source==='绯雪' && (hit.frostbindStrike || /^(?:预求我身·见心|普攻·居合)(?:伤害)?(?:\(|$)/.test(hit.name));
-        if(frost.readyAt && strike)frost.trigger={round:round+1,hit:stage.hits,name:hit.name};
-        if(!frost.readyAt && layers>=rule.frostbindLayers)frost.readyAt=stage.hits;
-      }
       hp -= effective;
       const before = end;
       if (hp <= 0) {

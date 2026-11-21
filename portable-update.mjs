@@ -64,6 +64,7 @@ export function createUpdateHandler(root, version, port) {
         const work = await mkdtemp(path.join(path.dirname(root), '.matrix-update-'));
         pending = { work, id: randomUUID() };
         try {
+          await writeFile(path.join(work,'install-root.txt'),root,{flag:'wx'});
           const zip = path.join(work, 'package.zip');
           await pipeline(Readable.from(bounded(req, maxZip)), createWriteStream(zip, { flags: 'wx' }));
           const result = await run(path.join(root, 'MatrixUpdate.exe'), ['prepare', work, root, version], { windowsHide: true, timeout: 180_000 });

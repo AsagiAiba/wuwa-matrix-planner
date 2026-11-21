@@ -1,6 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {repositionExecutions,inspectProjectAxis,verifyEngineDamage,rosterKey,libraryEntry} from '../afyg-replay/site/execution-position.js';
+import {makeRosterChoices} from '../afyg-batch.js';
+import {repositionExecutions,inspectProjectAxis,verifyEngineDamage,rosterKey,libraryEntry,roundRange,inAxisRange} from '../afyg-replay/site/execution-position.js';
+
+test('1+3+1 uses the ending reference hits once per corresponding segment and keeps the tail once',()=>{
+  const timeline={refLines:[
+    {id:'left',pos:0},{id:'a',pos:10,time:'+28s 首轮 14胶卷'},
+    {id:'b',pos:20,time:'+26s 中间三轮循环 10胶卷'},{id:'c',pos:30,time:'+14s 尾轮'},
+    {id:'right',pos:32,time:'结束'}
+  ]};
+  const audit=inspectProjectAxis({},timeline);
+  assert.equal(audit.kind,'closing');assert.equal(audit.range.cycles,5);assert.equal(audit.templateSeconds,120);
+  const rounds=Array.from({length:5},(_,i)=>[0,10,11,20,21,30].filter(x=>inAxisRange(x,roundRange(audit,i))));
+  assert.deepEqual(rounds,[[0,10],[11,20],[11,20],[11,20],[21,30]]);
+  assert.equal(inspectProjectAxis({matrixAxisType:'full'},timeline).kind,'full');
+  assert.equal(inspectProjectAxis({analysis:{timings:[{refLineId:'right',seconds:120}]}},timeline).kind,'full');
+});
 
 test('library groups reordered rosters, keeps gear and axis variants, and distinguishes Rover elements',()=>{
   const p={name:'循环',team:['漂泊者·气动','心','莉莉'].map(character=>({character,chain:0,refinement:1})),phases:{timeline:{data:{opBlocks:[],refLines:[],damageBlocks:[]}}}};
@@ -70,4 +85,16 @@ test('move separate executions without moving co-bound skills, effects or losing
   assert.equal(blocks.length,1);
   assert.deepEqual(blocks[0].skillHits,[{hitName:'普攻'}]);
   assert.deepEqual(blocks[0].nonDirectEntries,[effect]);
+});
+test('batch preferences select a single axis automatically and keep plan-specific roster choices',()=>{
+  const project={team:['绯雪','洛瑟菈','穗穗'].map(character=>({character}))};
+  const items=[{id:'one',raw:{project}},{id:'two',raw:{...project,team:[...project.team].reverse()}}];
+  const key=rosterKey(project), available=()=>'';
+  const choices=previous=>makeRosterChoices(items,previous,available)[0];
+  assert.equal(choices(undefined).choice,null);
+  assert.equal(choices([{key,selected:true,projectId:'two'}]).choice,'two');
+  assert.equal(choices([{key,selected:false,projectId:'one'}]).selected,false);
+  assert.equal(choices([{key,selected:true,projectId:'deleted'}]).choice,null);
+  const [single]=makeRosterChoices(items.slice(0,1),[{key,selected:true,projectId:'two'}],available);
+  assert.equal(single.choice,'one');
 });

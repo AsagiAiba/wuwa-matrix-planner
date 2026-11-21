@@ -109,7 +109,10 @@ try {
   const exported = await event; await exported.saveAs('outputs/before-plan-delete.json');
   assert.equal(JSON.parse(await readFile('outputs/before-plan-delete.json', 'utf8')).matrixSeason, 's2-phase4');
   assert.deepEqual(await library(), beforeDelete); assert.ok(await page.locator('#delete-plan-dialog').isVisible());
-  assert.match(await page.locator('#confirm-delete-plan').innerText(), /已保存备份/);
+  assert.ok(await page.locator('#confirm-delete-plan').isDisabled());
+  await page.locator('#verify-delete-file').setInputFiles('outputs/before-plan-delete.json');
+  await page.locator('#confirm-delete-plan:enabled').waitFor();
+  assert.match(await page.locator('#confirm-delete-plan').innerText(), /备份已验证/);
   await page.screenshot({ path: 'outputs/delete-plan-confirm.png' });
   await page.locator('#confirm-delete-plan').click();
   assert.ok(!(await library()).plans.some(plan => plan.id === importedId));

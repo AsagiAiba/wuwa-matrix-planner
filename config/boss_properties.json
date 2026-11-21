@@ -210,7 +210,7 @@
           "alias": "海维夏",
           "icon_file": "assets/bosses/T_IconMonsterHead_34021_UI.webp",
           "specialProperties": [
-            "海维夏受到的震谐伤害最终提高100%，其处于震谐·偏移状态下，被谐度破坏命中时，受到的伤害最终提升15%，持续15秒。"
+            "海维夏受到的震谐伤害最终提高100%，其处于【震谐·偏移】状态下，被谐度破坏命中时，受到的伤害最终提升15%，持续15秒。"
           ],
           "status": "confirmed",
           "propertySource": "monster-description",
@@ -871,7 +871,7 @@
           "alias": "朔雷之鳞",
           "icon_file": "assets/bosses/T_IconMonsterHead_225_UI.webp",
           "specialProperties": [
-            "朔雷之鳞拥有集谐·偏移或集谐·干涉时受到的伤害最终提升20%。",
+            "朔雷之鳞拥有【集谐·偏移】或【集谐·干涉】时受到的伤害最终提升20%。",
             "朔雷之鳞的集谐·干涉层数上限提升2层。",
             "处于集谐·偏移状态下，被谐度破坏命中时，额外获得来自角色附加的2层【集谐·干涉】，该效果每场战斗仅可触发1次。"
           ],

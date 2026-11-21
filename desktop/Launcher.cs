@@ -11,8 +11,8 @@ using System.Reflection;
 
 [assembly: AssemblyTitle("终焉矩阵血线排布")]
 [assembly: AssemblyProduct("Wuwa Matrix Planner")]
-[assembly: AssemblyVersion("0.5.7.0")]
-[assembly: AssemblyFileVersion("0.5.7.0")]
+[assembly: AssemblyVersion("0.5.17.0")]
+[assembly: AssemblyFileVersion("0.5.17.0")]
 
 internal static class Launcher {
     private static readonly string Root = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
@@ -70,7 +70,7 @@ internal static class Launcher {
                 tray = new NotifyIcon();
                 appIcon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
                 tray.Icon = appIcon ?? SystemIcons.Application;
-                tray.Text = "终焉矩阵血线排布 V0.5.7";
+                tray.Text = "终焉矩阵血线排布 V0.5.17";
                 var menu = new ContextMenuStrip();
                 menu.Items.Add("打开软件", null, delegate { OpenWindow(); });
                 menu.Items.Add("退出软件", null, delegate { Application.Exit(); });
@@ -86,7 +86,7 @@ internal static class Launcher {
             }
             return 0;
         } catch (Exception error) {
-            if (!headless) MessageBox.Show(error.Message, "终焉矩阵血线排布 V0.5.7", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!headless) MessageBox.Show(error.Message, "终焉矩阵血线排布 V0.5.17", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         } finally {
             if (tray != null) { tray.Visible = false; tray.Dispose(); }
@@ -110,7 +110,7 @@ internal static class Launcher {
     private static bool Matches(Dictionary<string, object> status) {
         return status != null && status.ContainsKey("app") && Convert.ToString(status["app"]) == "wuwa-matrix-hp-planner"
             && status.ContainsKey("root") && String.Equals(Convert.ToString(status["root"]).TrimEnd(Path.DirectorySeparatorChar), Root, StringComparison.OrdinalIgnoreCase)
-            && status.ContainsKey("version") && Convert.ToString(status["version"]) == "0.5.7";
+            && status.ContainsKey("version") && Convert.ToString(status["version"]) == "0.5.17";
     }
 
     private static bool IsPortBusy(int port) {

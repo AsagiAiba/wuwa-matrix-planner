@@ -1,6 +1,8 @@
+import {MAX_BACKUP_BYTES,readPlannerJSON,checkBackupTree,sameJSON} from './plan-backup.js';
 import {axisLabels,confirmImportAxis,libraryEntry} from './afyg-replay/site/execution-position.js';
 import {setupRosterScan} from './roster-recognition.js';
 import { compileProjectPreset } from './afyg-preset.js';
+import {batchEntries,setupBatchProjects} from './afyg-batch.js';
 import { visibleWaves, locateScore, packTeams, reorderTeams, nearestTeamSlot, characterIdentity, validateConfig, staminaLimits, staminaConflicts, defaultTeamName, splitQuickTeams, axisTickStep, matrixInfo, bossScoreAtRemainingHp, layoutTeamPreviews, PENDING_TEAM_SCORE, createTeamDeletionHistory, deleteTeamWithHistory, undoTeamDeletion, redoTeamDeletion, MIN_ZOOM, MAX_ZOOM } from './score-axis.js';
 import { normalizePlanLibrary, createPlanLibrary, addPlan, copyPlan, renamePlan, updatePlan, activatePlan, deletePlan } from './plan-library.js';
 import { parseScoreInput } from './score-axis.js';
@@ -8,7 +10,7 @@ import { simulatePreset, circuitDamageRules, matrixFinalFactor } from './score-a
 import simulationNotes from './config/simulation_notes.json' with {type:'json'};
 import defaultPairs from './config/default_pairs.json' with {type:'json'};
 import {refreshBundledProject} from './afyg-replay/site/execution-position.js';
-import { seasonDefinitions, enemyDefenseForLevel, getSeason, seasonStaminaRules, buildSeasonScores } from './season-config.js';
+import { seasonDefinitions, damageProfileKey, enemyDefenseForLevel, getSeason, seasonStaminaRules, buildSeasonScores } from './season-config.js';
 const emptyLayout={version:1,towerId:18,matrixSeason:'s2-phase4',staminaSeason:'s2-phase4',matrixVersion:getSeason('s2-phase4').name,maxRound:2,pixelsPerPoint:.04,scoreMarker:null,teams:[]};
 
 const $ = id => document.getElementById(id);
@@ -82,7 +84,7 @@ function teamPreset(team){
          !Array.isArray(data.hits)||(data.roundOrders===undefined?(!data.hits.length||data.hits.length>2000):
            (![4,5].includes(data.cycles)||data.hits.length>2000*data.cycles||!Array.isArray(data.roundOrders)||data.roundOrders.length!==data.cycles||
             !data.roundOrders.every(order=>Array.isArray(order)&&order.length<=2000&&order.every(i=>Number.isInteger(i)&&i>=0&&i<data.hits.length))))||
-         !data.hits.every(h=>h&&typeof h.name==='string'&&typeof h.source==='string'&&Number.isInteger(h.part)&&h.part>0&&h.damage&&Object.values(h.damage).every(v=>Number.isFinite(v)&&v>=0)))
+         !data.hits.every(h=>h&&typeof h.name==='string'&&typeof h.source==='string'&&Number.isInteger(h.part)&&h.part>0&&h.damage&&typeof h.damage==='object'&&!Array.isArray(h.damage)&&Object.keys(h.damage).length<=256&&(h.castOnly||Object.keys(h.damage).length>0)&&Object.values(h.damage).every(v=>Number.isFinite(v)&&v>=0)))
         throw Error('工程预设数据无效，请重新应用');
       if(data.roundSeconds!==undefined && (!Array.isArray(data.roundSeconds)||data.roundSeconds.length!==data.cycles||!data.roundSeconds.every(t=>Number.isFinite(t)&&t>=0)))throw Error('工程的轮次用时无效，请重新应用');
       if(data.matrixBuffVersion===1 && !data.hits.every(h=>(h.roundSecond===undefined||(Number.isFinite(h.roundSecond)&&h.roundSecond>=0)) &&
@@ -131,6 +133,9 @@ function updatePresetScores(plan) {
         const factor=preset.matrixBuffVersion===1?(hit,boss,round,active)=>matrixFinalFactor(hit,boss,round,rules,active):undefined;
         let report=waiting?{reason:'请先填写前序队伍的分数'}:simulatePreset(preset,season,records,start,factor,team.forgetMode??'auto',rules);
         if(report.end+manualLeft>records.at(-1).cumulative_points_after+1e-7)report={reason:'预设与后续队伍总分超出 R15'};
+        if(report.reason && preset.matrixLevelVersion!==1 && team.score>0){
+          report={...report,score:team.score,reason:'沿用旧备份得分 '+fmt(team.score)+' 分。'+report.reason};
+        }
         team.score=report.score || 0;
         if(team.score>0)delete team.needsScore;else team.needsScore=true;
         reports.set(team.id,report);
@@ -144,7 +149,11 @@ function updatePresetScores(plan) {
   return reports;
 }
 function validatePlan(value, options = {}) {
-  if(Array.isArray(value?.teams))for(const team of value.teams)teamPreset(team);
+  if(!Array.isArray(value?.teams)||value.teams.length>40)throw Error('队伍数量须为 0—40');
+  for(const team of value.teams){
+    const preset=teamPreset(team);
+    if(preset && (!Array.isArray(team.characterIds)||new Set(preset.roles).size!==3||!matchesPreset(team,preset)))throw Error('工程预设与队伍角色不一致');
+  }
   return validateConfig(value, characterIds, scoreTables.get(matrixInfo(value).id).records, identityById, staminaRules, options);
 }
 function restorePlan(value) {
@@ -176,8 +185,12 @@ try {
   const saved = localStorage.getItem(STORAGE);
   if (saved) {
     originalStoredPlan = saved;
-    try { localStorage.setItem(`${STORAGE}-restore-backup`, saved); } catch { /* The in-memory backup remains downloadable. */ }
-    if (!localStorage.getItem(`${STORAGE}-before-connected-v2`)) localStorage.setItem(`${STORAGE}-before-connected-v2`, saved);
+    if(!localStorage.getItem(LIBRARY_STORAGE)){
+      try{
+        localStorage.setItem(STORAGE+'-restore-backup',saved);
+        if(!localStorage.getItem(STORAGE+'-before-connected-v2'))localStorage.setItem(STORAGE+'-before-connected-v2',saved);
+      }catch{/* The authoritative data and in-memory recovery copy remain available. */}
+    }
     const previous = JSON.parse(saved);
     for (const team of previous.teams || []) {
       const roster = [];
@@ -201,14 +214,16 @@ let recoveryBackupExported = false;
 try {
   const savedLibrary = localStorage.getItem(LIBRARY_STORAGE);
   if (savedLibrary) {
-    try { localStorage.setItem(`${LIBRARY_STORAGE}-restore-backup`, savedLibrary); } catch { }
+
     try {
-      let libraryMarkerRemoved = false;
+      let libraryMarkerRemoved = false, migratedRange=false;
       planLibrary = normalizePlanLibrary(JSON.parse(savedLibrary), value => {
         const restored = restorePlan(value);
         libraryMarkerRemoved ||= restored.markerRemoved;
+        migratedRange ||= restored.config.maxRound!==value.maxRound;
         return restored.config;
       });
+      if(libraryMarkerRemoved||migratedRange){try{localStorage.setItem(LIBRARY_STORAGE+'-restore-backup',savedLibrary);}catch{}}
       state = structuredClone(planLibrary.plans.find(plan => plan.id === planLibrary.activePlanId).config);
       restoreError = null; repairedRosters = false; removedOutOfRangeMarker = libraryMarkerRemoved;
     } catch (error) {
@@ -288,6 +303,9 @@ if (!restoreError && !libraryRecoveryLocked && !planLibrary.plans.some(plan => O
 }
 let planAction = null;
 let planStorageError = false;
+// Detect another window replacing the primary library before committing this window's snapshot.
+let lastLibraryText;
+try{lastLibraryText=localStorage.getItem(LIBRARY_STORAGE);}catch{/* Storage may be disabled. */}
 let selectedId = state.teams[0]?.id;
 let picked = [];
 let toastTimer;
@@ -300,6 +318,8 @@ let quickSession = null;
 let pendingStaminaSeason = null;
 let conflictTeamIds = new Set();
 let deletingPlanId = null;
+let deleteVerification=null;
+let deletionBaseline=null;
 let lastMatrixContent = null;
 const teamDeletionHistories = new Map();
 syncSeasonRuntime();
@@ -340,18 +360,18 @@ function changeTeamDeletion(action) {
     if (hasBloodline() && !required) throw new Error('队伍总分超出 R15 范围，请先调整已有队伍分数。');
     if (required) candidate.maxRound = Math.max(candidate.maxRound, required.round);
     state = validatePlan(candidate, { allowStaminaConflicts: true });
-    teamDeletionHistories.set(planLibrary.activePlanId, result.history);
+
     selectedId = action === 'undo' ? team.id : state.teams.some(item => item.id === selectedId) ? selectedId : state.teams[0]?.id;
-    persist(); renderAll();
+    if(!persist())return;teamDeletionHistories.set(planLibrary.activePlanId,result.history);renderAll();
     toast(action === 'undo' ? `已撤回删除：${team.name}` : action === 'redo' ? `已恢复删除操作：${team.name}` : `已删除 ${team.name}，可撤回最近 2 次队伍删除。`);
   } catch (error) {
     toast(`操作未完成：${error.message} 队伍与撤回记录已保留。`);
   }
 }
 
-function normalizeTeamNames() {
+function normalizeTeamNames(plan=state) {
   const formerExamples = { 'team-1': '今汐队', 'team-2': '相里要队', 'team-3': '椿队' };
-  for (const team of state.teams) {
+  for (const team of plan.teams) {
     const generated = defaultTeamName(team.characterIds, characterMap);
     if (!team.nameMode) team.nameMode = team.name === generated || team.name === formerExamples[team.id] || /^队伍\s*\d+$/.test(team.name) ? 'auto' : 'custom';
     if (team.nameMode === 'auto' && generated) team.name = generated;
@@ -367,25 +387,37 @@ function toast(message) {
   toastTimer = setTimeout(() => $('toast').classList.remove('visible'), 3500);
 }
 
+function checkLibraryRevision(){
+  if(localStorage.getItem(LIBRARY_STORAGE)!==lastLibraryText)throw Error('排布库已在其他窗口变动，请刷新后重试。');
+}
+function writePlanLibrary(next,config){
+  if(libraryRecoveryLocked)throw Error('请先恢复原排布库。');
+  checkLibraryRevision();
+  const text=JSON.stringify(next);
+  try{localStorage.setItem(LIBRARY_STORAGE,text);lastLibraryText=text;}
+  catch{throw Error('排布库写入失败，请检查本地存储空间或权限。原排布已保留。');}
+  try{localStorage.setItem(STORAGE,JSON.stringify(config));}catch{/* Optional compatibility mirror. */}
+  planStorageError=false;
+}
 function persist() {
   updatePresetScores(state);
   state.disabledCharacterIds = [...new Set((state.disabledCharacterIds || []).map(id => pickerChoiceIdByMember.get(id)).filter(id => id && !alwaysAvailableChoices.has(id)))];
   normalizeTeamNames();
-  planLibrary = updatePlan(planLibrary, planLibrary.activePlanId, state);
-  if (libraryRecoveryLocked) { planStorageError = true; updateSaveStatus(); return; }
-  try {
-    localStorage.setItem(LIBRARY_STORAGE, JSON.stringify(planLibrary));
-    planStorageError = false;
-    try { localStorage.setItem(STORAGE, JSON.stringify(state)); } catch { /* Legacy mirror is optional; the plan library is authoritative. */ }
-  } catch {
-    planStorageError = true;
+  const next=updatePlan(planLibrary,planLibrary.activePlanId,state);
+  try{
+    writePlanLibrary(next,state);
+    planLibrary=next;updateSaveStatus();return true;
+  }catch(error){
+    state=structuredClone(activePlan().config);
+    syncSeasonRuntime();
+    if(!state.teams.some(t=>t.id===selectedId))selectedId=state.teams[0]?.id;
+    planStorageError=true;renderAll();toast(error.message);return false;
   }
-  updateSaveStatus();
 }
 
 function updateSaveStatus() {
   $('save-state').textContent = libraryRecoveryLocked ? '原排布库已保留，请先导出备份' : planStorageError ? '请导出 JSON 保存配置' : '配置自动保存在此浏览器';
-  $('plan-save-status').textContent = libraryRecoveryLocked ? '恢复待处理，当前修改尚未保存' : planStorageError ? '保存失败，请导出 JSON' : `${planLibrary.plans.length} 套排布 · 自动保存`;
+  $('plan-save-status').textContent = libraryRecoveryLocked ? '恢复待处理，当前修改尚未保存' : planStorageError ? '保存失败，原排布已保留，可导出 JSON 备份' : `${planLibrary.plans.length} 套排布 · 自动保存`;
 }
 
 function activePlan() {
@@ -412,6 +444,16 @@ function renderPlanControls() {
   updateSaveStatus();
 }
 
+function commitActivePlan(next) {
+  const plan=next.plans.find(p=>p.id===next.activePlanId);
+  const config=plan.config;
+  delete config.planName;
+  updatePresetScores(config);normalizeTeamNames(config);
+  plan.config=validatePlan(config,{allowStaminaConflicts:true});
+  writePlanLibrary(next,plan.config);
+  planLibrary=next;
+  enterActivePlan();
+}
 function enterActivePlan() {
   state = structuredClone(activePlan().config);
   referencePreviewId = null;
@@ -421,11 +463,10 @@ function enterActivePlan() {
   pendingStaminaSeason = null; pendingTeam = null; quickSession = null;
   $('disabled-removal-notice').hidden = true;
   if (!libraryRecoveryLocked) restoreError = null;
-  renderRestoreWarning(); persist(); renderAll(); $('timeline-viewport').scrollLeft = 0;
+  renderRestoreWarning(); renderAll(); $('timeline-viewport').scrollLeft = 0;
 }
 
 function openPlanDialog(action) {
-  if (!restoreError) persist();
   planAction = action;
   $('plan-dialog-title').textContent = action === 'new' ? '新建排布' : action === 'copy' ? '复制排布' : '重命名排布';
   $('plan-name').value = action === 'new' ? uniquePlanName(`排布 ${planLibrary.plans.length + 1}`) : action === 'copy' ? uniquePlanName(`${activePlan().name} 副本`) : activePlan().name;
@@ -435,21 +476,45 @@ function openPlanDialog(action) {
   $('plan-dialog').showModal(); $('plan-name').select();
 }
 
-function configForSharing() {
-  const matrix = matrixInfo(state);
-  return { ...structuredClone(state), matrixSeason: matrix.id, matrixVersion: matrix.name, planName: activePlan().name };
+function recoverBackup(value){
+  checkBackupTree(value);
+  if(!Array.isArray(value?.teams)||value.teams.length>40)throw Error('不是有效的单排布备份。');
+  const restored=restorePlan(value);
+  const season=getSeason(restored.config);
+  const profiles=[...new Set(season.bosses.flatMap(boss=>{
+    const res=[1,2,3,4,5,6].map(id=>boss.resistances.values[id]).join(',');
+    return season.enemyLevels.map(level=>damageProfileKey(level,res));
+  }))];
+  for(const team of restored.config.teams){
+    const preset=teamPreset(team);
+    if(preset?.matrixLevelVersion===1 && preset.hits.some(hit=>!hit.castOnly && profiles.some(key=>!Object.hasOwn(hit.damage,key))))
+      throw Error('工程预设缺少本赛季的等级或抗性伤害数据。');
+  }
+  updatePresetScores(restored.config);
+  return validatePlan(restored.config,{allowStaminaConflicts:true});
 }
-
-function downloadPlanConfig(config, name) {
-  const matrix = matrixInfo(config);
-  const text = JSON.stringify({ ...structuredClone(config), matrixSeason: matrix.id, matrixVersion: matrix.name, planName: name }, null, 2) + '\n';
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
-  const link = element('a'); link.href = url; link.download = `${name.replace(/[\\/:*?"<>|]/g, '_')}.json`; link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+function backupText(config,name){
+  const matrix=matrixInfo(config);
+  const snapshot={...config,matrixSeason:matrix.id,matrixVersion:matrix.name,planName:name};
+  checkBackupTree(snapshot);
+  const text=JSON.stringify(snapshot);
+  if(new Blob([text]).size>MAX_BACKUP_BYTES)throw Error('排布超过 32 MiB，无法生成可恢复的单排布备份。');
+  const decoded=JSON.parse(text);
+  if(!sameJSON(recoverBackup(decoded),decoded))throw Error('恢复校验与当前排布不一致，未生成备份。');
+  return text;
+}
+function downloadPlanConfig(config,name){
+  const text=backupText(config,name);
+  const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
+  const link=element('a');link.href=url;link.download=name.replace(/[\\/:*?"<>|]/g,'_')+'.json';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  return text;
 }
 
 function openDeletePlan() {
-  if (!restoreError) persist();
+  deleteVerification=null;
+  deletionBaseline=localStorage.getItem(LIBRARY_STORAGE);
+  $('verify-delete-field').hidden=true;$('verify-delete-file').value='';
   deletingPlanId = planLibrary.activePlanId;
   $('delete-plan-summary').textContent = `即将删除“${activePlan().name}”，其中包含 ${activePlan().config.teams.length} 支队伍。${planLibrary.plans.length === 1 ? '删除后会新建一套空白排布。' : ''}`;
   $('delete-plan-backup-note').textContent = '可以先导出 JSON 备份，再确认永久删除。';
@@ -464,12 +529,17 @@ function confirmDeletePlan() {
   if (!deletingPlanId || libraryRecoveryLocked) return;
   try {
     const fallback = { ...structuredClone(state), teams: [], scoreMarker: null };
+    const changed=localStorage.getItem(LIBRARY_STORAGE)!==deletionBaseline;
+    if(changed || (deleteVerification && (!deleteVerification.verified || deleteVerification.snapshot!==backupText(state,activePlan().name)))){
+      $('confirm-delete-plan').disabled=true;
+      if(deleteVerification)deleteVerification.verified=false;
+      throw Error(changed?'排布库已变化，请重新打开删除窗口。':'请重新导出并验证当前排布的文件。');
+    }
     const next = deletePlan(planLibrary, deletingPlanId, fallback);
-    // Commit the deletion before changing the visible selection; failure leaves the plan intact.
-    localStorage.setItem(LIBRARY_STORAGE, JSON.stringify(next));
+    commitActivePlan(next);
     teamDeletionHistories.delete(deletingPlanId);
-    planLibrary = next; deletingPlanId = null;
-    $('delete-plan-dialog').close(); enterActivePlan(); toast('排布方案已永久删除。');
+    deletingPlanId=null;deleteVerification=null;
+    $('delete-plan-dialog').close();toast('排布方案已永久删除。');
   } catch (error) { $('delete-plan-error').textContent = `删除未完成，方案仍保留：${error.message}`; }
 }
 
@@ -695,7 +765,8 @@ function openBossDetails(wave) {
 }
 
 async function copyPlanConfig() {
-  const text = JSON.stringify(configForSharing(), null, 2);
+  let text;
+  try{text=backupText(state,activePlan().name);}catch(error){toast('复制失败：'+error.message);return;}
   try {
     await navigator.clipboard.writeText(text);
     toast(`已复制“${activePlan().name}”的 JSON 配置。`);
@@ -1159,12 +1230,8 @@ function renderInspector() {
             line.append(element('small','muted',stage.stackEvents.map(e=>(e.trigger==='谐度破坏' && teamPreset(team).cycles>1?'第 '+e.round+' 轮 · ':'')+(e.castOnly?(e.hit?'第 '+e.hit+' 击后':'首击前'):'第 '+e.hit+' 击')+' '+e.trigger).join(' → ')));
           }
         }
-        if(stage.frostbind){
-          const {readyAt,trigger}=stage.frostbind;
-          const threshold=readyAt?`第 ${readyAt} 击达到 13 层霜渐`:'未达到 13 层霜渐';
-          const detail=trigger?`第 ${trigger.hit} 击「${trigger.name}」触发霜结，后续终伤 +30%`:
-            readyAt?'尚未命中见心或居合':'霜结未触发';
-          line.append(element('small','muted',threshold+' · '+detail));
+        if(stage.hiyukiTeamFinal){
+          line.append(element('small','muted',`绯雪在队：对达妮娅的全队伤害从第一击起，最终伤害 +${stage.hiyukiTeamFinal}%`));
         }
         box.append(line);
       }
@@ -1707,6 +1774,7 @@ function saveDisabledCharacterSettings(profile=null) {
   disabledCharacterDraft = new Set([...disabledCharacterDraft].filter(id => !alwaysAvailableChoices.has(id)));
   const changes = [];
   try {
+    checkLibraryRevision();
     const impact = disabledCharacterImpact(disabledCharacterDraft);
     const config=impact.library.plans.find(plan => plan.id===impact.library.activePlanId).config;
     if(profile){config.rosterProfileName=profile.name;config.rosterLevels=profile.roster;}
@@ -1720,6 +1788,7 @@ function saveDisabledCharacterSettings(profile=null) {
       localStorage.setItem(key, value); changes.push([key, previous]);
     }
     disabledCharacters = new Set(disabledCharacterDraft); disabledCharactersLoadError = '';
+    lastLibraryText=updates.find(([key])=>key===LIBRARY_STORAGE)[1];
     planLibrary = impact.library; state = nextState; planStorageError = false;
     if (!state.teams.some(team => team.id === selectedId)) selectedId = state.teams[0]?.id;
     for (const [id, history] of teamDeletionHistories) {
@@ -2134,7 +2203,7 @@ $('team-form').addEventListener('submit', event => {
   Object.assign(team, { name, score, nameMode: name === defaultTeamName(team.characterIds, characterMap) ? 'auto' : 'custom' });
   delete team.needsScore;
   state.teams = packTeams(state.teams);
-  persist(); renderAll(); toast('已更新分数条');
+  if(persist()){renderAll();toast('已更新分数条');}
 });
 $('add-team').addEventListener('click', () => {
   if (state.teams.length >= 40) { toast('Demo 最多支持 40 支队伍'); return; }
@@ -2142,41 +2211,35 @@ $('add-team').addEventListener('click', () => {
   pendingTeam = { id: crypto.randomUUID(), name: '', nameMode: 'auto', characterIds: [], score: 0, startScore: end, color: COLORS[state.teams.length % COLORS.length] };
   openCharacters();
 });
+function presetTeam(candidate,roles){
+  if(teamUsesDisabledCharacter({characterIds:roles},disabledCharacters))throw new Error('请先在当前方案启用该工程的三名角色');
+  let team=candidate.teams.find(t=>t.id===selectedId&&matchesPreset(t,{roles}))||candidate.teams.find(t=>matchesPreset(t,{roles}));
+  if(!team){
+    team={id:crypto.randomUUID(),name:defaultTeamName(roles,characterMap),nameMode:'auto',characterIds:[...roles],score:0,startScore:0,needsScore:true,color:COLORS[candidate.teams.length%COLORS.length]};
+    candidate.teams.push(team);
+  }
+  return team;
+}
 function applyPreset(preset, name){
   if(libraryRecoveryLocked||restoreError)throw new Error('请先完成排布恢复');
   const candidate=structuredClone(state);
-  if(teamUsesDisabledCharacter({characterIds:preset.roles},disabledCharacters))throw new Error('请先在当前方案启用该工程的三名角色');
-  let team=candidate.teams.find(t=>t.id===selectedId&&matchesPreset(t,preset))||candidate.teams.find(t=>matchesPreset(t,preset));
-  if(!team){
-    team={id:crypto.randomUUID(),name:defaultTeamName(preset.roles,characterMap),nameMode:'auto',characterIds:[...preset.roles],score:0,startScore:0,needsScore:true,color:COLORS[candidate.teams.length%COLORS.length]};
-    candidate.teams.push(team);
-  }
+  const team=presetTeam(candidate,preset.roles);
   team.presetId=preset.id;
   team.projectPreset=preset;
   const report=updatePresetScores(candidate).get(team.id);
-  state=validatePlan(candidate);selectedId=team.id;persist();renderAll();
+  state=validatePlan(candidate);selectedId=team.id;if(!persist())throw Error('本地保存失败，原排布已保留。');renderAll();
   $('afyg-details').open=true;
   toast(report.reason||`已应用「${name}」，预计 ${fmt(report.score)} 分`);
   return report;
 }
-async function applySelectedProject(){
-  const stored=await refreshBundledProject();
-  if(!stored){
-    const response=await fetch('/sample.json');
-    if(!response.ok)throw Error('无法读取内置工程，请到椰果工程页导入队伍的轴');
-    const file=await response.json();
-    return applyProject(file.project??file);
-  }
-  const item=stored.items?.find(entry=>entry.id===stored.activeId);
-  if(!item)throw Error('请先在椰果工程页选择队伍');
-  const raw=item.edited??item.raw;
-  await applyProject(raw.project??raw,stored.activeId);
-}
 let projectCalculation=0;
+function projectRoles(project){
+  return project.team.map(slot=>characters.find(c=>c.name===slot.character)?.id);
+}
 async function applyProject(project,projectId){
   const ticket=++projectCalculation;
   if(!Array.isArray(project.team))throw Error('工程中缺少队伍配置');
-  const roles=project.team.map(slot=>characters.find(c=>c.name===slot.character)?.id);
+  const roles=projectRoles(project);
   if(roles.length!==3||roles.some(id=>!id))throw Error('工程中有未识别的角色，请检查阵容');
   const planId=planLibrary.activePlanId;
   const preset=await compileProjectPreset(project,roles,seasonDefinitions);
@@ -2185,6 +2248,56 @@ async function applyProject(project,projectId){
   if(projectId && JSON.parse(localStorage.getItem('afyg-project-library-v1')||'null')?.activeId!==projectId)throw Error('所选椰果工程已切换，请重新应用');
   return applyPreset(preset,preset.name);
 }
+setupBatchProjects({
+  currentPlan:activePlan,
+  unavailable(project){
+    const roles=projectRoles(project);
+    if(roles.length!==3||roles.some(id=>!id))return '工程中有未识别的角色';
+    if(teamUsesDisabledCharacter({characterIds:roles},disabledCharacters))return '本方案已禁用其中的角色';
+    return '';
+  },
+  async apply(planId,groups,signal,progress){
+    if(libraryRecoveryLocked||restoreError)throw Error('请先完成排布恢复');
+    const ticket=++projectCalculation,original=JSON.stringify(state),savedLibrary=localStorage.getItem(LIBRARY_STORAGE);
+    function checkCurrent(){
+      signal.throwIfAborted();
+      if(ticket!==projectCalculation || planId!==planLibrary.activePlanId || original!==JSON.stringify(state) || savedLibrary!==localStorage.getItem(LIBRARY_STORAGE))
+        throw Error('排布已变动，请关闭弹窗后重新选择。');
+    }
+    checkCurrent();
+    const candidate=structuredClone(state);
+    const tasks=groups.filter(g=>g.selected&&!g.blocked).map(group=>{
+      const entry=group.entries.find(e=>e.id===group.choice);
+      if(!entry)throw Error('请为「'+group.name+'」选择工程轴。');
+      const roles=projectRoles(entry.project);
+      return {entry,roles,team:presetTeam(candidate,roles)};
+    });
+    if(candidate.teams.length>40)throw Error('应用后将超过 40 支队伍，请减少勾选。');
+    const conflicts=staminaConflicts(candidate.teams,staminaRules,candidate.staminaSeason,identityById);
+    if(conflicts.length)throw Error('体力不足：'+conflicts.map(c=>characterMap.get(c.characterId).name+'（'+c.used+'/'+c.limit+'）').join('、')+'。请调整勾选或已有队伍。');
+    for(const [index,{entry,team,roles}] of tasks.entries()){
+      checkCurrent();progress('正在计算 '+(index+1)+' / '+tasks.length+' · '+entry.project.name);
+      try{team.projectPreset=await compileProjectPreset(entry.project,roles,seasonDefinitions);}
+      catch(error){throw Error('「'+entry.project.name+'」计算失败：'+error.message);}
+      team.presetId=team.projectPreset.id;
+    }
+    const latest=new Map((await batchEntries()).map(e=>[e.id,e.edited??e.raw]));
+    checkCurrent();
+    for(const {entry} of tasks){
+      const file=latest.get(entry.id);
+      if(!file||JSON.stringify(file.project??file)!==JSON.stringify(entry.project))throw Error('所选工程已变动，请重新打开弹窗。');
+    }
+    candidate.batchProjectChoices=groups.map(g=>({key:g.key,selected:g.selected,projectId:g.choice}));
+    const reports=updatePresetScores(candidate);
+    const config=validatePlan(candidate);
+    const next=updatePlan(planLibrary,planId,config);
+    writePlanLibrary(next,config);
+    planLibrary=next;state=config;
+    selectedId=tasks[0].team.id;renderAll();
+    const pending=tasks.filter(t=>reports.get(t.team.id)?.reason);
+    toast('已应用 '+tasks.length+' 支队伍'+(pending.length?'，其中 '+pending.length+' 支待计分：'+reports.get(pending[0].team.id).reason:''));
+  }
+});
 window.addEventListener('message',async event=>{
   const view=$('project-frame').contentWindow;
   if(event.origin!==location.origin||event.source!==view||event.data?.type!=='matrix:apply-execution')return;
@@ -2196,11 +2309,6 @@ window.addEventListener('message',async event=>{
   }catch(error){message='血线未更新：'+error.message;}
   view.postMessage({type:'matrix:execution-result',request,message},location.origin);
 });
-$('add-afyg').onclick=async()=>{
-  const button=$('add-afyg');button.disabled=true;button.textContent='正在计算预设…';
-  try{await applySelectedProject();}catch(error){toast(error.message);}
-  finally{button.disabled=false;button.textContent='一键生成导入的轴的分数';}
-};
 $('afyg-manual').onclick=()=>{const team=current();if(!team)return;delete team.projectPreset;delete team.presetId;persist();renderAll();$('team-score').focus();};
 let teamDeletionTarget=null;
 function confirmTeamDeletion(id){
@@ -2235,7 +2343,7 @@ $('confirm-characters').addEventListener('click', () => {
     try { state = validatePlan(next); }
     catch (error) { $('character-feedback').textContent = error.message; return; }
     selectedId = added[0].id; quickSession = null;
-    persist(); renderAll(); $('character-dialog').close(); toast(`已将 ${added.length} 支队伍倒序加入轴首，分数待填。`);
+    if(!persist())return;renderAll(); $('character-dialog').close(); toast(`已将 ${added.length} 支队伍倒序加入轴首，分数待填。`);
     return;
   }
   if (picked.length !== 3) return;
@@ -2266,7 +2374,7 @@ $('confirm-characters').addEventListener('click', () => {
   if (hasBloodline()) state.maxRound = Math.max(state.maxRound, sufficient.round);
   if (pendingTeam) { state.teams.push(team); selectedId = team.id; pendingTeam = null; }
   state.teams = packTeams(state.teams);
-  persist(); renderAll(); $('character-dialog').close();
+  if(!persist())return;renderAll(); $('character-dialog').close();
 });
 $('character-dialog').addEventListener('close', () => { clearPickerFlights(); pendingTeam = null; quickSession = null; document.body.append($('toast')); $('toast').classList.remove('visible'); });
 $('quick-team').addEventListener('click', openQuickTeams);
@@ -2375,7 +2483,7 @@ $('score-locator').addEventListener('submit', event => {
 $('target-score').addEventListener('input', renderTargetScoreGap);
 $('clear-score-marker').addEventListener('click', () => { state.scoreMarker = null; persist(); renderScoreMarker(); });
 $('export-button').addEventListener('click', () => {
-  downloadPlanConfig(state, activePlan().name);
+  try{downloadPlanConfig(state,activePlan().name);}catch(error){toast('导出失败：'+error.message);}
 });
 $('import-button').addEventListener('click', () => $('import-file').click());
 function selectView(tab) {
@@ -2404,11 +2512,12 @@ $('import-file').addEventListener('change', async event => {
   const file = event.target.files[0]; if (!file) return;
   event.target.value='';
   try {
-    if (file.size > 1_000_000) throw new Error('配置文件不能超过 1 MB');
-    const parsed = JSON.parse((await file.text()).replace(/^\uFEFF/,''));
+    const baseline=localStorage.getItem(LIBRARY_STORAGE),targetId=planLibrary.activePlanId;
+    const parsed=await readPlannerJSON(file);
     const raw=parsed.engine==='wuwa-afyg-tool@441852a'&&parsed.result?parsed.project:parsed;
     const afyg=raw.project??raw;
-    if(Array.isArray(afyg.team)&&(afyg.phases||afyg.encounter)){
+    if(!Array.isArray(parsed.teams)&&Array.isArray(afyg.team)&&(afyg.phases||afyg.encounter)){
+      if(file.size>1_000_000)throw Error('此入口的椰果原工程不能超过 1 MB。');
       if(!await confirmImportAxis(afyg))return;
       const key='afyg-project-library-v1';
       let library=await refreshBundledProject();
@@ -2433,17 +2542,22 @@ $('import-file').addEventListener('change', async event => {
       return;
     }
     if (parsed.schemaVersion === 1 && Array.isArray(parsed.bosses) && parsed.scoring) throw new Error('这是赛季数据配置，请放到 config/seasons 目录；此处用于导入队伍排布 JSON。');
-    const imported = validatePlan(parsed);
+    const imported = recoverBackup(parsed);
     const importedName = typeof imported.planName === 'string' ? imported.planName : file.name.replace(/\.json$/i, '');
     delete imported.planName;
     const next = addPlan(planLibrary, uniquePlanName(importedName), imported);
-    planLibrary = next; enterActivePlan(); toast('已导入为新排布，原有方案已保留。');
+    if(localStorage.getItem(LIBRARY_STORAGE)!==baseline || planLibrary.activePlanId!==targetId)throw Error('读取期间排布库已变动，请重新导入。');
+    commitActivePlan(next);
+    const migratedMarker=parsed.scoreMarker!=null && imported.scoreMarker==null;
+    const legacyScore=imported.teams.some(team=>teamPreset(team) && teamPreset(team).matrixLevelVersion!==1);
+    const notes=[migratedMarker?'已移除超出当前血线的旧目标标记。':'',legacyScore?'旧工程沿用备份中的得分，重新推演需补齐原工程。':''].join('');
+    toast('已导入为新排布，原有方案已保留。'+notes);
   } catch (error) { toast(`导入失败：${error.message}`); }
   event.target.value = '';
 });
 $('plan-select').addEventListener('change', () => {
-  const id = $('plan-select').value; persist();
-  planLibrary = activatePlan(planLibrary, id); enterActivePlan();
+  const id=$('plan-select').value;
+  try{commitActivePlan(activatePlan(planLibrary,id));}catch(error){$('plan-select').value=planLibrary.activePlanId;toast(error.message);}
 });
 $('new-plan').addEventListener('click', () => openPlanDialog('new'));
 $('duplicate-plan').addEventListener('click', () => openPlanDialog('copy'));
@@ -2452,13 +2566,37 @@ $('copy-plan-config').addEventListener('click', copyPlanConfig);
 $('delete-plan').addEventListener('click', openDeletePlan);
 $('cancel-delete-plan').addEventListener('click', () => { deletingPlanId = null; $('delete-plan-dialog').close(); });
 $('confirm-delete-plan').addEventListener('click', confirmDeletePlan);
-$('export-delete-plan').addEventListener('click', () => {
-  const plan = planLibrary.plans.find(item => item.id === deletingPlanId);
-  if (!plan) return;
-  downloadPlanConfig(plan.config, plan.name);
-  $('delete-plan-backup-note').textContent = '已发起 JSON 下载。请确认备份文件已保存，再点击确认永久删除。';
-  $('confirm-delete-plan').textContent = '已保存备份，确认永久删除';
+$('export-delete-plan').addEventListener('click',()=>{
+  if(!deletingPlanId||deletingPlanId!==planLibrary.activePlanId)return;
+  const attempt={snapshot:null,verified:false};
+  deleteVerification=attempt;
+  $('confirm-delete-plan').disabled=true;$('confirm-delete-plan').textContent='验证后确认永久删除';
+  $('verify-delete-field').hidden=true;$('verify-delete-file').value='';
+  try{
+    attempt.snapshot=downloadPlanConfig(state,activePlan().name);
+    $('verify-delete-field').hidden=false;
+    $('delete-plan-error').textContent='';
+    $('delete-plan-backup-note').textContent='请选择实际下载的 JSON。验证还原结果与当前方案一致后才能确认删除。';
+  }catch(error){$('delete-plan-error').textContent='备份失败：'+error.message;}
 });
+$('verify-delete-file').addEventListener('change',async event=>{
+  const attempt=deleteVerification;
+  if(!attempt?.snapshot)return;
+  const token=Symbol();attempt.token=token;attempt.verified=false;
+  $('confirm-delete-plan').disabled=true;
+  const file=event.target.files[0];event.target.value='';
+  if(!file)return;
+  try{
+    const data=await readPlannerJSON(file);
+    if(deleteVerification!==attempt||attempt.token!==token||!$('delete-plan-dialog').open)return;
+    recoverBackup(data);
+    if(planLibrary.activePlanId!==deletingPlanId || localStorage.getItem(LIBRARY_STORAGE)!==deletionBaseline ||
+       attempt.snapshot!==backupText(state,activePlan().name) || !sameJSON(data,JSON.parse(attempt.snapshot)))throw Error('文件与当前方案不一致。');
+    attempt.verified=true;$('confirm-delete-plan').disabled=false;$('confirm-delete-plan').textContent='备份已验证，确认永久删除';
+    $('delete-plan-error').textContent='';$('delete-plan-backup-note').textContent='已回读文件并通过恢复校验。';
+  }catch(error){if(deleteVerification===attempt&&attempt.token===token)$('delete-plan-error').textContent='验证失败：'+error.message;}
+});
+$('delete-plan-dialog').addEventListener('close',()=>{if(!$('delete-plan-dialog').open){deleteVerification=null;deletingPlanId=null;}});
 $('close-plan-dialog').addEventListener('click', () => $('plan-dialog').close());
 $('close-copy-config').addEventListener('click', () => $('copy-config-dialog').close());
 $('close-boss-dialog').addEventListener('click', () => $('boss-dialog').close());
@@ -2474,14 +2612,15 @@ $('plan-form').addEventListener('submit', event => {
   event.preventDefault();
   const name = $('plan-name').value.trim();
   try {
-    if (planAction === 'rename') planLibrary = renamePlan(planLibrary, planLibrary.activePlanId, name);
-    else if (planAction === 'copy') planLibrary = copyPlan(planLibrary, planLibrary.activePlanId, name);
+    let next;
+    if (planAction === 'rename') next = renamePlan(planLibrary, planLibrary.activePlanId, name);
+    else if (planAction === 'copy') next = copyPlan(planLibrary, planLibrary.activePlanId, name);
     else {
       const season = staminaRules.seasons.find(item => item.id === $('plan-season').value);
       const config = validatePlan({ ...structuredClone(emptyLayout), teams: [], towerId: season.towerId, matrixSeason: season.id, matrixVersion: season.name, staminaSeason: season.id, pixelsPerPoint: state.pixelsPerPoint });
-      planLibrary = addPlan(planLibrary, name, config);
+      next = addPlan(planLibrary, name, config);
     }
-    $('plan-dialog').close(); enterActivePlan();
+    commitActivePlan(next);$('plan-dialog').close();
   } catch (error) { $('plan-dialog-error').textContent = error.message; }
 });
 for (const season of staminaRules.seasons) {

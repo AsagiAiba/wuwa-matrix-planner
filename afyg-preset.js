@@ -1,4 +1,4 @@
-import {inspectProjectAxis,projectAxisRange,repositionExecutions,verifyEngineDamage} from './afyg-replay/site/execution-position.js';
+import {roundRange,inAxisRange,templateTimes,inspectProjectAxis,projectAxisRange,repositionExecutions,verifyEngineDamage} from './afyg-replay/site/execution-position.js';
 import {specialEchoCast} from './cingulum.js';
 import {enemyDefenseForLevel,damageProfileKey} from './season-config.js';
 export {projectAxisRange};
@@ -39,10 +39,32 @@ async function resistanceTable(project, values,level) {
     frame.src='/fast-calc?api_base='+encodeURIComponent(location.origin);document.body.append(frame);
   });
 }
-// Time is only used for the 30s buff window. Between timed reference lines the
-// importer's grid positions provide an estimate; untimed intervals stay unknown.
+// Some full axes label rounds by duration ("30s启动, 25s循环, 25s循环").
+// Keep increasing absolute labels on the existing clock.
+export function fullAxisTimes(project,refs){
+  const labels=refs.map(ref=>/^([+]?)\s*(\d+(?:\.\d+)?)\s*(?:s|秒)\s*(?:启动|首轮|起手|循环|尾轮|收尾)/i.exec((ref.name||ref.time||'').trim()));
+  const stages=labels.filter(Boolean);
+  if(stages.length<2 || !stages.some((m,i)=>m[1] || (i>0 && +m[2]<=+stages[i-1][2])))return null;
+  const authored=new Map((project.analysis?.timings??[]).map(t=>[t.refLineId,t.seconds]));
+  const times=new Map();
+  const fullLength=project.matrixAxisType==='full' || /120\s*(?:s|秒)|全局轴/i.test(project.name??'');
+  // A partial authored marker inside a round must not shift the next round end.
+  let boundary=0;
+  refs.forEach((ref,i)=>{
+    const saved=authored.get(ref.id),duration=labels[i];
+    if(ref.id==='left')times.set(ref.id,0);
+    else if(duration){
+      boundary=Number.isFinite(saved)&&saved>boundary?saved:boundary+Number(duration[2]);
+      times.set(ref.id,boundary);
+    }else if(Number.isFinite(saved)&&saved>=boundary && saved>0)times.set(ref.id,saved);
+    else if(ref.id==='right' && fullLength && boundary<120)times.set(ref.id,120);
+  });
+  return times;
+}
+
 function axisClock(project,timeline,axis){
-  const timed=new Map((project.analysis?.timings??[]).map(t=>[t.refLineId,t.seconds]));
+  const refs=[...timeline.refLines].sort((a,b)=>a.pos-b.pos);
+  const timed=(axis.playback?templateTimes(project,refs):axis.cycles===1?fullAxisTimes(project,refs):null)??new Map((project.analysis?.timings??[]).map(t=>[t.refLineId,t.seconds]));
   const points=[];
   for(const ref of timeline.refLines){
     const label=ref.name||ref.time||'';
@@ -80,6 +102,28 @@ export function responseWindows(project,timeline,axis,pos,clock=axisClock(projec
       marks.get(who).add(pos.get(block.sourceId));
     }
   }
+  if(axis.playback){
+    let elapsed=0;
+    const segments=axis.playback.map(range=>{
+      const segmentClock=axisClock(project,timeline,{...range,playback:true});
+      const start=elapsed;
+      elapsed+=segmentClock.duration;
+      return {range,start,begin:segmentClock.begin};
+    });
+    const absolute=(segment,x)=>{
+      const t=secondsAt(x);
+      return t===null || segment.begin===null ? null : segment.start+t-segment.begin;
+    };
+    const triggers=new Map();
+    for(const [who,positions] of marks){
+      triggers.set(who,segments.flatMap(s=>[...positions].filter(x=>inAxisRange(x,s.range)).map(x=>absolute(s,x))).filter(t=>t!==null));
+    }
+    return (who,x)=>segments.reduce((mask,s,i)=>{
+      if(!inAxisRange(x,s.range))return mask;
+      const time=absolute(s,x);
+      return time!==null && triggers.get(who)?.some(t=>time>=t && time-t<30) ? mask|(1<<i) : mask;
+    },0);
+  }
   const warmStart=timeline.refLines.some(r=>r.pos===axis.start && /首轮.*不计/.test(r.name||r.time||''));
   return (who,x)=>{
     const now=secondsAt(x);
@@ -102,23 +146,24 @@ export function responseWindows(project,timeline,axis,pos,clock=axisClock(projec
 export async function compileProjectPreset(project, roles, seasons){
   const timeline=(project.phases??project.encounter)?.timeline?.data;
   if(!timeline?.refLines)throw Error('工程缺少轴参考线');
-  const {kind,range,split,repeats}=inspectProjectAxis(project,timeline);
+  const audit=inspectProjectAxis(project,timeline);
+  const {kind,range,split,repeats,loopEnd}=audit;
   const rounds=range.cycles>1?project.executionRounds:undefined;
   if(!repeats && rounds===undefined)return compileRotation(project,roles,seasons);
   if(rounds!==undefined && (!Array.isArray(rounds)||rounds.length!==range.cycles))throw Error('处决设置的轮数与所选轴类型不一致');
   if(repeats && (!split||split.pos>range.end))throw Error('请在导入时确认首轮与循环段的分界');
+  if(kind==='closing' && !(loopEnd?.pos>split?.pos))throw Error('请确认中间循环的末格与尾轮分界');
+  const playback=Array.from({length:range.cycles},(_,i)=>roundRange(audit,i));
   const variants=new Map(),hits=[],pool=new Map(),roundOrders=[],roundSeconds=[];
   for(let i=0;i<range.cycles;i++){
     const moves=rounds?.[i]??{};
     if(!moves||typeof moves!=='object'||Array.isArray(moves))throw Error('分轮处决设置无效');
-    const first=Boolean(repeats) && i===0;
-    const key=JSON.stringify([first,moves]);
+    const segment=playback[i];
+    const key=JSON.stringify([segment.start,segment.end,moves]);
     if(!variants.has(key)){
       const rotation=repositionExecutions(project,project,moves);
       delete rotation.executionRounds;
-      const segment=!repeats?range:first?{...range,end:split.pos,inclusiveEnd:false}:
-        {...range,start:split.pos,loopAfterOpening:true};
-      const variant=await compileRotation(rotation,roles,seasons,true,segment);
+      const variant=await compileRotation(rotation,roles,seasons,true,kind==='closing'?{...segment,playback}:segment);
       const order=variant.hits.map(hit=>{
         const signature=JSON.stringify(hit);
         if(!pool.has(signature)){pool.set(signature,hits.length);hits.push(hit);}
@@ -175,7 +220,7 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
   const castMarkers=new Map();
   for(const op of ops){
     const cast=specialEchoCast(project.team[op.trackIndex]?.character,op.desc,hasRoccia);
-    if(cast && op.pos>=axis.start && (op.pos<axis.end || (op.pos===axis.end&&axis.inclusiveEnd)))castMarkers.set(op.id,{op,cast});
+    if(cast && inAxisRange(op.pos,axis))castMarkers.set(op.id,{op,cast});
   }
   const positions=[];
   const blocks=[...timeline.damageBlocks].sort((a,b)=>pos.get(a.sourceId)-pos.get(b.sourceId));
@@ -190,7 +235,7 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
   for(const block of blocks){
     const anchor=pos.get(block.sourceId);
     if(!Number.isFinite(anchor))throw Error('找不到伤害块对应的操作或参考线');
-    if(anchor<axis.start||anchor>axis.end||(!axis.inclusiveEnd&&anchor===axis.end))continue;
+    if(!inAxisRange(anchor,axis))continue;
     const rows=rowsByBlock.get(block.id);
     for(const entry of rows){
       const raw=block.skillHits.find(hit=>entry.id.includes(hit.skillType+'|'+hit.hitName+'#'));
@@ -231,7 +276,6 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
       if(indirect?.category==='效应' && indirect.name==='霜渐效应' && Number.isInteger(indirect.layers)){
         metadata.glacioLayers=indirect.layers;
       }
-      if(raw?.character==='绯雪' && ['预求我身·见心伤害','普攻·居合伤害'].includes(raw.hitName))metadata.frostbindStrike=true;
       if(indirect?.category==='处决' && indirect.name==='谐度破坏')metadata.tuneBreak=true;
       if(indirect?.category==='效应'||types.some(t=>t==='效应伤害'||t==='异常效应伤害'))metadata.abnormal=true;
       if(raw?.skillType==='声骸技能'){
@@ -280,7 +324,7 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
   for(const a of [...ops,...timeline.refLines]){
     const label=(a.desc||a.name||a.time||'').trim();
     if(!/^(?:附加|施加)(?:(?:\d+层)?[【「]?(?:异常|霜渐|霜冻|电磁|光噪|虚湮|风蚀|聚爆)效应[】」]?)$/.test(label))continue;
-    if(a.pos<axis.start||a.pos>axis.end||(!axis.inclusiveEnd&&a.pos===axis.end))continue;
+    if(!inAxisRange(a.pos,axis))continue;
     let i=positions.findIndex(x=>x>a.pos);
     if(i<0)i=hits.length;
     const second=relativeSecond(a.pos);
@@ -293,7 +337,7 @@ async function compileRotation(project, roles, seasons, allowEmpty=false, segmen
     for(const row of table.values()){
       const x=pos.get(row.blockId);
       if(!Number.isFinite(x))throw Error('导入核对失败：伤害条目缺少落点');
-      if(x>=axis.start && (x<axis.end || axis.inclusiveEnd&&x===axis.end))expected+=Math.round(row.damage);
+      if(inAxisRange(x,axis))expected+=Math.round(row.damage);
     }
     const actual=hits.reduce((sum,h)=>sum+(h.castOnly?0:h.damage[key]),0);
     if(actual!==expected)throw Error('导入核对失败：计分区间的逐击伤害与椰果条目不一致');

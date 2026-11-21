@@ -1,4 +1,5 @@
-import {refreshBundledProject,rosterKey,libraryEntry,isExecution,projectStages,repositionExecutions,inspectProjectAxis,axisLabels,confirmImportAxis,verifyEngineDamage} from './execution-position.js';
+import {showCalculationOverlay} from '/calculation-overlay.js';
+import {inAxisRange,roundRange,refreshBundledProject,rosterKey,libraryEntry,isExecution,projectStages,repositionExecutions,inspectProjectAxis,axisLabels,confirmImportAxis,verifyEngineDamage} from './execution-position.js';
 const $=id=>document.getElementById(id);
 function elem(tag,text){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;}
 const fmt=n=>new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2}).format(n);
@@ -124,7 +125,7 @@ function editedFile(state){
     return originalEnvelope?{...originalEnvelope,project:snapshot}:snapshot;
 }
 function reset(){
-  $('execution-editor').hidden=true;$('execution-status').textContent='';executionRequest=null;
+  $('execution-editor').hidden=true;$('execution-status').textContent='';finishExecution();
   $('overview').hidden=true;document.querySelector('.native').hidden=true;
   generation++;exportRequest=null;clearTimeout(engineTimer);frame=null;result=null;selection='';lookup.clear();$('host').replaceChildren();$('export').disabled=true;
   for(const id of ['totals','axis','results','project-name','axis-audit','team','axis-info','detail-note'])$(id).replaceChildren();
@@ -195,10 +196,15 @@ async function load(read,key=null){
     if(seq!==generation||ticket!==loadTicket)return;
     document.querySelector('.native').hidden=false;$('status').textContent='正在计算期望伤害…';
     frame=elem('iframe');frame.title='椰果原版计算页';frame.src='/fast-calc?api_base='+encodeURIComponent(location.origin);$('host').append(frame);
-    engineTimer=setTimeout(()=>{if(!result&&seq===generation)$('status').textContent='复算尚未返回，请检查本地基础资料并重新载入。';},18000);
+    engineTimer=setTimeout(()=>{if(!result&&seq===generation){$('status').textContent='复算尚未返回，请检查本地基础资料并重新载入。';if(parent===window)finishExecution();}},18000);
   }catch(e){if(seq===generation&&ticket===loadTicket)$('status').textContent=e.message;}
 }
 let executionRequest=null;
+function finishExecution(){
+  if(!executionRequest)return;
+  executionRequest.unlock();executionRequest=null;
+  $('recalculate-execution').disabled=false;
+}
 function anchorLabel(a){
   if(a.key===undefined)return a.name||a.time||(a.id==='left'?'起点':a.id==='right'?'结束':'参考线');
   return [project.team[a.trackIndex]?.character,keys[a.key]||a.key,a.desc,a.intro?'变奏':''].filter(Boolean).join(' · ');
@@ -213,16 +219,16 @@ function drawExecutionEditor(){
   $('recalculate-execution').disabled=false;
   $('recalculate-execution').textContent=parent===window?'重新计算':'重新计算并应用到血线';
   const anchors=[...t.opBlocks,...t.refLines].sort((a,b)=>a.pos-b.pos);
-  const {range,split,kind,repeats}=inspectProjectAxis(project,t),{cycles}=range;
-  $('execution-hint').textContent=cycles>1?'每轮分别设置。选择「本轮不放」会跳过该次处决伤害和叠层。下方操作轴为单轮模板。':'放在计分区间外的处决不会计入血线。';
+  const audit=inspectProjectAxis(project,t);
+  const {range,kind,repeats}=audit,{cycles}=range;
+  $('execution-hint').textContent=cycles>1?'每轮分别设置。选择「本轮不放」会跳过该次处决伤害和叠层。下方操作轴显示原工程的格子。':'放在计分区间外的处决不会计入血线。';
   breaks.sort((a,b)=>lookup.get(a.sourceId).pos-lookup.get(b.sourceId).pos);
   for(let round=0;round<cycles;round++){
    const group=elem('div');group.className='execution-round';
-   if(cycles>1)group.append(elem('strong',repeats && round===0?(kind==='startup'?'第 1 轮 · 启动':'第 1 轮 · 首轮特化'):'第 '+(round+1)+' 轮'));
+   if(cycles>1)group.append(elem('strong',repeats && round===0?(kind==='startup'?'第 1 轮 · 启动':'第 1 轮 · 首轮特化'):kind==='closing'&&round===4?'第 5 轮 · 尾轮特化':'第 '+(round+1)+' 轮'));
    list.append(group);
    breaks.forEach((block,i)=>{
-    const inSegment=pos=>!repeats||!split||(round===0?pos<split.pos:
-      pos>=split.pos && (pos<range.end||range.inclusiveEnd&&pos===range.end));
+    const inSegment=pos=>!repeats||inAxisRange(pos,roundRange(audit,round));
     if(!inSegment(lookup.get(block.sourceId).pos))return;
     const who=block.nonDirectEntries.find(isExecution).responders?.[0];
     const label=elem('label',[who,'处决'+(breaks.length>1?' '+(i+1):'')].filter(Boolean).join(' · '));
@@ -245,7 +251,9 @@ function drawExecutionEditor(){
 $('recalculate-execution').onclick=async()=>{
   const item=library.find(i=>i.id===activeId);
   if(!item||executionRequest)return;
+  let unlock;
   try{
+    unlock=showCalculationOverlay();
     const rounds=Array.from($('execution-positions').children,()=>({}));
     for(const row of $('execution-positions').querySelectorAll('.execution-row')){
       const [target,side]=row.querySelectorAll('select');
@@ -259,13 +267,16 @@ $('recalculate-execution').onclick=async()=>{
     item.executionMoves=moves;
     await load(async()=>item.edited,item.id);
     if(activeId!==item.id||!frame)return;
+    if(parent===window && result)return;
+    executionRequest={id:crypto.randomUUID(),unlock};
+    unlock=null;
+    $('recalculate-execution').disabled=true;
     if(parent!==window){
-      executionRequest=crypto.randomUUID();
-      $('recalculate-execution').disabled=true;
       $('execution-status').textContent='正在按新位置推演血线…';
-      parent.postMessage({type:'matrix:apply-execution',request:executionRequest,projectId:item.id,project:revised},location.origin);
+      parent.postMessage({type:'matrix:apply-execution',request:executionRequest.id,projectId:item.id,project:revised},location.origin);
     }
-  }catch(error){$('execution-status').textContent=error.message;}
+  }catch(error){finishExecution();$('execution-status').textContent=error.message;}
+  finally{unlock?.();}
 };
 function drawAxis(){
   const board=elem('div');board.className='board';
@@ -276,8 +287,7 @@ function drawAxis(){
     project.executionRounds.forEach((moves,i)=>{
       for(const block of executions){
         const pos=lookup.get(block.sourceId)?.pos;
-        if(spec.repeats && spec.split && (i===0?pos>=spec.split.pos:
-          pos<spec.split.pos||pos>spec.range.end||!spec.range.inclusiveEnd&&pos===spec.range.end))continue;
+        if(spec.repeats && !inAxisRange(pos,roundRange(spec,i)))continue;
         const move=moves[block.id];if(move?.skip)continue;
         const id=move?.anchorId??block.sourceId;
         if(!labelsByAnchor.has(id))labelsByAnchor.set(id,new Set());
@@ -330,8 +340,8 @@ function showRows(){
   $('results').replaceChildren(table);
 }
 window.addEventListener('message',e=>{
-  if(e.source===parent && e.origin===location.origin && e.data?.type==='matrix:execution-result' && executionRequest && e.data.request===executionRequest){
-    executionRequest=null;$('recalculate-execution').disabled=false;$('execution-status').textContent=e.data.message;return;
+  if(e.source===parent && e.origin===location.origin && e.data?.type==='matrix:execution-result' && executionRequest && e.data.request===executionRequest.id){
+    finishExecution();$('execution-status').textContent=e.data.message;return;
   }
   if(!frame||e.source!==frame.contentWindow||e.origin!==location.origin)return;
   if(e.data?.type==='fast-calc:state'&&e.data.requestId==='view-equipment'&&e.data.ok){
@@ -360,28 +370,40 @@ window.addEventListener('message',e=>{
     return;
   }
   if(e.data?.type!=='fast-calc:result')return;
+  if(parent===window)finishExecution();
   const r=e.data;
   if(!Array.isArray(r.entries)||!Array.isArray(r.segments)||!Number.isFinite(r.total)||r.entries.some(e=>!Number.isFinite(e.damage)||!lookup.has(e.blockId))){$('status').textContent='计算结果含未识别的轴绑定，无法完整还原。';return;}
   try{verifyEngineDamage(r);}catch(error){$('status').textContent=error.message;$('export').disabled=true;return;}
   const audit=inspectProjectAxis(project,timeline),range=audit.range;
-  let openingDamage=0,cycleDamage=0;
+  const closing=audit.kind==='closing';
+  const first=roundRange(audit,0),tail=closing?roundRange(audit,4):null;
+  let openingDamage=0,cycleDamage=0,tailDamage=0;
   for(const row of r.entries){
     const pos=lookup.get(row.blockId).pos;
     if(pos<range.start||pos>range.end||(!range.inclusiveEnd&&pos===range.end))continue;
-    if(audit.repeats&&pos<audit.split?.pos)openingDamage+=row.damage;
+    if(audit.repeats&&inAxisRange(pos,first))openingDamage+=row.damage;
+    else if(tail&&inAxisRange(pos,tail))tailDamage+=row.damage;
     else cycleDamage+=row.damage;
   }
-  const reference=audit.kind==='full'?cycleDamage:openingDamage+(audit.repeats||4)*cycleDamage;
-  const bounds=audit.repeats&&audit.split?'。循环从「'+anchorLabel(audit.split)+'」开始，'+
+  const parts=[];
+  if(audit.repeats)parts.push({label:audit.kind==='startup'?'启动':'首轮',damage:openingDamage,count:1});
+  parts.push({label:audit.kind==='full'?'全轴':closing?'中间循环':'循环',damage:cycleDamage,count:audit.repeats||range.cycles});
+  if(closing)parts.push({label:'尾轮',damage:tailDamage,count:1});
+  const reference=parts.reduce((sum,p)=>sum+p.damage*p.count,0);
+  const bounds=closing&&audit.split&&audit.loopEnd?'。首轮截至「'+anchorLabel(audit.split)+'」，中间循环截至「'+anchorLabel(audit.loopEnd)+'」，均含末格':audit.repeats&&audit.split?'。循环从「'+anchorLabel(audit.split)+'」开始，'+
     (audit.loopEnd?'到「'+anchorLabel(audit.loopEnd)+'」之前':'一直到工程末尾'):'';
-  const seconds=audit.kind==='startup'?audit.templateSeconds:audit.kind==='single'?100:120;
+  const seconds=closing||audit.kind==='startup'?audit.templateSeconds:audit.kind==='single'?100:120;
   $('axis-audit').textContent=axisLabels[audit.kind]+' · '+audit.reason+bounds+'。原工程敌人面板下，'+
-    (audit.repeats?(audit.kind==='startup'?'启动 ':'首轮 ')+fmt(openingDamage)+' ＋ 循环 '+fmt(cycleDamage)+' × '+audit.repeats:audit.kind==='single'?'单轮 '+fmt(cycleDamage)+' × 4':'全轴 '+fmt(cycleDamage)+' × 1')+
+    parts.map(p=>p.label+' '+fmt(p.damage)+(p.count>1?' × '+p.count:'')).join(' ＋ ')+
     '。模板参考总伤 '+fmt(reference)+(seconds?'，按 '+seconds+' 秒折算 '+fmt(reference/seconds)+' DPS。':'。所选分界缺少计时，仅显示总伤。');
   clearTimeout(engineTimer);result=r;$('status').textContent='';$('totals').replaceChildren();
-  function metric(label,value){const tile=elem('div');tile.append(elem('small',label),elem('strong',value));$('totals').append(tile);}
-  metric('全工程期望伤害',fmt(r.total));
-  for(const s of r.segments){metric(s.time+' · 伤害',fmt(s.total));if(s.seconds>0)metric(s.time+' · DPS',fmt(s.dps));}
+  function metric(label,value,detail){const tile=elem('div');tile.append(elem('small',label),elem('strong',value));if(detail)tile.append(elem('small',detail));$('totals').append(tile);}
+  metric('全工程期望伤害',fmt(reference));
+  if(audit.kind==='full' && reference===r.total){
+    for(const s of r.segments){metric(s.time+' · 伤害',fmt(s.total));if(s.seconds>0)metric(s.time+' · DPS',fmt(s.dps));}
+  }else if(audit.kind!=='full'){
+    for(const p of parts)metric(p.label+' × '+p.count,fmt(p.damage*p.count),p.count>1?'每轮 '+fmt(p.damage):'');
+  }
   showRows();$('export').disabled=false;
 });
 $('sample').onclick=()=>load(async()=>{const res=await fetch('/sample.json');if(!res.ok)throw Error('未找到样例文件');return res.json();},'sample');

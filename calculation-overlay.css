@@ -1,0 +1,12 @@
+#calculation-overlay[open] {
+  position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;
+  border:0;border-radius:0;box-shadow:none;background:transparent;display:grid;place-items:center;overflow:hidden;
+}
+#calculation-overlay::backdrop {background:rgba(9,15,21,.42);backdrop-filter:blur(3px)}
+body:has(#calculation-overlay[open]) #batch-afyg-dialog {visibility:hidden}
+body:has(#calculation-overlay[open]) #batch-afyg-dialog::backdrop {background:transparent;backdrop-filter:none}
+#calculation-overlay .calculation-status {display:inline-flex;align-items:center;gap:.65em;color:var(--gold,#e6bd79);font-size:1.4rem;font-weight:650;outline:none}
+.calc-spinner {width:1.05em;height:1.05em;box-sizing:border-box;border:2px solid #e6bd7950;border-top-color:currentColor;border-radius:50%;animation:calc-spin .85s linear infinite}
+@keyframes calc-spin {to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.calc-spinner{animation:none}}
+html:has(#calculation-overlay[open]) {overflow:hidden;overscroll-behavior:none}

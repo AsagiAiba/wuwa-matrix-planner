@@ -168,10 +168,10 @@ try {
   connected(await exported());
   await page.reload(); await page.locator('.team-bar').first().waitFor();
   assert.equal(await page.locator('#team-score').inputValue(), '5000');
-  const invalid = structuredClone(config); invalid.teams[1].characterIds[0] = invalid.teams[0].characterIds[0];
+  const invalid = structuredClone(config); invalid.teams[1].characterIds[0] = invalid.teams[1].characterIds[1];
   await page.locator('#import-file').setInputFiles({ name: 'duplicate.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(invalid)) });
-  await page.waitForFunction(() => document.getElementById('toast').textContent.includes('重复上阵'));
-  assert.match(await page.locator('#toast').innerText(), /重复上阵/);
+  await page.waitForFunction(() => document.getElementById('toast').textContent.includes('有效角色'));
+  assert.match(await page.locator('#toast').innerText(), /有效角色/);
   const legacy = structuredClone(config);
   legacy.teams[1].characterIds = [...legacy.teams[0].characterIds];
   await page.evaluate(value => { localStorage.removeItem('wuwa-matrix-plan-library-v1'); localStorage.setItem('wuwa-matrix-demo-v1', JSON.stringify(value)); }, legacy);

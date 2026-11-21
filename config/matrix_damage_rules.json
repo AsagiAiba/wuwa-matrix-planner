@@ -11,7 +11,7 @@
   },
   "s2Phase4Bosses": {
     "607750002": { "vulnerability": -20, "tuneBreak": 12.5, "maxStacks": 4 },
-    "665700003": { "abnormal": 25, "frostbindLayers": 13, "frostbindFinal": 30 },
+    "665700003": { "abnormal": 25, "hiyukiTeamFinal": 30 },
     "676750008": { "vulnerability": -25, "echo": 10, "maxStacks": 5, "fullStacks": 30 }
   }
 }

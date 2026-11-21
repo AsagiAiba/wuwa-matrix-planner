@@ -68,8 +68,40 @@ export const axisLabels={
   full:'120 秒全局轴',
   opening:'首轮特化 × 1＋循环模板 × 4',
   startup:'启动轴 × 1＋循环轴 × 3',
+  closing:'首轮特化 × 1＋中间循环 × 3＋尾轮特化 × 1',
   single:'单轮轴 × 4（约 100 秒）'
 };
+
+export function inAxisRange(pos,range){
+  return (range.exclusiveStart?pos>range.start:pos>=range.start) &&
+    (pos<range.end || range.inclusiveEnd && pos===range.end);
+}
+
+// A "+" reference labels elapsed time since the preceding timed reference.
+export function templateTimes(project,refs){
+  const explicit=new Map((project.analysis?.timings??[]).map(t=>[t.refLineId,t.seconds]));
+  const times=new Map();
+  let elapsed=0;
+  for(const r of refs){
+    const delta=/^\+(\d+(?:\.\d+)?)\s*(?:s\b|秒)/i.exec(r.time||r.name||'');
+    const saved=explicit.get(r.id);
+    if(r.id==='left')elapsed=0;
+    else if(delta)elapsed+=Number(delta[1]);
+    else if(Number.isFinite(saved)&&saved>elapsed)elapsed=saved;
+    else continue;
+    times.set(r.id,elapsed);
+  }
+  return times;
+}
+
+export function roundRange(audit,round){
+  const {range,split,loopEnd,repeats,kind}=audit;
+  if(!repeats)return range;
+  const closing=kind==='closing';
+  if(!round)return {...range,end:split?.pos,inclusiveEnd:closing};
+  if(closing && round===range.cycles-1)return {...range,start:loopEnd?.pos,exclusiveStart:true};
+  return {...range,start:split?.pos,end:loopEnd?.pos??range.end,inclusiveEnd:closing||range.inclusiveEnd&&!loopEnd,exclusiveStart:closing,loopAfterOpening:true};
+}
 
 export function inspectProjectAxis(project,timeline){
   const refs=[...timeline.refLines].sort((a,b)=>a.pos-b.pos);
@@ -101,25 +133,34 @@ export function inspectProjectAxis(project,timeline){
   const openingSeconds=timings.get(opening?.id),loopSeconds=timings.get(firstLoop?.id)-openingSeconds;
   const threeFit=openingSeconds>0 && loopSeconds>0 && openingSeconds+3*loopSeconds<=120 && openingSeconds+4*loopSeconds>120;
   const startupMarked=/启动轴/.test(label(opening??{})+' '+title);
+  const tail=refs.find(r=>firstLoop && r.pos>firstLoop.pos && /尾轮|末轮|收尾/.test(label(r)));
+  const closingTemplate=tail && loops.length===1 && (/(?:[3三]\s*(?:轮|次)|[×x*]\s*3)/i.test(label(firstLoop)) || /1\s*[+＋]\s*3\s*[+＋]\s*1/.test(title) || /尾轮特化|末轮特化/.test(label(tail)));
   const suggestedTemplate=startupMarked && (threeFit || /4\s*[r轮]/i.test(title))?'startup':'opening';
-  const kind=override??(finish||(!excluded && (namedFull || (openingAndLoop && loops.length>1)))?'full':openingAndLoop?suggestedTemplate:'single');
+  const kind=override??(finish?'full':closingTemplate?'closing':(!excluded && (namedFull || (openingAndLoop && loops.length>1)))?'full':openingAndLoop?suggestedTemplate:'single');
   const start=refs.find(r=>/^\+?0\s*(?:s\b|秒)/i.test(label(r)));
   const end=start && loops.find(r=>r.pos>start.pos);
   const anchors=[...refs,...(timeline.opBlocks??[])];
   const split=anchors.find(a=>a.id===project.matrixLoopStart)??opening;
   const loopEnd=project.matrixLoopEnd==='last'?null:(anchors.find(a=>a.id===project.matrixLoopEnd)??loops.find(r=>split&&r.pos>split.pos));
-  const repeats=kind==='opening'?4:kind==='startup'?3:0;
+  const closing=kind==='closing';
+  const repeats=kind==='opening'?4:kind==='startup'||closing?3:0;
   const range=kind==='single'?{cycles:4,start:start?.pos??-Infinity,end:end?.pos??Infinity,inclusiveEnd:false}:
-    {cycles:repeats+1,start:-Infinity,end:repeats?(loopEnd?.pos??Infinity):(finish?.pos??Infinity),inclusiveEnd:!repeats||!loopEnd};
+    {cycles:repeats+1+Number(closing),start:-Infinity,end:closing?Infinity:repeats?(loopEnd?.pos??Infinity):(finish?.pos??Infinity),inclusiveEnd:closing||!repeats||!loopEnd};
   if(override)reason='按导入时选择的类型结算';
   else if(kind==='single')reason=excluded?'工程注明首轮不计，取标记内的循环段':end?'已找到单轮循环边界':'未找到完整的 120 秒计时，建议核对是否为单轮';
   else if(kind==='startup'&&threeFit)reason='启动 '+openingSeconds+' 秒，循环 '+loopSeconds+' 秒，120 秒内可打三次完整循环';
+  else if(closing)reason='参考线依次标出了首轮、中间三轮循环和尾轮';
   else if(repeats)reason='参考线同时标出了首轮和循环模板';
   else if(!reason)reason=namedFull?'名称含全局轴或 120 秒，请核对结束位置':'工程已列出首轮和多段后续循环';
   if(kind==='full' && openingAndLoop)reason+='；原轴含首轮和后续循环';
   const elapsedStart=timings.get(split?.id);
   const elapsedEnd=timings.get(loopEnd?.id??'right');
-  const templateSeconds=elapsedStart>0 && elapsedEnd>elapsedStart?elapsedStart+repeats*(elapsedEnd-elapsedStart):null;
+  let templateSeconds=elapsedStart>0 && elapsedEnd>elapsedStart?elapsedStart+repeats*(elapsedEnd-elapsedStart):null;
+  if(closing){
+    const times=templateTimes(project,refs);
+    const first=times.get(split?.id),middle=times.get(loopEnd?.id),last=[...times.values()].at(-1);
+    templateSeconds=first>0 && middle>first && last>middle ? last+2*(middle-first) : null;
+  }
   return {kind,reason,range,split,loopEnd,repeats,templateSeconds};
 }
 
@@ -145,7 +186,7 @@ export function confirmImportAxis(project){
   const dialog=document.createElement('dialog');
   dialog.className='axis-import-dialog';
   dialog.setAttribute('aria-label','核对导入轴类型');
-  dialog.innerHTML='<form method="dialog"><h2>核对导入轴类型</h2><p class="axis-import-name"></p><label>该文件包含哪种轴？<select name="kind"></select></label><p class="axis-basis"></p><div class="loop-bounds"><label>循环起点（从这一格开始）<select name="start"></select></label><label>循环结束边界（到这一格之前）<select name="end"></select></label></div><p class="axis-feedback" role="status"></p><div class="controls"><button value="cancel" type="button">取消</button><button value="ok">确认导入</button></div></form>';
+  dialog.innerHTML='<form method="dialog"><h2>核对导入轴类型</h2><p class="axis-import-name"></p><label>该文件包含哪种轴？<select name="kind"></select></label><p class="axis-basis"></p><div class="loop-bounds"><label><span class="start-label">循环起点（从这一格开始）</span><select name="start"></select></label><label><span class="end-label">循环结束边界（到这一格之前）</span><select name="end"></select></label></div><p class="axis-feedback" role="status"></p><div class="controls"><button value="cancel" type="button">取消</button><button value="ok">确认导入</button></div></form>';
   const form=dialog.querySelector('form'),{kind,start,end}=form.elements;
   dialog.querySelector('.axis-import-name').textContent=project.name||'未命名工程';
   dialog.querySelector('.axis-basis').textContent=audit.reason;
@@ -160,20 +201,31 @@ export function confirmImportAxis(project){
   });
   start.value=audit.split?.id??'';end.value=audit.loopEnd?.id??'last';
   const feedback=dialog.querySelector('.axis-feedback');
-  const update=()=>{dialog.querySelector('.loop-bounds').hidden=!['opening','startup'].includes(kind.value);feedback.textContent={
+  const update=()=>{dialog.querySelector('.loop-bounds').hidden=!['opening','startup','closing'].includes(kind.value);const closing=kind.value==='closing';
+    dialog.querySelector('.start-label').textContent=closing?'首轮末格（含本格）':'循环起点（从这一格开始）';
+    dialog.querySelector('.end-label').textContent=closing?'中间循环末格（含本格，下一格进入尾轮）':'循环结束边界（到这一格之前）';
+    feedback.textContent={
     full:'从开场到结束顺序结算一次，保留已经写好的尾轮。',
     opening:'分界前只打一次，选中的循环段打四次，共五轮。',
     startup:'分界前的启动段打一次，选中的循环段打三次，共四轮。',
+    closing:'首轮一次，中间模板三次，尾轮一次。两条分界线上的伤害分别计入首轮和中段。',
     single:'按单轮约 25 秒重复四次，预计覆盖 100 秒。'
   }[kind.value];};
   kind.onchange=update;update();
   form.querySelector('[value=cancel]').onclick=()=>dialog.close('cancel');
   form.onsubmit=e=>{
-    if(!['opening','startup'].includes(kind.value))return;
+    if(!['opening','startup','closing'].includes(kind.value))return;
     const boundary=anchors.find(a=>a.id===start.value)?.pos;
     const last=anchors.find(a=>a.id===end.value)?.pos??Infinity;
     const positions=new Map(anchors.map(a=>[a.id,a.pos]));
     const blocks=t.damageBlocks??[];
+    if(kind.value==='closing'){
+      const pos=blocks.map(b=>positions.get(b.sourceId));
+      if(!Number.isFinite(boundary)||!Number.isFinite(last)||last<=boundary||!pos.some(x=>x<=boundary)||!pos.some(x=>x>boundary&&x<=last)||!pos.some(x=>x>last)){
+        e.preventDefault();feedback.textContent='请选择首轮和中间循环的末格，让首轮、循环和尾轮各含至少一个伤害块。';
+      }
+      return;
+    }
     if(!Number.isFinite(boundary)||!blocks.some(b=>positions.get(b.sourceId)<boundary)||!blocks.some(b=>positions.get(b.sourceId)>=boundary && positions.get(b.sourceId)<last)){
       e.preventDefault();feedback.textContent='请调整分界，让首轮和循环段各包含至少一个伤害块。';
     }
@@ -181,9 +233,9 @@ export function confirmImportAxis(project){
   document.body.append(dialog);dialog.showModal();
   return new Promise(resolve=>dialog.addEventListener('close',()=>{
     if(dialog.returnValue==='ok'){
-      if(audit.kind!==kind.value)delete project.executionRounds;
+      if(audit.kind!==kind.value || (kind.value==='closing' && (start.value!==audit.split?.id || end.value!==audit.loopEnd?.id)))delete project.executionRounds;
       project.matrixAxisType=kind.value;
-      if(['opening','startup'].includes(kind.value)){project.matrixLoopStart=start.value;project.matrixLoopEnd=end.value;}
+      if(['opening','startup','closing'].includes(kind.value)){project.matrixLoopStart=start.value;project.matrixLoopEnd=end.value;}
       else {delete project.matrixLoopStart;delete project.matrixLoopEnd;}
     }
     dialog.remove();resolve(dialog.returnValue==='ok');

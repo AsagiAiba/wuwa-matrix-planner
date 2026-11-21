@@ -27,10 +27,10 @@ if (-not (Test-Path -LiteralPath $appIcon -PathType Leaf)) { throw 'Missing app 
 if ($LASTEXITCODE -ne 0) { throw 'Launcher compilation failed.' }
 & $compiler /nologo /codepage:65001 /target:exe /platform:x64 /optimize+ "/out:$(Join-Path $releaseRoot 'MatrixUpdate.exe')" /reference:System.Web.Extensions.dll /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll (Join-Path $projectRoot 'desktop\MatrixUpdate.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Update helper compilation failed.' }
-foreach ($name in @('portable-update.js','portable-update.mjs','portable-version.js')) {
+foreach ($name in @('portable-update.js','portable-update.mjs','portable-cleanup.mjs','portable-version.js')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot $name) -Destination $releaseRoot -Force
 }
-foreach ($name in @('index.html','app.js','afyg-preset.js','cingulum.js','roster-recognition.js','styles.css','score-axis.js','plan-library.js','season-config.js','server.mjs','package.json','README.md','LICENSE','THIRD_PARTY_NOTICES.md','CHANGELOG.md')) {
+foreach ($name in @('index.html','app.js','calculation-overlay.js','calculation-overlay.css','afyg-batch.js','afyg-preset.js','cingulum.js','roster-recognition.js','styles.css','score-axis.js','plan-backup.js','plan-library.js','season-config.js','server.mjs','package.json','README.md','LICENSE','THIRD_PARTY_NOTICES.md','CHANGELOG.md')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot $name) -Destination (Join-Path $releaseRoot $name) -Force
 }
 foreach ($name in @('assets','config')) {

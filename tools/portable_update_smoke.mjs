@@ -103,12 +103,20 @@ try {
   await picker.setInputFiles(target);
   await status.filter({hasText:'无需重复更新'}).waitFor();
   assert.equal(uploads, 0, 'old and same-version names must be rejected before upload');
-  const saved = (await readdir(work)).filter(n => n.startsWith('.matrix-update-') && n !== failedUpdate);
-  assert.equal(saved.length, 1);
-  const backupDir = path.join(work, saved[0]);
-  const backup = JSON.parse(await readFile(path.join(backupDir,'排布备份.json'),'utf8'));
-  assert.equal(JSON.parse(backup.localStorage['wuwa-matrix-plan-library-v1']).activePlanId, savedId);
-  assert.equal(JSON.parse(await readFile(path.join(backupDir,'previous/package.json'),'utf8')).version, fromVersion);
+  let leftovers;
+  for(let i=0;i<300;i++){
+    leftovers=(await readdir(work)).filter(n=>n.startsWith('.matrix-update-') && n!==failedUpdate);
+    if(!leftovers.length)break;
+    await pause(150);
+  }
+  assert.deepEqual(leftovers,[],'successful update should be cleaned after restart');
+  const backupDir=path.join(work,'排布备份');
+  const names=await readdir(backupDir);
+  assert.equal(names.length,1);
+  const backup=JSON.parse(await readFile(path.join(backupDir,names[0]),'utf8'));
+  assert.equal(JSON.parse(backup.localStorage['wuwa-matrix-plan-library-v1']).activePlanId,savedId);
+  const failed=await readdir(path.join(work,failedUpdate));
+  assert.ok(failed.includes('failed')&&failed.includes('update.log')&&failed.includes('排布备份.json'));
   console.log('PASS: v%s → v%s, cancellation, rollback, restart, plan and team data, backup, filename checks before upload.', fromVersion, toVersion);
 } finally {
   if (browser) await browser.close();

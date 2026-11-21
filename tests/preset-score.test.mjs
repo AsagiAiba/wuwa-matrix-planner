@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {simulatePreset,circuitDamageRules,matrixFinalFactor} from '../score-axis.js';
-import {projectAxisRange} from '../afyg-preset.js';
+import {projectAxisRange,fullAxisTimes} from '../afyg-preset.js';
+
+test('full-axis startup and repeated cycle duration labels accumulate to the 120s end',()=>{
+ const refs=['','30s启动','25s循环','25s循环','25s循环','结束'].map((name,i)=>({id:['left','a','b','c','d','right'][i],name,pos:i*100}));
+ assert.deepEqual([...fullAxisTimes({matrixAxisType:'full'},refs).values()],[0,30,55,80,105,120]);
+ assert.equal(fullAxisTimes({},refs).has('right'),false);
+ assert.equal(fullAxisTimes({},[refs[0],refs[1],{id:'b',name:'55s循环'}]),null);
+ const authored={matrixAxisType:'full',analysis:{timings:[{refLineId:'b',seconds:56}]}};
+ assert.deepEqual([...fullAxisTimes(authored,refs).values()],[0,30,56,81,106,120]);
+});
 
 import {getSeason,buildSeasonScores,enemyDefenseForLevel} from '../season-config.js';
 
@@ -35,26 +44,22 @@ test('S2-4 anomaly circuit adds 25 and 80 in the final zone, refreshes, expires 
  assert.equal(run([hit(29,{statusApplication:true}),hit(0),hit(29)],undefined,
    {cycles:2,roundSeconds:[30,30],roundOrders:[[0],[1,2]]}).applied,385);
 });
-test('Denia frostbind needs 13 layers then Hiyuki’s hit; subsequent team hits gain additive final damage only on that spawn',()=>{
- const matrix=getSeason('s2-phase4'),denia=matrix.bosses[1];
- const season={...matrix,bosses:[denia,denia]};
- const key=[1,2,3,4,5,6].map(i=>denia.resistances.values[i]).join(',');
- const hit=(name,source='绯雪',extra={})=>({source,name,part:1,damage:{[key]:120},finalZone:1.2,...extra});
- const skill=hit('预求我身·见心(共鸣解放)');
- const effect=hit('霜渐效应13层','霜渐效应',{abnormal:true});
- const hits=[hit('霜渐效应12层','霜渐效应',{abnormal:true}),skill,effect,hit('普攻·居合','洛瑟菈'),hit('普通攻击'),skill,
-   hit('普通攻击','穗穗'),effect,hit('普攻·居合'),hit('普通攻击','穗穗')];
- const run=(seq,roles=['1108'],waves=[wave(1,0,1e6)])=>simulatePreset({hits:seq,cycles:1,roles,bossEventVersion:2},season,waves,0,()=>1);
- const expected=[145,120,145,120,120,120,150,175,150,150];
- let total=0;
- for(const [i,damage] of expected.entries()){
-   total+=damage;assert.ok(Math.abs(run(hits.slice(0,i+1)).applied-total)<1e-7);
- }
- assert.equal(run(hits).stages[0].frostbind.trigger.hit,6);
- assert.equal(run(hits,['1109']).stages[0].frostbind,undefined);
- const split=run([effect,hit('普攻·居合'),hit('普通攻击','穗穗'),skill],['1108'],[wave(1,0,415),wave(2,207,1e4)]);
- assert.equal(split.stages[0].frostbind.trigger.hit,2);
- assert.deepEqual(split.stages[1].frostbind,{readyAt:null,trigger:null});
+test('Hiyuki grants team final damage on the first hit against Denia, including on switching targets',()=>{
+ const season=getSeason('s2-phase4'),denia=season.bosses[1],other=season.bosses[4];
+ const profile=b=>[1,2,3,4,5,6].map(i=>b.resistances.values[i]).join(',');
+ const damage={[profile(denia)]:120,[profile(other)]:120};
+ const hit=(source,extra={})=>({source,name:'普通攻击',part:1,damage,finalZone:1.2,...extra});
+ const ally=hit('洛瑟菈'),frost=hit('霜渐效应',{abnormal:true,glacioLayers:13}),late=hit('穗穗',{roundSecond:40});
+ const run=(hits,roles=['1109','1108'],waves=[wave(1,0,1e6)],bosses=[denia],start=0)=>
+   simulatePreset({hits,cycles:1,roles,bossEventVersion:2},{...season,bosses},waves,start,()=>1);
+ assert.equal(run([ally]).applied,150); // 120 base includes a 1.2 final-damage zone.
+ assert.equal(run([ally,frost,late]).applied,150+175+150);
+ assert.equal(run([ally,frost,late],['1109']).applied,120+145+120);
+ assert.equal(run([ally],undefined,undefined,undefined,100).stages[0].hiyukiTeamFinal,30); // partial HP start
+ const switched=run([ally,ally,frost,late],undefined,[wave(1,0,100),wave(2,50,300),wave(3,200,1e4)],[other,denia,other]);
+ assert.equal(switched.applied,100+150+150+120);
+ assert.equal(switched.stages[1].lost,25); // the second hit on Denia deals 175 before overkill.
+ assert.deepEqual(switched.stages.map(s=>s.hiyukiTeamFinal),[undefined,30,undefined]);
 });
 test('both seasons use the verified enemy levels at every boss, including chests',()=>{
   for(const id of ['s2-phase3','s2-phase4']){

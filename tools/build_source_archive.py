@@ -11,9 +11,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
     '.gitignore', '启动Demo.cmd', 'app.js', 'CHANGELOG.md', 'index.html',
-    'afyg-preset.js', 'cingulum.js', 'roster-recognition.js', 'package.json', 'plan-library.js', 'README.md', 'score_core.py',
+    'calculation-overlay.js','calculation-overlay.css','afyg-batch.js','afyg-preset.js', 'cingulum.js', 'roster-recognition.js', 'package.json', 'plan-backup.js','plan-library.js', 'README.md', 'score_core.py',
     'score-axis.js', 'season-config.js', 'server.mjs', 'styles.css',
-    'LICENSE', 'THIRD_PARTY_NOTICES.md', 'portable-update.js', 'portable-update.mjs', 'portable-version.js',
+    'LICENSE', 'THIRD_PARTY_NOTICES.md', 'portable-update.js', 'portable-update.mjs','portable-cleanup.mjs', 'portable-version.js',
 )
 DESKTOP_FILES = ('Launcher.cs', 'MatrixUpdate.cs', '使用说明.txt', 'LICENSE.node.txt')
 TREE_TYPES = {

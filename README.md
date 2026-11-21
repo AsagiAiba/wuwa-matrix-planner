@@ -2,7 +2,7 @@
 
 **快速获取最新测试版本加入Q群：831447075**
 
-开发血线排布功能时用到了 GPT-6.1。软件代码中集成了 D4RK（d4rkOfficial）开发的椰果工具箱计算引擎，用来读取椰果工程并复算逐段伤害。该组件采用 MIT 许可证，源码和便携包均附原版权声明、许可全文及作者补充声明。[椰果工具箱](https://github.com/d4rkOfficial/wuwa-afyg-tool) · [原许可证](afyg-replay/LICENSE.txt)
+代码部分由GPT-6.2开发。软件代码中集成了 D4RK（d4rkOfficial）开发的椰果工具箱计算引擎，用来读取椰果工程并复算逐段伤害。该组件采用 MIT 许可证，源码和便携包均附原版权声明、许可全文及作者补充声明。[椰果工具箱](https://github.com/d4rkOfficial/wuwa-afyg-tool) · [原许可证](afyg-replay/LICENSE.txt)
 
 《鸣潮》终焉矩阵队伍和血线的小工具。选好角色、填入队伍分数后，就能看到每队从哪只 Boss 的多少血开始、打到哪里结束，方便调整出场顺序。
 

@@ -1,5 +1,7 @@
 # 鸣潮终焉矩阵血线排布 V0.5.17
 
+**本工具开源免费，下载、使用和更新均无需付费。** 请勿花钱购买软件或激活码，正式版可直接从本仓库免费下载。[下载最新正式版](https://github.com/KazamiSora/wuwa-matrix-planner/releases/latest)
+
 **快速获取最新测试版本加入Q群：831447075**
 
 代码部分由GPT-6.2开发。软件代码中集成了 D4RK（d4rkOfficial）开发的椰果工具箱计算引擎，用来读取椰果工程并复算逐段伤害。该组件采用 MIT 许可证，源码和便携包均附原版权声明、许可全文及作者补充声明。[椰果工具箱](https://github.com/d4rkOfficial/wuwa-afyg-tool) · [原许可证](afyg-replay/LICENSE.txt)

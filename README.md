@@ -152,6 +152,18 @@ V0.3 修复了旧测试版禁用角色时误删其他方案队伍的问题。升
 
 最新表与规则保存在 data/s2_4_score_source.json；原始 XLSX 导入数据继续保留作历史记录。旧版调研及计分记录见 [玩法与计分规则](docs/终焉矩阵调研与计分规则.md)。
 
+## 技术栈
+
+| 模块 | 技术 | 用途 |
+| --- | --- | --- |
+| 桌面启动 | C#、.NET Framework、Windows Forms | 启动本地服务，管理托盘和浏览器窗口 |
+| 本地服务 | Node.js 24.22.1、`node:http` | 通过 `127.0.0.1` 提供页面、数据和素材 |
+| 界面 | HTML、CSS、原生 JavaScript（ES Modules） | 血线轴、拖拽排序、缩放和快捷组队 |
+| 伤害与计分 | D4RK 椰果工具箱引擎、JavaScript | 复算逐击伤害，按 Boss 抗性、转火和溢出计算矩阵得分 |
+| 截图识别 | Canvas 2D、模板匹配 | 识别角色头像、皮肤和等级 |
+| 数据与存储 | JSON、`localStorage` | 配置赛季规则，保存排布和工程，导入导出备份 |
+| 测试与打包 | `node:test`、Python `unittest`、Playwright、PowerShell | 验证计分和界面交互，构建便携包并生成 SHA-256 校验文件 |
+
 ## 从源码运行
 
 安装 Node.js 后，在项目目录执行：
